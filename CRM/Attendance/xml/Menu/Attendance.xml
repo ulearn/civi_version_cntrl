@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<menu>
+ <item>
+     <path>civicrm/attendance/search</path>
+     <title>Dashboard</title>
+     <page_callback>CRM_Attendance_Controller_Search</page_callback>
+      <page_type>1</page_type>
+     <weight>700</weight>
+     <component>CiviAttendance</component>
+  </item>
+  
+</menu>

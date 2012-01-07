@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -58,21 +58,9 @@ class CRM_Mailing_StateMachine_Send extends CRM_Core_StateMachine {
                               'CRM_Mailing_Form_Settings'=> null,
                               'CRM_Mailing_Form_Upload'  => null,
                               'CRM_Mailing_Form_Test'    => null,
+                              'CRM_Mailing_Form_Schedule'=> null,
                               );
-
-        require_once 'CRM/Mailing/Info.php';
-        if ( CRM_Mailing_Info::workflowEnabled( ) ) {
-            if ( CRM_Core_Permission::check( 'schedule mailings' ) ) {
-                $this->_pages['CRM_Mailing_Form_Schedule'] = null;
-            }
-
-            if ( CRM_Core_Permission::check( 'approve mailings' ) ) {
-                $this->_pages['CRM_Mailing_Form_Approve'] = null;
-            }
-        } else {
-            $this->_pages['CRM_Mailing_Form_Schedule'] = null;
-        }
-
+        
         $this->addSequentialPages( $this->_pages, $action );
     }
 

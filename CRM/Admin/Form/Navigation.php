@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -48,11 +48,6 @@ class CRM_Admin_Form_Navigation extends CRM_Admin_Form
     protected $_currentParentID = null;
 
     /**
-     * Default values
-     */
-     protected $_defaults = array( );
-     
-    /**
      * Function to build the form
      *
      * @return None
@@ -65,11 +60,6 @@ class CRM_Admin_Form_Navigation extends CRM_Admin_Form
         if ($this->_action & CRM_Core_Action::DELETE ) { 
             return;
         }
-        
-        if ( isset( $this->_id ) ) {
-            $params = array( 'id' => $this->_id );
-            CRM_Core_BAO_Navigation::retrieve( $params, $this->_defaults );
-        }       
         
         $this->applyFilter('__ALL__', 'trim');
         $this->add('text',
@@ -93,46 +83,36 @@ class CRM_Admin_Form_Navigation extends CRM_Admin_Form
         
         $operators = array( 'AND' => 'AND', 'OR' => 'OR' );
         $this->add('select', 'permission_operator', ts( 'Operator'), $operators ); 
-
-        $this->add('checkbox', 'has_separator', ts('Separator?'));
-        $active = $this->add('checkbox', 'is_active', ts('Enabled?'));
+        $parentMenu = CRM_Core_BAO_Navigation::getNavigationList( );            
         
-        if ( CRM_Utils_Array::value('name', $this->_defaults) == 'Home' ) {
-            $active->freeze( );
-        } else {
-            $parentMenu = CRM_Core_BAO_Navigation::getNavigationList( );
-
-            if ( isset( $this->_id ) ) {
-                unset( $parentMenu[$this->_id] );
-            }
-
-            // also unset home.
-            $homeMenuId = CRM_Core_DAO::getFieldValue( 'CRM_Core_DAO_Navigation', 'Home', 'id', 'name' ); 
-            unset( $parentMenu[ $homeMenuId ] );    
-
-            $parent = $this->add( 'select', 'parent_id', ts( 'Parent' ), array( '' => ts('-- select --') ) + $parentMenu );            
+        if ( isset( $this->_id ) ) {
+            unset( $parentMenu[$this->_id] );
         }
+        $this->add( 'select', 'parent_id', ts( 'Parent' ), array( '' => ts('-- select --') ) + $parentMenu );
+        $this->add('checkbox', 'has_separator', ts('Separator?'));
+        $this->add('checkbox', 'is_active', ts('Enabled?'));
     }
     
     public function setDefaultValues() {
-        $defaults = $this->_defaults;
+        $defaults = array( );
         if ( isset( $this->_id ) ) {
-            if ( CRM_Utils_Array::value( 'permission', $this->_defaults ) ) { 
-                foreach ( explode( ',' , $this->_defaults['permission'] ) as $value ){ 
+            $params = array( 'id' => $this->_id );
+            CRM_Core_BAO_Navigation::retrieve( $params, $defaults );
+            if ( CRM_Utils_Array::value( 'permission', $defaults ) ) { 
+                foreach ( explode( ',' , $defaults['permission'] ) as $value ){ 
                     $components[$value] = $value;
                 }
                 $defaults['permission'] = $components;
             }
             //Take parent id in object variable to calculate the menu
             //weight if menu parent id changed
-            $this->_currentParentID = CRM_Utils_Array::value( 'parent_id', $this->_defaults );
+            $this->_currentParentID = CRM_Utils_Array::value( 'parent_id', $defaults );
         } else {
             $defaults['permission'] = "access CiviCRM";
         }
         
         // its ok if there is no element called is_active
-        $defaults['is_active'] = ( $this->_id ) ? $this->_defaults['is_active'] : 1;
-        
+        $defaults['is_active'] = ( $this->_id ) ? $defaults['is_active'] : 1;
         return $defaults;
     }
        

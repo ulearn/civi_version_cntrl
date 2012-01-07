@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,33 +29,38 @@
   <tr class="columnheader">
     <th></th>
     <th>{ts}Client{/ts}</th>
-    <th>{ts}Subject{/ts}</th>
     <th>{ts}Status{/ts}</th>
     <th>{ts}Type{/ts}</th>
     <th>{ts}My Role{/ts}</th>
     <th>{ts}Case Manager{/ts}</th>      
-    <th>{if $list EQ 'upcoming'}{ts}Next Sched.{/ts}{elseif $list EQ 'recent'}{ts}Most Recent{/ts}{/if}</th>
+    <th>{if $list EQ 'upcoming'}{ts}Next Sched.{/ts}{else}{ts}Most Recent{/ts}{/if}</th>
+
     <th></th>
   </tr>
 
   {counter start=0 skip=1 print=false}
   {foreach from=$rows item=row}
  
-  <tr id='{$context}-{$list}-rowid-{$row.case_id}' class="crm-case crm-case_{$row.case_id}">
+  <tr id='{$list}Rowid{$row.case_id}' class="crm-case crm-case_{$row.case_id}">
 	<td>
         {* &nbsp;{$row.contact_type_icon}<br /> *}
-        <span id="{$context}{$list}{$row.case_id}_show">
-	    <a href="#" onclick="{$context}{$list}CaseDetails('{$row.case_id}','{$row.contact_id}', '{$list}', '{$context}'); 
-	       			 showCaseActivities('{$row.case_id}','{$list}', '{$context}');
+        <span id="{$list}{$row.case_id}_show">
+	    <a href="#" onclick="show('{$list}CaseDetails{$row.case_id}', 'table-row');
+                             {$list}CaseDetails('{$row.case_id}','{$row.contact_id}'); 
+                             hide('{$list}{$row.case_id}_show');
+                             show('minus{$list}{$row.case_id}_hide');
+                             show('{$list}{$row.case_id}_hide','table-row');
                              return false;"><img src="{$config->resourceBase}i/TreePlus.gif" class="action-icon" alt="{ts}open section{/ts}"/></a>
 	</span>
-	<span id="minus{$context}{$list}{$row.case_id}_hide">
-	    <a href="#" onclick="hideCaseActivities('{$row.case_id}','{$list}', '{$context}');
+	<span id="minus{$list}{$row.case_id}_hide">
+	    <a href="#" onclick="hide('{$list}CaseDetails{$row.case_id}');
+                             show('{$list}{$row.case_id}_show', 'table-row');
+                             hide('{$list}{$row.case_id}_hide');
+                             hide('minus{$list}{$row.case_id}_hide');
                              return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}open section{/ts}"/></a>
 	</td>
 
     <td class="crm-case-phone"><a href="{crmURL p='civicrm/contact/view' q="reset=1&cid=`$row.contact_id`"}">{$row.sort_name}</a>{if $row.phone}<br /><span class="description">{$row.phone}</span>{/if}<br /><span class="description">{ts}Case ID{/ts}: {$row.case_id}</span></td>
-    <td class="crm-case-case_subject">{$row.case_subject}</td>
     <td class="{$row.class} crm-case-case_status">{$row.case_status}</td>
     <td class="crm-case-case_type">{$row.case_type}</td>
     <td class="crm-case-case_role">{if $row.case_role}{$row.case_role}{else}---{/if}</td>
@@ -63,7 +68,7 @@
     {if $list eq 'upcoming'}
     	 <td class="crm-case-case_scheduled_activity">
 	   {if $row.case_upcoming_activity_viewable}
-	      <a href="javascript:{$list}viewActivity({$row.case_scheduled_activity_id}, {$row.contact_id}, '{$list}');" title="{ts}View this activity.{/ts}">{$row.case_scheduled_activity_type}</a>
+	      <a href="javascript:viewActivity({$row.case_scheduled_activity_id}, {$row.contact_id});" title="{ts}View this activity.{/ts}">{$row.case_scheduled_activity_type}</a>
 	   {else}
 	      {$row.case_scheduled_activity_type}	
 	   {/if}    
@@ -78,7 +83,7 @@
     {elseif $list eq 'recent'}
     	 <td class="crm-case-case_recent_activity">
 	 {if $row.case_recent_activity_viewable}	
-	     <a href="javascript:{$list}viewActivity({$row.case_recent_activity_id}, {$row.contact_id}, '{$list}');" title="{ts}View this activity.{/ts}">{$row.case_recent_activity_type}</a>
+	     <a href="javascript:viewActivity({$row.case_recent_activity_id}, {$row.contact_id});" title="{ts}View this activity.{/ts}">{$row.case_recent_activity_type}</a>
 	  {else}
 	     {$row.case_recent_activity_type}
 	  {/if}   
@@ -88,17 +93,18 @@
 	 </td>   
     {/if}
 
-    <td>{$row.action}{$row.moreActions}</td>
+    <td>{$row.action}</td>
    </tr>
    <tr id="{$list}{$row.case_id}_hide" class="crm-case_{$row.case_id}">
      <td>
      </td>
      <td colspan="7" width="99%" class="enclosingNested crm-case_{$row.case_id}">
-        <div id="{$context}-{$list}-casedetails-{$row.case_id}"></div>
+        <div id="{$list}CaseDetails{$row.case_id}"></div>
      </td>
    </tr>
  <script type="text/javascript">
-     hide('minus{$context}{$list}{$row.case_id}_hide');
+     hide('{$list}{$row.case_id}_hide');
+     hide('minus{$list}{$row.case_id}_hide');
  </script>
   {/foreach}
 
@@ -110,44 +116,27 @@
     {/if}
 
 </table>
-
-{*include activity view js file*}
-{include file="CRM/common/activityView.tpl" list=$list}
-<div id="view-activity-{$list}">
-    <div id="activity-content-{$list}"></div>
-</div>
 {/strip}
 
 {* Build case details*}
 {literal}
 <script type="text/javascript">
-function {/literal}{$context}{$list}{literal}CaseDetails( caseId, contactId, type, context )
+
+function {/literal}{$list}{literal}CaseDetails( caseId, contactId )
 {
-    var dataUrl = {/literal}"{crmURL p='civicrm/case/details' h=0 q='snippet=4&caseId='}{literal}" + caseId +'&cid=' + contactId + '&type=' + type;
-    cj.ajax({
+
+  var dataUrl = {/literal}"{crmURL p='civicrm/case/details' h=0 q='snippet=4&caseId='}{literal}" + caseId +'&cid=' + contactId;
+  cj.ajax({
             url     : dataUrl,
             dataType: "html",
             timeout : 5000, //Time in milliseconds
             success : function( data ){
-			            cj( '#'+ context + '-' + type +'-casedetails-' + caseId ).html( data );
+                           cj( '#{/literal}{$list}{literal}CaseDetails' + caseId ).html( data );
                       },
             error   : function( XMLHttpRequest, textStatus, errorThrown ) {
-                        console.error( 'Error: '+ textStatus );
-                      }
+                              console.error( 'Error: '+ textStatus );
+                    }
          });
 }
-
-function showCaseActivities( caseId, type, context ) {
-    show( context + '-' + type +'-casedetails-'+ caseId , 'table-row' );
-    hide( context+type+caseId+'_show' );
-    show( 'minus'+context+type+caseId+'_hide' );
-}
-
-function hideCaseActivities( caseId , type, context ) {
-    hide( context + '-' + type +'-casedetails-' + caseId );
-    show( context+type+caseId+'_show', 'table-row' );
-    hide( 'minus'+context+type+caseId+'_hide' );
-}
-
 </script>
 {/literal}

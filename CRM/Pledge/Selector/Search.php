@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,12 +79,9 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
                                 'pledge_next_pay_date', 
                                 'pledge_next_pay_amount',    
                                 'pledge_outstanding_amount',    
-                                'pledge_status_id',
-                                'pledge_status',
+                                'pledge_status_id' ,
                                 'pledge_is_test',
-                                'pledge_contribution_page_id',
-                                'pledge_contribution_type',
-                                'pledge_campaign_id'
+                                'pledge_contribution_page_id'
                                  );
 
     /** 
@@ -178,6 +175,7 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
 
         $this->_query->_distinctComponentClause = " DISTINCT(civicrm_pledge.id)";
     }//end of constructor
+
     
     /**
      * This method returns the links that are given for each search row.
@@ -230,6 +228,7 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
         
         return self::$_links;
     } //end of function
+
     
     /**
      * getter for array of the parameters required for creating pager.
@@ -237,14 +236,14 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
      * @param 
      * @access public
      */
-    function getPagerParams( $action, &$params ) 
+    function getPagerParams($action, &$params) 
     {
-        $params['status']    = ts('Pledge') . ' %%StatusMessage%%';
-        $params['csvString'] = null;
+        $params['status']       = ts('Pledge') . ' %%StatusMessage%%';
+        $params['csvString']    = null;
         if ( $this->_limit ) {
-            $params['rowCount'] = $this->_limit;
+            $params['rowCount']     = $this->_limit;
         } else {
-            $params['rowCount'] = CRM_Utils_Pager::ROWCOUNT;
+            $params['rowCount']     = CRM_Utils_Pager::ROWCOUNT;
         }
 
         $params['buttonTop']    = 'PagerTopButton';
@@ -258,14 +257,16 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
      * @return int Total number of rows 
      * @access public
      */
-    function getTotalCount( $action )
+    function getTotalCount($action)
     {
         return $this->_query->searchQuery( 0, 0, null,
                                            true, false, 
                                            false, false, 
                                            false, 
                                            $this->_additionalClause );
+        
     }
+
     
     /**
      * returns all the rows in the given offset and rowCount
@@ -278,7 +279,7 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
      *
      * @return int   the total number of rows for this action
      */
-     function &getRows( $action, $offset, $rowCount, $sort, $output = null ) 
+     function &getRows($action, $offset, $rowCount, $sort, $output = null) 
      {
          $result = $this->_query->searchQuery( $offset, $rowCount, $sort,
                                                false, false, 
@@ -287,14 +288,6 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
                                                $this->_additionalClause );
          // process the result of the query
          $rows = array( );
-
-         // get all pledge status
-         $pledgeStatuses = CRM_Core_OptionGroup::values( 'contribution_status', 
-                                                       false, false, false, null, 'name', false );
-         
-         //get all campaigns.
-         require_once 'CRM/Campaign/BAO/Campaign.php';
-         $allCampaigns = CRM_Campaign_BAO_Campaign::getCampaigns( null, null, false, false, false, true );
          
          //4418 check for view, edit and delete
          $permissions = array( CRM_Core_Permission::VIEW );
@@ -314,22 +307,14 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
                      $row[$property] = $result->$property;
                  }
              }
-
-             //carry campaign on selectors.
-             $row['campaign'] = CRM_Utils_Array::value( $result->pledge_campaign_id, $allCampaigns );
-             $row['campaign_id'] = $result->pledge_campaign_id;
              
-             // add pledge status name
-             $row['pledge_status_name'] = CRM_Utils_Array::value( $row['pledge_status_id'],
-                                                                  $pledgeStatuses );
-             // append (test) to status label
              if ( CRM_Utils_Array::value( 'pledge_is_test', $row ) ) {
-                 $row['pledge_status'] .= ' (test)';
+                 $row['pledge_status_id'] .= ' (test)';
              }
              
              $hideOption = array();
              if ( CRM_Utils_Array::key( 'Cancelled', $row ) ||
-                  CRM_Utils_Array::key( 'Completed', $row ) ) {
+                  CRM_Utils_Array::key('Completed', $row ) ) {
                  $hideOption[] = 'Cancel';
              }
              
@@ -347,14 +332,13 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
                  CRM_Contact_BAO_Contact_Utils::getImage( $result->contact_sub_type ? 
                                                           $result->contact_sub_type : $result->contact_type ,false,$result->contact_id );
              $rows[] = $row;
-             
          }
-         
          return $rows;
      }
      
+     
      /**
-      * @return array  $qill    which contains an array of strings
+      * @return array              $qill         which contains an array of strings
       * @access public
       */
      
@@ -393,11 +377,6 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
                                                 'name'      => ts('Balance'),
                                                 ),
                                           array(
-                                                'name'      => ts('Pledged For'),
-                                                'sort'      => 'pledge_contribution_type',
-                                                'direction' => CRM_Utils_Sort::DONTCARE,
-                                                ),
-                                          array(
                                                 'name'      => ts('Pledge Made'),
                                                 'sort'      => 'pledge_create_date',
                                                 'direction' => CRM_Utils_Sort::DESCENDING,
@@ -414,7 +393,7 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
                                                 ),
                                           array(
                                                 'name'      => ts('Status'),
-                                                'sort'      => 'pledge_status',
+                                                'sort'      => 'pledge_status_id',
                                                 'direction' => CRM_Utils_Sort::DONTCARE,
                                                 ),
                                           array('desc'      => ts('Actions') ),
@@ -436,8 +415,7 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
         return self::$_columnHeaders;
     }
     
-    function &getQuery( )
-    {
+    function &getQuery( ) {
         return $this->_query;
     }
 
@@ -447,8 +425,7 @@ class CRM_Pledge_Selector_Search extends CRM_Core_Selector_Base
      * @param string $output type of output 
      * @return string name of the file 
      */ 
-     function getExportFileName( $output = 'csv')
-     { 
+     function getExportFileName( $output = 'csv') { 
          return ts('Pledge Search'); 
      } 
 

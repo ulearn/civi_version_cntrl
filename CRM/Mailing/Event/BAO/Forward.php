@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -53,7 +53,6 @@ class CRM_Mailing_Event_BAO_Forward extends CRM_Mailing_Event_DAO_Forward {
         $q =& CRM_Mailing_Event_BAO_Queue::verify($job_id, $queue_id, $hash);
         
         $successfulForward = false;
-        $contact_id = null;
         if (! $q) {
             return $successfulForward;
         }
@@ -92,14 +91,13 @@ class CRM_Mailing_Event_BAO_Forward extends CRM_Mailing_Event_DAO_Forward {
         require_once 'CRM/Core/Transaction.php';
         $transaction = new CRM_Core_Transaction( );
         
-        if ( isset($dao->queue_id) || 
-             (isset($dao->do_not_email) && $dao->do_not_email == 1) ) {
+        if (isset($dao->queue_id) || $dao->do_not_email == 1) {
             /* We already sent this mailing to $forward_email, or we should
              * never email this contact.  Give up. */
             return $successfulForward;
         }
 
-        civicrm_api_include('contact', false, 2);
+        require_once 'api/v2/Contact.php';
         
         $contact_params = array('email' => $forward_email);
         $count = civicrm_contact_search_count($contact_params);
@@ -116,7 +114,7 @@ class CRM_Mailing_Event_BAO_Forward extends CRM_Mailing_Event_DAO_Forward {
             $formatted['onDuplicate'] = CRM_Import_Parser::DUPLICATE_SKIP;
             $formatted['fixAddress'] = true;
             $contact =& civicrm_contact_format_create($formatted);
-            if ( civicrm_error( $contact ) ) {
+            if (civicrm_error($contact, CRM_Core_Error)) {
                 return $successfulForward;
             }
             $contact_id = $contact['id'];
@@ -183,7 +181,7 @@ class CRM_Mailing_Event_BAO_Forward extends CRM_Mailing_Event_DAO_Forward {
         $params = array('event_queue_id' => $queue->id,
                         'job_id'        => $job_id,
                         'hash'          => $queue->hash);
-        if (is_a($result, 'PEAR_Error')) {
+        if (is_a($result, PEAR_Error)) {
             /* Register the bounce event */
             $params = array_merge($params,
                 CRM_Mailing_BAO_BouncePattern::match($result->getMessage()));
@@ -313,16 +311,7 @@ class CRM_Mailing_Event_BAO_Forward extends CRM_Mailing_Event_DAO_Forward {
             $query .= " GROUP BY $queue.id ";
         }
 
-        $orderBy = "sort_name ASC, {$forward}.time_stamp DESC";
-        if ($sort) {
-            if ( is_string( $sort ) ) {
-                $orderBy = $sort;
-            } else {
-                $orderBy = trim( $sort->orderBy() );
-            }
-        }
-
-        $query .= " ORDER BY {$orderBy} ";
+        $query .= " ORDER BY $contact.sort_name, $forward.time_stamp DESC ";
 
         if ($offset||$rowCount) {//Added "||$rowCount" to avoid displaying all records on first page
             $query .= ' LIMIT ' 

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -115,13 +115,13 @@ class CRM_Contact_Form_Task_PickProfile extends CRM_Contact_Form_Task {
         if ( CRM_Core_Permission::access( 'Quest' ) ) {
             $this->_contactTypes['Student'] = 'Student';            
         }
-                
-        foreach($this->_contactIds as $id) {
-            $this->_contactTypes   = CRM_Contact_BAO_Contact::getContactTypes( $id );
-        }
         
         //add Contact type profiles
         $this->_contactTypes[] = 'Contact';
+        
+        foreach($this->_contactIds as $id) {
+            $this->_contactTypes   = CRM_Contact_BAO_Contact::getContactTypes( $id );
+        }
         
         require_once "CRM/Core/BAO/UFGroup.php";
         $profiles = CRM_Core_BAO_UFGroup::getProfiles($this->_contactTypes);

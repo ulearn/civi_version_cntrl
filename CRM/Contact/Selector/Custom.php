@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id: Selector.php 11510 2007-09-18 09:21:34Z lobo $
  *
  */
@@ -139,26 +139,8 @@ class CRM_Contact_Selector_Custom extends CRM_Core_Selector_Base implements CRM_
         $this->_formValues        = $formValues;
         $this->_includeContactIds = $includeContactIds;
 
-        require_once( 'CRM/Core/Extensions.php' );
-        $ext = new CRM_Core_Extensions();
-
-        if( ! $ext->isExtensionKey( $customSearchClass ) ) {
-            if( $ext->isExtensionClass( $customSearchClass ) ) {
-                $customSearchFile = $ext->classToPath( $customSearchClass );
-                require_once( $customSearchFile );
-            } else {
-                require_once( str_replace( '_', DIRECTORY_SEPARATOR, $customSearchClass ) . '.php' );
-            }
-            eval( '$this->_search = new ' . $customSearchClass . '( $formValues );' );
-        } else {
-            $customSearchFile = $ext->keyToPath( $customSearchClass, 'search' );
-            require_once( $customSearchFile );
-            eval( '$this->_search = new ' . $ext->keyToClass( $customSearchClass, 'search' ) . '( $formValues );' );
-        }
-
-
-
-        
+        require_once( str_replace( '_', DIRECTORY_SEPARATOR, $customSearchClass ) . '.php' );
+        eval( '$this->_search = new ' . $customSearchClass . '( $formValues );' );
     }//end of constructor
 
 

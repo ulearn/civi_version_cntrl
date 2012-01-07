@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,8 +32,8 @@
  * @package CiviCRM_APIv2
  * @subpackage API_Location
  *
- * @copyright CiviCRM LLC (c) 2004-2011
- * @version $Id: Location.php 33379 2011-03-25 00:49:59Z kurund $
+ * @copyright CiviCRM LLC (c) 2004-2010
+ * @version $Id: Location.php 27847 2010-05-21 17:20:58Z mover $
  */
 
 /**
@@ -61,7 +61,7 @@ function civicrm_location_add( &$params ) {
     
     $locationTypeId = CRM_Utils_Array::value( 'location_type_id', $params );
     if ( !$locationTypeId && 
-         '2.0' == CRM_Utils_Array::value( 'location_format', $params ) ) {
+         '3.0' != CRM_Utils_Array::value( 'version', $params ) ) {
         require_once 'CRM/Core/DAO/LocationType.php';
         $locationTypeDAO = new CRM_Core_DAO_LocationType();
         $locationTypeDAO->name      = $params['location_type'];
@@ -78,19 +78,13 @@ function civicrm_location_add( &$params ) {
     $location =& _civicrm_location_add( $params, $locationTypeId );
     return $location;
 }
-/*
- * Correctly named wrapper for 'add' function
- */
-function civicrm_location_create($params){
-    $result = civicrm_location_add( $params );
-    return $result;
-    
-}
+
 /**
  *  Update a specified location with the provided property values.
  * 
  *  @param  object  $contact        A valid Contact object (passed by reference).
  *  @param  string  $location_id    Valid (db-level) id for location to be updated. 
+
  *  @param  Array   $params         Associative array of property name/value pairs to be updated
  *
  *  @return Location object with updated property values
@@ -111,11 +105,10 @@ function civicrm_location_update( $params ) {
     
     $unsetVersion = false;
     $locationTypes = array( );
-    $hasLocBlockId = false;
     $allLocationTypes = CRM_Core_PseudoConstant::locationType( true );
-    if ( '2.0' == CRM_Utils_Array::value( 'location_format', $params )  ) {
-        //force to use 3.0 location_format for get location api's.
-        $params['location_format'] = '3.0';
+    if ( '3.0' != CRM_Utils_Array::value( 'version', $params )  ) {
+        //force to use 3.0 version for get location api's.
+        $params['version'] = '3.0';
         $unsetVersion = true;
         
         if ( ! ( $locationTypeId = CRM_Utils_Array::value( 'location_type_id', $params ) ) && 
@@ -135,38 +128,27 @@ function civicrm_location_update( $params ) {
         $locTypeIds = array( );
         foreach ( array( 'email', 'phone', 'im', 'address', 'openid' ) as $name ) {
             if ( isset( $params[$name] ) && is_array( $params[$name]) ) {
-                foreach ( $params[$name] as $count => &$values ) {
-                    $locName   = CRM_Utils_Array::value( 'location_type',    $values );
-                    $LocTypeId = CRM_Utils_Array::value( 'location_type_id', $values );
-                    if ( $locName && !in_array( $locName, $locationTypes ) ) $locationTypes[] = $locName;  
-                    if ( $LocTypeId ) {
-                        $locTypeIds[$LocTypeId] = $LocTypeId;
-                    } else if ( in_array( $locName, $allLocationTypes ) ) {
-                        $values['location_type_id'] = array_search( $locName, $allLocationTypes );
+                foreach ( $params[$name] as $count => $values ) {
+                    if ( ($name = CRM_Utils_Array::value( 'location_type', $values)) &&
+                         !in_array( $name, $locationTypes ) ) {
+                        $locationTypes[] = $name;
                     }
-                    if ( !$hasLocBlockId && CRM_Utils_Array::value( 'id', $values ) ) $hasLocBlockId = true;
+                    if ( ($id = CRM_Utils_Array::value( 'location_type_id', $values)) &&
+                         !in_array( $id, $locTypeIds) ) {
+                        $locTypeIds[] = $id;
+                    }
                 }
             }
         }
         
         //get all location types.
         foreach ( $locTypeIds as $locId ) {
-            $name = CRM_Utils_Array::value( $locId, $allLocationTypes );
-            if ( !$name ) return civicrm_create_error( ts('Invalid Location Type Id : %1', array( 1 => $locId ) ) );
-            if ( !in_array( $name, $locationTypes ) ) $locationTypes[] = $name;
+            if ( ($name = CRM_Utils_Array::value( $locId, $allLocationTypes)) &&
+                 !in_array( $name, $locationTypes ) ) {
+                $locationTypes[] = $name;
+            }
         }
     }
-    
-    $invalidTypes = array( );
-    foreach ( $locationTypes as $name ) {
-        if ( !in_array( $name, $allLocationTypes ) ) $invalidTypes[$name] = $name; 
-    }
-    if ( !empty( $invalidTypes ) ) {
-        return civicrm_create_error( ts( "Invalid Location Type(s) : %1", array( 1 => implode( ', ', $invalidTypes ) ) ) );
-    }
-    
-    //allow to swap locations.
-    if ( $hasLocBlockId ) $locationTypes = $allLocationTypes; 
     
     if ( !empty( $locationTypes ) ) {
         $params['location_type'] = $locationTypes;
@@ -178,7 +160,7 @@ function civicrm_location_update( $params ) {
     $locations =& civicrm_location_get( $params );
     
     if ( $unsetVersion ) {
-        unset( $params['location_format'] );
+        unset( $params['version'] );
     }
     
     if ( CRM_Utils_System::isNull( $locations ) ) {
@@ -264,7 +246,7 @@ function civicrm_location_get( $contact ) {
  */
 function _civicrm_location_add( &$params, $locationTypeId = null ) {
     // convert api params to 3.0 format.
-    if ( '2.0' == CRM_Utils_Array::value( 'location_format', $params ) ) {
+    if ( '3.0' != CRM_Utils_Array::value( 'version', $params ) ) {
         _civicrm_format_params_v2_to_v3( $params, $locationTypeId );
     }
     
@@ -395,7 +377,7 @@ function _civicrm_location_add( &$params, $locationTypeId = null ) {
     }
     
     // CRM-4800
-    if ( 2.0 == CRM_Utils_Array::value( 'location_format', $params ) ) {
+    if ( 3.0 != CRM_Utils_Array::value( 'version', $params ) ) {
         $locArray['location_type_id'] = $locationTypeId;
     }
     
@@ -410,7 +392,7 @@ function _civicrm_location_add( &$params, $locationTypeId = null ) {
  */
 function _civicrm_location_update( $params, $locations ) {
     // convert api params to 3.0 format.
-    if ( '2.0' == CRM_Utils_Array::value( 'location_format', $params ) ) {
+    if ( '3.0' != CRM_Utils_Array::value( 'version', $params ) ) {
         _civicrm_format_params_v2_to_v3( $params );
     }
     
@@ -516,7 +498,7 @@ function _civicrm_location_update( $params, $locations ) {
     }
     
     // CRM-4800
-    if ( 2.0 == CRM_Utils_Array::value( 'location_format', $params ) ) {
+    if ( 3.0 != CRM_Utils_Array::value( 'version', $params ) ) {
         $locArray['location_type_id'] = $locationTypeId;
     }
     
@@ -579,7 +561,7 @@ function &_civicrm_location_get( $contact, $locationTypes = array( ) ) {
     
     
     // CRM-4800
-    if ( '2.0' == CRM_Utils_Array::value( 'location_format', $contact ) ) {
+    if ( '3.0' != CRM_Utils_Array::value( 'version', $contact ) ) {
         _civicrm_location_get_v3_to_v2( $locValues );
     }
     
@@ -615,27 +597,12 @@ function _civicrm_location_check_params( &$params ) {
     
     //lets have user option to send location type id or location type.
     if ( !$errorField && 
-         '2.0' == CRM_Utils_Array::value( 'location_format', $params ) &&
+         '3.0' != CRM_Utils_Array::value( 'version', $params ) &&
          !CRM_Utils_Array::value( 'location_type_id', $params ) && 
          !CRM_Utils_Array::value( 'location_type', $params ) ) {
         $errorField = 'location_type';
     }
-
-    if ( !$errorField ) {
-        $blocks = array( 'address', 'email', 'phone', 'im', 'website' );
-        $emptyAddressBlock = true;
-        foreach( $blocks as $block ) {
-            if ( isset( $params[$block] ) && !empty( $params[$block]  ) ) {
-                $emptyAddressBlock = false;
-                break;
-            }
-        }
-
-        if ( $emptyAddressBlock ) {
-            return civicrm_create_error( 'Please set atleast one location block. ( address or email or phone or im or website)' );
-        }
-    }
-
+    
     if ( $errorField ) {
         return civicrm_create_error( "Required fields not found for location $errorField" ); 
     }

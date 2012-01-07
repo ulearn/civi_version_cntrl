@@ -7,7 +7,7 @@ README file for CiviCRM
 4. Installation
 5. Support
 6. Developers
-Neil
+
 
 *************************
 1. Who

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -40,8 +40,8 @@ require_once 'CRM/Core/Page/Basic.php';
  * Page to display / edit the header / footer of a mailing
  *
  */
-class CRM_Mailing_Page_Report extends CRM_Core_Page_Basic
-{
+class CRM_Mailing_Page_Report extends CRM_Core_Page_Basic {
+
     public $_mailing_id;
 
     /**
@@ -54,18 +54,15 @@ class CRM_Mailing_Page_Report extends CRM_Core_Page_Basic
         return 'CRM_Mailing_BAO_Mailing';
     }
 
-    function &links()
-    {
+    function &links() {
         return CRM_Core_DAO::$_nullObject;
     }
 
-    function editForm()
-    {
+    function editForm() {
         return null;
     }
 
-    function editName()
-    {
+    function editName() {
         return 'CiviMail Report';
     }
 
@@ -74,28 +71,30 @@ class CRM_Mailing_Page_Report extends CRM_Core_Page_Basic
      *
      * @return string user context.
      */
-    function userContext( $mode = null ) 
+    function userContext($mode = null) 
     {
         return 'civicrm/mailing/report';
     }
 
-    function userContextParams( $mode = null)
-    {
+    function userContextParams($mode = null) {
         return 'reset=1&mid=' . $this->_mailing_id;
     }
 
 
-    function run()
-    {
-        $this->_mailing_id = CRM_Utils_Request::retrieve( 'mid', 'Positive', $this );
-        
+    function run() {
+        $this->_mailing_id = CRM_Utils_Request::retrieve('mid', 'Positive',
+                                                         $this);
+
         // check that the user has permission to access mailing id
         require_once 'CRM/Mailing/BAO/Mailing.php';
         CRM_Mailing_BAO_Mailing::checkPermission( $this->_mailing_id );
         
         require_once 'CRM/Mailing/BAO/Mailing.php';
-        $report =& CRM_Mailing_BAO_Mailing::report( $this->_mailing_id );
-	
+        $report =& CRM_Mailing_BAO_Mailing::report($this->_mailing_id);
+
+        if ( count($report['jobs']) > 1 ) {
+            CRM_Core_Error::statusBounce(ts('Selected Mailing has more than one live job.'));
+        }   
         //get contents of mailing
         CRM_Mailing_BAO_Mailing::getMailingContent( $report, $this ); 
         
@@ -106,12 +105,11 @@ class CRM_Mailing_Page_Report extends CRM_Core_Page_Basic
         if ( $context == 'activitySelector' ) {
             $backUrl      = CRM_Utils_System::url( 'civicrm/contact/view', "reset=1&cid={$cid}&selectedChild=activity" );
             $backUrlTitle = ts( 'Back to Activities');
-        } else if ( $context == 'activity' ) {
+        } else if( $context == 'activity' ) {
             $atype = CRM_Utils_Request::retrieve( 'atype', 'Positive', $this );
             $aid   = CRM_Utils_Request::retrieve( 'aid',   'Positive', $this );
             
-            $backUrl      = CRM_Utils_System::url( 'civicrm/activity/view', 
-                                                   "atype={$atype}&action=view&reset=1&id={$aid}&cid={$cid}&context=activity" );
+            $backUrl      = CRM_Utils_System::url( 'civicrm/activity/view', "atype={$atype}&action=view&reset=1&id={$aid}&cid={$cid}&context=activity" );
             $backUrlTitle = ts( 'Back to Activity'); 
         } else {
             $backUrl      = CRM_Utils_System::url( 'civicrm/mailing', 'reset=1' );

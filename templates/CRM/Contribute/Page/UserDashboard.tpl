@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -46,7 +46,7 @@
                     <td>{$row.contribution_type}</td>
                     <td>{$row.receive_date|truncate:10:''|crmDate}</td>
                     <td>{$row.receipt_date|truncate:10:''|crmDate}</td>
-                    <td>{$row.contribution_status}</td>
+                    <td>{$row.contribution_status_id}</td>
                 </tr>
             {/foreach}
         </table>

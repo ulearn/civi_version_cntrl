@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -44,16 +44,14 @@
        <div class="action-link">
            <a accesskey="N" href="{$newEventURL}" class="button"><span><div class="icon add-icon"></div>{ts}Add Event Registration{/ts}</span></a>
             {if $accessContribution and $newCredit}
-                <a accesskey="N" href="{$newCreditURL}" class="button"><span><div class="icon add-icon"></div>{ts}Submit Credit Card Event Registration{/ts}</a></span>
+                <a accesskey="N" href="{$newCreditURL}" class="button"><span>&raquo; {ts}Submit Credit Card Event Registration{/ts}</a></span>
             {/if}
             <br/ ><br/ >
        </div>
    {/if}
 
     {if $rows}
-    	{include file="CRM/common/pager.tpl" location="top"}
         {include file="CRM/Event/Form/Selector.tpl"}
-	{include file="CRM/common/pager.tpl" location="bottom"}
     {else}
        <div class="messages status">
            <table class="form-layout">

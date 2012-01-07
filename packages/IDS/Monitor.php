@@ -303,15 +303,9 @@ class IDS_Monitor
         }
 
         // check if this field is part of the exceptions
-        if (is_array($this->exceptions)) {
-            foreach($this->exceptions as $exception) {
-                if(!preg_match('/^\//', $exception)) {
-                    $exception = '/' . preg_quote($exception, '/') . '/';
-                }
-                if(preg_match($exception, $key)) {
-                    return false;					
-                }        		
-            }
+        if (is_array($this->exceptions)
+            && in_array($key, $this->exceptions, true)) {
+            return false;
         }
 
         // check for magic quotes and remove them if necessary
@@ -377,7 +371,6 @@ class IDS_Monitor
      * @param  mixed $key
      * @param  mixed $value
      * @since  0.5
-     * @throws Exception
      *
      * @return array
      */
@@ -481,48 +474,34 @@ class IDS_Monitor
          */
         $purified = preg_replace('/\s+alt="[^"]*"/m', null, $purified);
         $purified = preg_replace('/=?\s*"\s*"/m', null, $purified);
-        
-        $original = preg_replace('/\s+alt="[^"]*"/m', null, $original);
+
         $original = preg_replace('/=?\s*"\s*"/m', null, $original);
-        $original = preg_replace('/style\s*=\s*([^"])/m', 'style = "$1', $original);
-        
-        # strip whitespace between tags
-        $original = preg_replace('/>\s*</m', '><', $original);
-        $purified = preg_replace('/>\s*</m', '><', $purified);
-        
-        $original = preg_replace(
-            '/(=\s*(["\'`])[^>"\'`]*>[^>"\'`]*["\'`])/m', 'alt$1', $original
-        );
+        $original = preg_replace('/\s+alt=?/m', null, $original);
 
-        // no purified html is left
-        if (!$purified) {
-            return $original;
-        }
-        
-        // calculate the diff length
-        $length = mb_strlen($original) - mb_strlen($purified);
-
+        // check which string is longer
+        $length = (strlen($original) - strlen($purified));
         /*
          * Calculate the difference between the original html input
          * and the purified string.
          */
-        $array_1 = str_split(html_entity_decode(urldecode($original)));
-        $array_2 = str_split(stripslashes($purified));
-
-        // create an array containing the single character differences
-        $differences = array();
-        foreach ($array_1 as $key => $value) {
-            if (!isset($array_2[$key]) || $value !== $array_2[$key]) {
-                $differences[] = $value;
+        if ($length > 0) {
+            $array_2 = str_split($original);
+            $array_1 = str_split($purified);
+        } else {
+            $array_1 = str_split($original);
+            $array_2 = str_split($purified);
+        }
+        foreach ($array_2 as $key => $value) {
+            if (!isset($array_1[$key]) || ($value !== $array_1[$key])) {
+                $array_1   = array_reverse($array_1);
+                $array_1[] = $value;
+                $array_1   = array_reverse($array_1);
             }
         }
-        
+
         // return the diff - ready to hit the converter and the rules
-        if(intval($length) <= 10) {
-            $diff = trim(join('', $differences));
-        } else {
-            $diff = substr(trim(join('', $differences)), 0, strlen($original));
-        }
+        $diff = trim(join('', array_reverse(
+            (array_slice($array_1, 0, $length)))));
 
         // clean up spaces between tag delimiters
         $diff = preg_replace('/>\s*</m', '><', $diff);
@@ -531,7 +510,7 @@ class IDS_Monitor
         $diff = preg_replace('/[^<](iframe|script|embed|object' .
             '|applet|base|img|style)/m', '<$1', $diff);
 
-        if (!$diff) {
+        if ($original == $purified && !$redux) {
             return null;
         }
 
@@ -558,14 +537,14 @@ class IDS_Monitor
             array_walk_recursive($tmp_value, array($this, '_jsonConcatContents'));
             $value = $this->tmpJsonString;
         } else {
-            $this->tmpJsonString .=  " " . $tmp_value . "\n";
+        	$this->tmpJsonString .=  " " . $tmp_value . "\n";
         }
 
         if($tmp_key && is_array($tmp_key) || is_object($tmp_key)) {
             array_walk_recursive($tmp_key, array($this, '_jsonConcatContents'));
             $key = $this->tmpJsonString;
         } else {
-            $this->tmpJsonString .=  " " . $tmp_key . "\n";
+        	$this->tmpJsonString .=  " " . $tmp_key . "\n";
         }
 
         return array($key, $value);
@@ -586,9 +565,9 @@ class IDS_Monitor
         if(is_string($key) && is_string($value)) {
             $this->tmpJsonString .=  $key . " " . $value . "\n";
         } else {
-            $this->_jsonDecodeValues(
-                json_encode($key), json_encode($value)
-            );
+        	$this->_jsonDecodeValues(
+        		json_encode($key), json_encode($value)
+        	);
         }
     }
 
@@ -703,8 +682,7 @@ class IDS_Monitor
     /**
      * Adds a value to the json array
      *
-     * @param  string the value containing JSON data
-     * @since  0.5.3
+     * @since 0.5.3
      *
      * @return void
      */

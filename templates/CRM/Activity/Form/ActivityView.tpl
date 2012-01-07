@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -45,18 +45,6 @@
         <tr>
             <td class="label">{ts}Subject{/ts}</td><td class="view-value">{$values.subject}</td>
         </tr>  
-
-	{if $values.campaign}
-        <tr>
-            <td class="label">{ts}Campaign{/ts}</td><td class="view-value">{$values.campaign}</td>
-        </tr>
-        {/if}
-        
-	{if $values.engagement_level AND 
-	    call_user_func( array( 'CRM_Campaign_BAO_Campaign', 'isCampaignEnable' ) )}
-	    <td class="label">{ts}Engagement Level{/ts}</td><td class="view-value">{$values.engagement_level}</td>
-	{/if}
-	
         <tr>
             <td class="label">{ts}Date and Time{/ts}</td><td class="view-value">{$values.activity_date_time|crmDate }</td>
         </tr> 
@@ -75,9 +63,7 @@
                               <td>
                                   {$mailingReport.mailing.body_text|mb_truncate:30|escape|nl2br}
                                   <br />
-                                  {if $values.mailingId}
-                                    <strong><a href='{$textViewURL}'>&raquo; {ts}View complete message{/ts}</a></strong>
-                                  {/if}
+                                  <strong><a href='{$textViewURL}'>&raquo; {ts}View complete message{/ts}</a></strong>
                               </td>
                           </tr>
                       {/if}
@@ -88,9 +74,7 @@
                               <td>
                                   {$mailingReport.mailing.body_html|mb_truncate:30|escape|nl2br}
                                   <br/>                         
-                                  {if $values.mailingId}
-                                    <strong><a href='{$htmlViewURL}'>&raquo; {ts}View complete message{/ts}</a></strong>
-                                  {/if}
+                                  <strong><a href='{$htmlViewURL}'>&raquo; {ts}View complete message{/ts}</a></strong>
                               </td>
                           </tr>
                       {/if}

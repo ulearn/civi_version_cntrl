@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -94,18 +94,14 @@
 <script type="text/javascript">
 function viewRevision( activityId ) {
       var cid= {/literal}"{$contactID}"{literal};
-      var type = {/literal}"{$type}"{literal};
-      var viewAct = cj("#view-activity" + type+ ".ui-dialog-content" );
       var viewUrl = {/literal}"{crmURL p='civicrm/case/activity/view' h=0 q="snippet=4" }"{literal};
-  	  cj("#activity-content" + type, viewAct).load( viewUrl + "&cid="+cid + "&aid=" + activityId +"&type=" + type);
+  	  cj("#activity-content").load( viewUrl + "&cid="+cid + "&aid=" + activityId);
 }
 
 function listRevisions( activityId ) {
       var cid= {/literal}"{$contactID}"{literal};
-      var type = {/literal}"{$type}"{literal};
-      var viewAct = cj("#view-activity" + type + ".ui-dialog-content" );
       var viewUrl = {/literal}"{crmURL p='civicrm/case/activity/view' h=0 q="snippet=4" }"{literal};
-  	  cj("#activity-content" + type, viewAct).load( viewUrl + "&cid=" + cid + "&aid=" + activityId + "&revs=1" +"&type=" + type);
+  	  cj("#activity-content").load( viewUrl + "&cid=" + cid + "&aid=" + activityId + "&revs=1" );
 }
 </script>
 {/literal}

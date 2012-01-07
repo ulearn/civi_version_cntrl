@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -196,7 +196,6 @@ function civicrm_config( $frontend = false ) {
                     'CMSdbPass'  => $jConfig->password,
                     'CMSdbHost'  => $jConfig->host,
                     'CMSdbName'  => $jConfig->db,
-                    'siteKey'    => md5( uniqid( '', true ) . $liveSite ),
                     );
 
     if ( $frontend ) {

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -70,18 +70,10 @@ class CRM_Contact_BAO_SearchCustom {
             return $error;
         }
 
-        require_once( 'CRM/Core/Extensions.php' );
-        $ext = new CRM_Core_Extensions();
+        $customSearchFile = str_replace( '_',
+                                         DIRECTORY_SEPARATOR,
+                                         $customSearchClass ) . '.php';
         
-        if( ! $ext->isExtensionKey( $customSearchClass ) ) {
-            $customSearchFile = str_replace( '_',
-                                             DIRECTORY_SEPARATOR,
-                                             $customSearchClass ) . '.php';
-        } else {
-            $customSearchFile = $ext->keyToPath( $customSearchClass );
-            $customSearchClass = $ext->keyToClass( $customSearchClass );
-        }
-
         $error = include_once( $customSearchFile );
         if ( $error == false ) {
             CRM_Core_Error::fatal( 'Custom search file: ' . $customSearchFile . ' does not exist. Please verify your custom search settings in CiviCRM administrative panel.' );

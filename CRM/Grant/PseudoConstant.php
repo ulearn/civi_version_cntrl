@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,12 +29,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
-
-require_once 'CRM/Core/OptionGroup.php';
 
 /**
  * This class holds all the Pseudo constants that are specific to Grant. This avoids
@@ -69,7 +67,8 @@ class CRM_Grant_PseudoConstant extends CRM_Core_PseudoConstant
     {
         if ( ! self::$grantStatus ) {
             self::$grantStatus = array( );
-            self::$grantStatus = CRM_Core_OptionGroup::values( 'grant_status' );
+            require_once "CRM/Core/OptionGroup.php";
+            self::$grantStatus =  CRM_Core_OptionGroup::values("grant_status");
         }
         
         if( $id ) {
@@ -90,7 +89,8 @@ class CRM_Grant_PseudoConstant extends CRM_Core_PseudoConstant
     {
         if ( ! self::$grantType ) {
             self::$grantType = array( );
-            self::$grantType = CRM_Core_OptionGroup::values( 'grant_type' );
+            require_once "CRM/Core/OptionGroup.php";
+            self::$grantType =  CRM_Core_OptionGroup::values("grant_type");
         }
         
         If( $id ) {

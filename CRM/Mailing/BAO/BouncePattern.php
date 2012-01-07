@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -63,6 +63,9 @@ class CRM_Mailing_BAO_BouncePattern extends CRM_Mailing_DAO_BouncePattern {
         $bp->find();
         
         while ($bp->fetch()) {
+            if (! is_array(self::$_patterns[$bp->bounce_type_id])) {
+                self::$_patterns[$bp->bounce_type_id] = array();
+            }
             self::$_patterns[$bp->bounce_type_id][] = $bp->pattern;
         }
 
@@ -93,23 +96,17 @@ class CRM_Mailing_BAO_BouncePattern extends CRM_Mailing_DAO_BouncePattern {
         }
         foreach (self::$_patterns as $type => $re) {
             if (preg_match($re, $message, $matches)) {
-                $bounce = array(
-                                'bounce_type_id' => $type,
-                                'bounce_reason' => $matches[0]
-                                );
-                
-                return $bounce;
+                return  array(
+                            'bounce_type_id' => $type,
+                            'bounce_reason' => $matches[0]
+                        );
             }
         }
         
-        
-
-        $bounce = array( 
-                        'bounce_type_id' => null, 
-                        'bounce_reason' => null 
-                         );
-        
-        return $bounce;
+        return  array( 
+                    'bounce_type_id' => null, 
+                    'bounce_reason' => null 
+                );
     }
 
 }

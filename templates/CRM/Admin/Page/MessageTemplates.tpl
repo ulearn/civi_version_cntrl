@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,7 +23,7 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-{capture assign=crmURL}{crmURL p='civicrm/admin/messageTemplates/add' q="action=add&reset=1"}{/capture}
+{capture assign=crmURL}{crmURL p='civicrm/admin/messageTemplates' q="action=add&reset=1"}{/capture}
 {if $action eq 1 or $action eq 2 or $action eq 8}
    {include file="CRM/Admin/Form/MessageTemplates.tpl"}
    
@@ -73,14 +73,7 @@
       </div>
     </div>
   </div>
-
-  <div class="crm-section msg_html-section">
-  <h3 class="header-dark">{$form.pdf_format_id.label}</h3>
-    <div class='text'>
-      {$form.pdf_format_id.html}
-    </div>
-  </div>
-    
+  
   <div id="crm-submit-buttons">{$form.buttons.html}</div>
   </fieldset>
 {/if}
@@ -136,7 +129,7 @@
 
             {if $action ne 1 and $action ne 2 and $type eq 'userTemplates'}
               <div class="action-link">
-                <a href="{crmURL p='civicrm/admin/messageTemplates/add' q="action=add&reset=1"}" id="newMessageTemplates" class="button"><span><div class="icon add-icon"></div>{ts}Add Message Template{/ts}</span></a>
+                <a href="{crmURL q="action=add&reset=1"}" id="newMessageTemplates" class="button"><span><div class="icon add-icon"></div>{ts}Add Message Template{/ts}</span></a>
               </div>
               <div class="spacer"></div>
             {/if}
@@ -163,7 +156,7 @@
     {/literal}
   </script>
 
-{elseif $action ne 1 and $action ne 2 and $action ne 4 and $action ne 8}
+{elseif $action ne 1 and $action ne 2 and $action ne 4}
   <div class="messages status">
       <img src="{$config->resourceBase}i/Inform.gif" alt="{ts}status{/ts}"/>
       {ts 1=$crmURL}There are no Message Templates entered. You can <a href='%1'>add one</a>.{/ts}

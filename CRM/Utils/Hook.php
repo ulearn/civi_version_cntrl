@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,9 +28,9 @@
 
 /**
  *
- * @package CiviCRM_Hook
- * @copyright CiviCRM LLC (c) 2004-2011
- * $Id: $
+ * @package CRM
+ * @copyright CiviCRM LLC (c) 2004-2010
+ * $Id$
  *
  */
 
@@ -94,19 +94,18 @@ class CRM_Utils_Hook {
      * @param string $op         the type of operation being performed
      * @param string $objectName the name of the object
      * @param int    $objectId   the unique identifier for the object 
-     * @params array $links      (optional ) the links array (introduced in v3.2)
      *
      * @return array|null        an array of arrays, each element is a tuple consisting of id, url, img, title, weight
      *
      * @access public
      */
-    static function links( $op, $objectName, &$objectId, &$links, &$mask=null ) {
+    static function links( $op, $objectName, &$objectId ) {
         $config = CRM_Core_Config::singleton( );  
         require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
         return   
             eval( 'return ' .
                   $config->userHookClass .
-                  '::invoke( 5, $op, $objectName, $objectId, $links, $mask, \'civicrm_links\' );' );  
+                  '::invoke( 3, $op, $objectName, $objectId, $op, $op, \'civicrm_links\' );' );  
     }
 
     /** 
@@ -415,26 +414,6 @@ class CRM_Utils_Hook {
                   '::invoke( 2, $objectName, $object, $null, $null, $null, \'civicrm_copy\' );' );
     }
 
-    /**
-     * This hook is called when a contact unsubscribes from a mailing.  It allows modules
-     * to override what the contacts are removed from.
-     *
-     * @param int $mailing_id - the id of the mailing to unsub from
-     * @param int $contact_id - the id of the contact who is unsubscribing
-     * @param array / int $groups - array of groups the contact will be removed from
-     **/
-
-    static function unsubscribeGroups($op, $mailingId, $contactId, &$groups, &$baseGroups) {
-        $config = CRM_Core_Config::singleton( );
-        require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
-        $null =& CRM_Core_DAO::$_nullObject;
-
-        return
-            eval( 'return ' .
-                  $config->userHookClass .
-                  '::invoke(5,$op, $mailingId, $contactId, $groups, $baseGroups, \'civicrm_unsubscribeGroups\');');
-    }
-
     static function invoke( $numParams,
                             &$arg1, &$arg2, &$arg3, &$arg4, &$arg5,
                             $fnSuffix, $fnPrefix ) {
@@ -520,6 +499,18 @@ class CRM_Utils_Hook {
                   '::invoke( 3, $form, $groups, $mailings, $null, $null, \'civicrm_mailingGroups\' );' );
     }
 
+    static function shortcuts( &$options ) {
+        $config = CRM_Core_Config::singleton( );
+        require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
+        $null =& CRM_Core_DAO::$_nullObject;
+
+        return   
+            eval( 'return ' .
+                  $config->userHookClass .
+                  '::invoke( 1, $options, $null, $null, $null, $null, \'civicrm_shortcuts\' );' );
+                                    
+    }
+
     static function membershipTypeValues( &$form, &$membershipTypes ) {
         $config = CRM_Core_Config::singleton( );
         require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
@@ -591,7 +582,7 @@ class CRM_Utils_Hook {
                   '::invoke( 3, $paymentObj, $rawParams, $cookedParams, $null, $null, \'civicrm_alterPaymentProcessorParams\' );' );
     }
 
-    static function alterMailParams( &$params, $context = null ) {
+    static function alterMailParams( &$params ) {
         $config = CRM_Core_Config::singleton( );
         require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
         $null =& CRM_Core_DAO::$_nullObject;
@@ -599,7 +590,7 @@ class CRM_Utils_Hook {
         return   
             eval( 'return ' .
                   $config->userHookClass .
-                  '::invoke( 2, $params, $context, $null, $null, $null, \'civicrm_alterMailParams\' );' );
+                  '::invoke( 1, $params, $null, $null, $null, $null, \'civicrm_alterMailParams\' );' );
     }
 
    /** 
@@ -659,192 +650,4 @@ class CRM_Utils_Hook {
                   '::invoke( 2, $options, $name, $null, $null, $null, \'civicrm_optionValues\' );' );
                                     
     }
-    
-    /**
-     * This hook allows modification of the navigation menu.
-     * @param $params associated array of navigation menu entry to Modify/Add 
-     * @access public
-     */
-    static function navigationMenu( &$params ) {
-        $config =& CRM_Core_Config::singleton( );
-        require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
-        $null =& CRM_Core_DAO::$_nullObject;
-        
-        return   
-            eval( 'return ' .
-                  $config->userHookClass .
-                  '::invoke( 1, $params, $null, $null, $null, $null, \'civicrm_navigationMenu\' );' );
-                                    
-    }
-
-    /**
-     * This hook allows modification of the data used to perform merging of duplicates.
-     * @param string $type the type of data being passed (cidRefs|eidRefs|relTables|sqls)
-     * @param array $data  the data, as described in $type
-     * @param int $mainId  contact_id of the contact that survives the merge
-     * @param int $otherId contact_id of the contact that will be absorbed and deleted
-     * @param array $tables when $type is "sqls", an array of tables as it may have been handed to the calling function
-     *
-     * @access public
-     */
-    static function merge( $type, &$data, $mainId = NULL, $otherId = NULL, $tables = NULL) {
-        $config =& CRM_Core_Config::singleton( );
-        require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
-
-        return
-            eval( 'return ' .
-                $config->userHookClass .
-                '::invoke( 5, $type, $data, $mainId, $otherId, $tables , \'civicrm_merge\' );' );
-
-    }
-
-    /**
-     * This hook provides a way to override the default privacy behavior for notes.
-     * @param array $note (reference) Associative array of values for this note
-     *
-     * @access public
-     */
-    static function notePrivacy( &$noteValues ) {
-        $config =& CRM_Core_Config::singleton( );
-        require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
-        $null =& CRM_Core_DAO::$_nullObject;
-
-        return
-            eval( 'return ' .
-                $config->userHookClass .
-                '::invoke( 1, $noteValues, $null, $null, $null, $null, \'civicrm_notePrivacy\' );' );
-    }
-    
-    /** 
-     * This hook is called before record is exported as CSV
-     * 
-     * @param string $exportTempTable - name of the temporary export table used during export
-     * @param array  $headerRows      - header rows for output
-     * @param array  $sqlColumns      - SQL columns
-     * @param int    $exportMode      - export mode ( contact, contribution, etc...)
-     *  
-     * @return void
-     * @access public 
-     */
-    static function export( &$exportTempTable, &$headerRows, &$sqlColumns, &$exportMode ) {
-        $config = CRM_Core_Config::singleton( );
-        require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
-        $null =& CRM_Core_DAO::$_nullObject;
-        return   
-            eval( 'return ' .
-                  $config->userHookClass .
-                  '::invoke( 4, $exportTempTable, $headerRows, $sqlColumns, $exportMode, $null, \'civicrm_export\' );' );
-    }
-
-    /**
-     * This hook allows modification of the queries constructed from dupe rules.
-     * @param string $obj object of rulegroup class
-     * @param string $type type of queries e.g table / threshold
-     * @param array  $query set of queries
-     *
-     * @access public
-     */
-    static function dupeQuery( $obj, $type, &$query ) {
-        $config =& CRM_Core_Config::singleton( );
-        require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
-        $null =& CRM_Core_DAO::$_nullObject;
-
-        return
-            eval( 'return ' .
-                  $config->userHookClass .
-                  '::invoke( 3, $obj, $type, $query, $null, $null , \'civicrm_dupeQuery\' );' );
-    }
-
-
-    /**
-     * This hook is called AFTER EACH email has been processed by the script bin/EmailProcessor.php
-     *
-     * @param string  $type    type of mail processed: 'activity' OR 'mailing'
-     * @param array  &$params  the params that were sent to the CiviCRM API function
-     * @param object  $mail    the mail object which is an ezcMail class
-     * @param array  &$result  the result returned by the api call
-     * @param string  $action  (optional ) the requested action to be performed if the types was 'mailing'
-     *
-     * @access public
-     */
-    static function emailProcessor( $type, &$params, $mail, &$result, $action = null ) {
-        $config =& CRM_Core_Config::singleton( );
-        require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
-
-        return
-            eval( 'return ' .
-                  $config->userHookClass .
-                  '::invoke( 5, $type, $params, $mail, $result, $action, \'civicrm_emailProcessor\' );' );
-    }
-
-    
-	/**
-     * This hook is called after a row has been processed and the
-     * record (and associated records imported
-     * 
-     * @param string  $object     - object being imported (for now Contact only, later Contribution, Activity, Participant and Member)
-     * @param string  $usage      - hook usage/location (for now process only, later mapping and others)
-     * @param string  $objectRef  - import record object
-     * @param array   $params     - array with various key values: currently
-     *                  contactID       - contact id
-     *                  importID        - row id in temp table
-     *                  importTempTable - name of tempTable
-     *                  fieldHeaders    - field headers
-     *                  fields          - import fields
-     *  
-     * @return void
-     * @access public 
-     */
-    static function import( $object, $usage, &$objectRef, &$params ) {
-        $config = CRM_Core_Config::singleton( );
-        require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
-        $null =& CRM_Core_DAO::$_nullObject;
-        return   
-            eval( 'return ' .
-                  $config->userHookClass .
-                  '::invoke( 4, $object, $usage, $objectRef, $params, $null, $null, \'civicrm_import\' );' );
-    }
-
-    /**
-     * This hook is called when API permissions are checked (cf. civicrm_api3_api_check_permission()
-     * in api/v3/utils.php and _civicrm_api3_permissions() in CRM/Core/DAO/.permissions.php).
-     *
-     * @param string $entity       the API entity (like contact)
-     * @param string $action       the API action (like get)
-     * @param array &$params       the API parameters
-     * @param array &$permisisons  the associative permissions array (probably to be altered by this hook)
-     */
-    static function alterAPIPermissions($entity, $action, &$params, &$permissions)
-    {
-        $config = CRM_Core_Config::singleton();
-        require_once(str_replace('_', DIRECTORY_SEPARATOR, $config->userHookClass) . '.php');
-        $null =& CRM_Core_DAO::$_nullObject;
-        return eval("return {$config->userHookClass}::invoke(4, \$entity, \$action, \$params, \$permissions, \$null, 'civicrm_alterAPIPermissions');");
-    }
-
-    /**
-     * This hook is called from CRM_Core_Selector_Controller through which all searches in civicrm go.
-     * This enables us hook implementors to modify both the headers and the rows
-     *
-     * The BIGGEST drawback with this hook is that you may need to modify the result template to include your
-     * fields. The result files are CRM/{Contact,Contribute,Member,Event...}/Form/Selector.tpl
-     *
-     * However, if you use the same number of columns, you can overwrite the existing columns with the values that
-     * you want displayed. This is a hackish, but avoids template modification.
-     *
-     * @param string $objectName the component name that we are doing the search
-     *                           activity, campaign, case, contact, contribution, event, grant, membership, and pledge
-     * @param array  &$headers   the list of column headers, an associative array with keys: ( name, sort, order )
-     * @param array  &$rows      the list of values, an associate array with fields that are displayed for that component
-     * @param array  &$seletor   the selector object. Allows you access to the context of the search
-     *
-     * @return void  modify the header and values object to pass the data u need
-     */
-    static function searchColumns( $objectName, &$headers, &$rows, &$selector ) {
-        $config = CRM_Core_Config::singleton();
-        require_once(str_replace('_', DIRECTORY_SEPARATOR, $config->userHookClass) . '.php');
-        $null =& CRM_Core_DAO::$_nullObject;
-        return eval("return {$config->userHookClass}::invoke(4, \$objectName, \$headers, \$rows, \$selector, \$null, 'civicrm_searchColumns');");
-    }
-
 }

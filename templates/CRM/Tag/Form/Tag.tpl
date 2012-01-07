@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -34,7 +34,7 @@
 <script type="text/javascript">
 
 options = {ldelim} ajaxURL:"{crmURL p='civicrm/ajax/rest' h=0}"
-       ,closetxt:'<div class="ui-icon ui-icon-close" style="float:left"></div>'
+       ,closetxt:'<div class="icon close-icon"></div>'
       {rdelim} 
 entityID={$entityID};
 entityTable='{$entityTable}';
@@ -47,14 +47,14 @@ cj(document).ready(function(){initTagTree()});
 function initTagTree() {
     //unobsctructive elements are there to provide the function to those not having javascript, no need for the others
     cj(".unobstructive").hide();
-
-    //load js tree.
-    cj("#tagtree").jstree({"plugins" : ["themes", "html_data"]});
-
-    cj("#tagtree ul input:checked").each (function(){
-        cj(this).parents("li").children(".jstree-icon").addClass('highlighted');
+    cj("#tagtree").treeview({
+        animated: "fast",
+        collapsed: true,
+        unique: true
     });
-
+    cj("#tagtree ul input:checked").each (function(){
+        cj(this).parents("li").children(".hit").addClass('highlighted');
+    });
     cj("#tagtree input").change(function(){
         tagid = this.id.replace("check_", "");
 
@@ -69,12 +69,12 @@ function initTagTree() {
         //get current tag label
         var currentTagLabel = cj("#tagLabel_" + tagid ).text( );
         if (this.checked) {
-            //civiREST ('entity_tag','create',{entity_table:entityTable,entity_id:entityID,tag_id:tagid},image);
-            cj().crmAPI ('entity_tag','create',{entity_table:entityTable,entity_id:entityID,tag_id:tagid},options);
+            //civiREST ('entity_tag','add',{entity_table:entityTable,entity_id:entityID,tag_id:tagid},image);
+            cj().crmAPI ('entity_tag','add',{entity_table:entityTable,entity_id:entityID,tag_id:tagid},options);
             // add check to tab label array
             tagsArray.push( currentTagLabel );
         } else {
-            cj().crmAPI ('entity_tag','delete',{entity_table:entityTable,entity_id:entityID,tag_id:tagid},options);
+            cj().crmAPI ('entity_tag','remove',{entity_table:entityTable,entity_id:entityID,tag_id:tagid},options);
             // build array of tag labels
             tagsArray = cj.map(tagsArray, function (a) { 
                  if ( cj.trim( a ) != currentTagLabel ) {
@@ -82,12 +82,8 @@ function initTagTree() {
                  }
              });
         }
-		
-        //showing count of tags in summary tab
-        var existingTagsInTagset = cj('.token-input-delete-token-facebook').length;
-        var tagCount = cj("#tagtree input:checkbox:checked").length + existingTagsInTagset;  
-        cj( '.ui-tabs-nav #tab_tag a' ).html( 'Tags <em>' + tagCount + '</em>');
-
+		//showing count of tags in summary tab
+		cj( '.ui-tabs-nav #tab_tag a' ).html( 'Tags <em>' + cj("#tagtree input:checkbox:checked").length + '</em>');
         //update summary tab 
         tagLabels = tagsArray.join(', ');
         cj("#tags").html( tagLabels );
@@ -122,19 +118,18 @@ function initTagTree() {
 	{/if}
     {/if}
     </p>
-    <div id="tagtree">
-    <ul class="tree">
+    <ul id="tagtree" class="tree">
         {foreach from=$tree item="node" key="id"}
         <li id="tag_{$id}">
             {if ! $node.children}<input name="tagList[{$id}]" id="check_{$id}" type="checkbox" {if $tagged[$id]}checked="checked"{/if}/>{/if}
             {if $node.children}<input name="tagList[{$id}]" id="check_{$id}" type="checkbox" {if $tagged[$id]}checked="checked"{/if}/>{/if}
-            {if $node.children} <span class="hit"></span> {/if} <label for="check_{$id}" id="tagLabel_{$id}">{$node.name}</label> 
+            <label for="check_{$id}" {if $node.children}class="hit"{/if} id="tagLabel_{$id}">{$node.name}</label>
             {if $node.children}
             <ul>
                 {foreach from=$node.children item="subnode" key="subid"}
                     <li id="tag_{$subid}">
                         <input id="check_{$subid}" name="tagList[{$subid}]" type="checkbox" {if $tagged[$subid]}checked="checked"{/if}/>
-                        {if $subnode.children} <span class="hit"></span> {/if} <label for="check_{$subid}" id="tagLabel_{$subid}">{$subnode.name}</label> 
+                        <label for="check_{$subid}" {if $subnode.children}class="hit"{/if} id="tagLabel_{$subid}">{$subnode.name}</label>
                         {if $subnode.children}
                         <ul>
                             {foreach from=$subnode.children item="subsubnode" key="subsubid"}
@@ -152,7 +147,6 @@ function initTagTree() {
         </li>	 
         {/foreach} 
     </ul>
-    </div>
    
       {*foreach from=$tag item="row" key="id"}
 

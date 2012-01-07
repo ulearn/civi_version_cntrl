@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,22 +24,26 @@
  +--------------------------------------------------------------------+
 *}
 {capture assign=newEventURL}{crmURL p='civicrm/event/add' q="action=add&reset=1"}{/capture}
-{capture assign=icalFile}{crmURL p='civicrm/event/ical' q="reset=1" fe=1}{/capture}
-{capture assign=icalFeed}{crmURL p='civicrm/event/ical' q="reset=1&page=1" fe=1}{/capture}
-{capture assign=rssFeed}{crmURL p='civicrm/event/ical' q="reset=1&page=1&rss=1" fe=1}{/capture}
-{capture assign=htmlFeed}{crmURL p='civicrm/event/ical' q="reset=1&page=1&html=1" fe=1}{/capture}
+{capture assign=icalFile}{crmURL p='civicrm/event/ical' q="reset=1"}{/capture}
+{capture assign=icalFeed}{crmURL p='civicrm/event/ical' q="reset=1&page=1"}{/capture}
+{capture assign=rssFeed}{crmURL p='civicrm/event/ical' q="reset=1&page=1&rss=1"}{/capture}
+{capture assign=htmlFeed}{crmURL p='civicrm/event/ical' q="reset=1&page=1&html=1"}{/capture}
+<div class="crm-form-block">
 <div class="float-right">
-    <a href="{$htmlFeed}" target="_blank" title="{ts}HTML listing of current and future public events.{/ts}">
+    <a href="{$htmlFeed}" title="{ts}HTML listing of current and future public events.{/ts}">
     <img src="{$config->resourceBase}i/applications-internet.png" alt="{ts}HTML listing of current and future public events.{/ts}" /></a>&nbsp;&nbsp;
-    <a href="{$rssFeed}" target="_blank" title="{ts}Get RSS 2.0 feed for current and future public events.{/ts}">
+    <a href="{$rssFeed}" title="{ts}Get RSS 2.0 feed for current and future public events.{/ts}">
     <img src="{$config->resourceBase}i/feed-icon.png" alt="{ts}Get RSS 2.0 feed for current and future public events.{/ts}" /></a>&nbsp;&nbsp;
     <a href="{$icalFile}" title="{ts}Download iCalendar file for current and future public events.{/ts}">
     <img src="{$config->resourceBase}i/office-calendar.png" alt="{ts}Download iCalendar file for current and future public events.{/ts}" /></a>&nbsp;&nbsp;
-    <a href="{$icalFeed}" target="_blank" title="{ts}Get iCalendar feed for current and future public events.{/ts}">
+    <a href="{$icalFeed}" title="{ts}Get iCalendar feed for current and future public events.{/ts}">
     <img src="{$config->resourceBase}i/ical_feed.gif" alt="{ts}Get iCalendar feed for current and future public events.{/ts}" /></a>&nbsp;&nbsp;&nbsp;{help id='icalendar'}
 </div>
 {include file="CRM/Event/Form/SearchEvent.tpl"}
+</div>
 
+
+<div class="crm-content-block">
 <div class="action-link">
     <a accesskey="N" href="{$newEventURL}" id="newManageEvent" class="button"><span><div class="icon add-icon"></div>{ts}Add Event{/ts}</span></a>
 <div class="clear"></div>
@@ -61,13 +65,10 @@
             <th>{ts}Public?{/ts}</th>
             <th>{ts}Starts{/ts}</th>
             <th>{ts}Ends{/ts}</th>
-            {if call_user_func(array('CRM_Campaign_BAO_Campaign','isCampaignEnable'))}
-	    <th>{ts}Campaign{/ts}</th>
-	    {/if}
-	    <th>{ts}Active?{/ts}</th>
-    	    <th></th>
-    	    <th class="hiddenElement"></th>
-    	    <th class="hiddenElement"></th>	
+	        <th>{ts}Active?{/ts}</th>
+    		<th></th>
+    		<th class="hiddenElement"></th>
+    		<th class="hiddenElement"></th>	
          </tr>
          </thead>
         {foreach from=$rows item=row}
@@ -78,9 +79,6 @@
             <td class="crm-event-is_public">{if $row.is_public eq 1} {ts}Yes{/ts} {else} {ts}No{/ts} {/if}</td>    
             <td class="crm-event-start_date">{$row.start_date|crmDate:"%b %d, %Y %l:%M %P"}</td>
             <td class="crm-event-end_date">{$row.end_date|crmDate:"%b %d, %Y %l:%M %P"}</td>
-	    {if call_user_func(array('CRM_Campaign_BAO_Campaign','isCampaignEnable'))}
-	    <td class="crm-event-campaign">{$row.campaign}</td>
-	    {/if}
             <td class="crm-event_status" id="row_{$row.id}_status">{if $row.is_active eq 1} {ts}Yes{/ts} {else} {ts}No{/ts} {/if}</td>
     	    <td class="crm-event-actions right nowrap">
         	    <div class="crm-configure-actions">
@@ -106,7 +104,7 @@
         			</li>
         		    {/if}
         		    {if $row.participant_listing_id}
-        		    	<li><a title="Public Participant Listing" class="action-item-wrap" href="{crmURL p='civicrm/event/participant' q="reset=1&id=`$row.id`" fe='true'}">{ts}Public Participant Listing{/ts}</a>
+        		    	<li><a title="Public Participant Listing" class="action-item-wrap" href="{crmURL p='civicrm/event/participant' q="reset=1&id=`$row.id`"}">{ts}Public Participant Listing{/ts}</a>
         		    	</li>
         		    {/if}
                         </ul> 
@@ -139,7 +137,7 @@
 {else}
    {if $isSearch eq 1}
     <div class="status messages">
-        <div class="icon inform-icon"></div>
+        <div class="icon inform-icon"></div></td>
              {capture assign=browseURL}{crmURL p='civicrm/event/manage' q="reset=1"}{/capture}
              {ts}No available Events match your search criteria. Suggestions:{/ts}
              <div class="spacer"></div>
@@ -147,13 +145,16 @@
                 <li>{ts}Check your spelling.{/ts}</li>
                 <li>{ts}Try a different spelling or use fewer letters.{/ts}</li>
                 <li>{ts}Make sure you have enough privileges in the access control system.{/ts}</li>
-             </ul>
+              </ul>
               {ts 1=$browseURL}Or you can <a href='%1'>browse all available Current Events</a>.{/ts}
     </div>
    {else}
     <div class="messages status">
-         <div class="icon inform-icon"></div>
-         {ts 1=$newEventURL}There are no events scheduled for the date range. You can <a href='%1'>add one</a>.{/ts}
+    <table class="form-layout">
+        <tr><div class="icon inform-icon"></div></tr>
+        <tr>{ts 1=$newEventURL}There are no events scheduled for the date range. You can <a href='%1'>add one</a>.{/ts}</tr>
+    </table>
     </div>    
    {/if}
 {/if}
+</div>

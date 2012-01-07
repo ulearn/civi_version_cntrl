@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -40,7 +40,7 @@
   </table>
 </fieldset>
 
-<div class="crm-accordion-wrapper crm-plain_text_email-accordion crm-accordion-closed">
+<div class="crm-accordion-wrapper crm-plaint_text_email-accordion crm-accordion-closed">
     <div class="crm-accordion-header">
         <div class="icon crm-accordion-pointer"></div> 
         {ts}Preview Mailing{/ts}

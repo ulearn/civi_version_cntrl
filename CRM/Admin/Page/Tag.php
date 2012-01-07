@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -81,12 +81,6 @@ class CRM_Admin_Page_Tag extends CRM_Core_Page_Basic
                                                                     'url'   => 'civicrm/admin/tag',
                                                                     'qs'    => 'action=delete&id=%%id%%',
                                                                     'title' => ts('Delete Tag'), 
-                                                                    ),
-                                  CRM_Core_Action::FOLLOWUP => array(
-                                                                    'name'  => ts('Merge'),
-                                                                    'class' => 'merge_tag',
-                                                                    'url'   => 'javascript:',
-                                                                    'title' => ts('Merge Tag')
                                                                     ),
                                   );
         }
@@ -153,17 +147,6 @@ class CRM_Admin_Page_Tag extends CRM_Core_Page_Basic
        }
        $this->assign( 'adminTagSet', $adminTagSet );
        
-       $reservedClause = !CRM_Core_Permission::check('administer reserved tags') ? "AND t1.is_reserved != 1" : '';
-       $query = "SELECT t1.name, t1.id
-FROM civicrm_tag t1 LEFT JOIN civicrm_tag t2 ON t1.id = t2.parent_id
-WHERE t2.id IS NULL {$reservedClause}";
-       $tag = CRM_Core_DAO::executeQuery( $query );
-
-       $mergeableTags  = array();
-       while( $tag->fetch( ) ) {           
-           $mergeableTags[$tag->id] = 1;
-       }
-
        require_once 'CRM/Core/OptionGroup.php';
        $usedFor = CRM_Core_OptionGroup::values('tag_used_for');
        
@@ -200,10 +183,6 @@ WHERE t2.id IS NULL {$reservedClause}";
            
            if ( $values[$tag->id]['is_tagset'] && !CRM_Core_Permission::check('administer Tagsets') ) {
                $newAction = 0;
-           }
-
-           if ( array_key_exists($tag->id, $mergeableTags) ) {
-               $newAction += CRM_Core_Action::FOLLOWUP;
            }
 
            // populate action links

@@ -223,7 +223,7 @@ class IDS_Report implements Countable, IteratorAggregate
      * IDS_Event object the IteratorAggregate is implemented. One can easily
      * use foreach() to iterate through all stored IDS_Event objects.
      *
-     * @return ArrayObject the event collection
+     * @return Iterator
      */
     public function getIterator()
     {

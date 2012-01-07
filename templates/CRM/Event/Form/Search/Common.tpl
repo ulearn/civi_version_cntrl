@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -71,11 +71,6 @@
 	{$form.participant_fee_amount_high.label} &nbsp; {$form.participant_fee_amount_high.html}
      </td> 
 </tr>
-
-{* campaign in contribution search *}
-{include file="CRM/Campaign/Form/addCampaignToComponent.tpl" campaignContext="componentSearch" 
-campaignTrClass='' campaignTdClass='crm-event-form-block-participant_campaign_id'}
-
 {if $participantGroupTree }
 <tr>
     <td colspan="4">

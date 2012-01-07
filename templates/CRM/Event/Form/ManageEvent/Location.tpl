@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -44,7 +44,7 @@
 				</td>
 				{foreach from=$form.location_option key=key item =item}
 					{if $key|is_numeric}
-						<td class="value"><strong>{$item.html}</strong></td>
+						<td class="fields"><strong>{$item.html}</strong></td>
 				    {/if}
                 {/foreach} 
 			 </tr>
@@ -52,7 +52,7 @@
 				<td class="labels">
 					{$form.loc_event_id.label}
 				</td>
-				<td class="value" colspan="2">
+				<td class="fields" colspan="2">
 					{$form.loc_event_id.html|crmReplace:class:huge}
 				</td>
 			</tr>

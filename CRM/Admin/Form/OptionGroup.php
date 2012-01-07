@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -70,24 +70,12 @@ class CRM_Admin_Form_OptionGroup extends CRM_Admin_Form
                    'description',
                    ts('Description'),
                    CRM_Core_DAO::getAttribute( 'CRM_Core_DAO_OptionGroup', 'description' ) );
-        
-        $element = $this->add( 'checkbox', 'is_active', ts('Enabled?') );
-        if ( $this->_action & CRM_Core_Action::UPDATE ) {
-            if ( in_array( $this->_values['name'], array( 'encounter_medium', 'case_type', 'case_status' ) ) ) {
-                static $caseCount = null; 
-                require_once 'CRM/Case/BAO/Case.php';
-                if ( !isset( $caseCount ) ) {
-                    $caseCount = CRM_Case_BAO_Case::caseCount( null, false );
-                }
-                
-                if ( $caseCount > 0 ) {
-                    $element->freeze( );
-                }
-               
-            } 
-            if ( $this->_values['is_reserved'] ) { 
-                $this->freeze( array( 'name', 'description', 'is_active' ) );
-            }
+
+        $this->add('checkbox', 'is_active', ts('Enabled?'));
+      
+        if ($this->_action == CRM_Core_Action::UPDATE &&
+            CRM_Core_DAO::getFieldValue( 'CRM_Core_DAO_OptionGroup', $this->_id, 'is_reserved' )) { 
+            $this->freeze(array('name', 'description', 'is_active' ));
         }
 
         $this->assign('id', $this->_id);

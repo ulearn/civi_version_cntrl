@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.4                                                |
+| CiviCRM version 3.1                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,7 +79,7 @@ class CRM_Core_DAO_OptionValue extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = true;
+    static $_log = false;
     /**
      * Option ID
      *
@@ -137,7 +137,7 @@ class CRM_Core_DAO_OptionValue extends CRM_Core_DAO
     /**
      * Optional description.
      *
-     * @var text
+     * @var string
      */
     public $description;
     /**
@@ -236,8 +236,8 @@ class CRM_Core_DAO_OptionValue extends CRM_Core_DAO
                     'type' => CRM_Utils_Type::T_STRING,
                     'title' => ts('Option Value') ,
                     'required' => true,
-                    'maxlength' => 512,
-                    'size' => CRM_Utils_Type::HUGE,
+                    'maxlength' => 64,
+                    'size' => CRM_Utils_Type::BIG,
                 ) ,
                 'name' => array(
                     'name' => 'name',
@@ -255,8 +255,8 @@ class CRM_Core_DAO_OptionValue extends CRM_Core_DAO
                     'name' => 'grouping',
                     'type' => CRM_Utils_Type::T_STRING,
                     'title' => ts('Option Grouping Name') ,
-                    'maxlength' => 255,
-                    'size' => CRM_Utils_Type::HUGE,
+                    'maxlength' => 64,
+                    'size' => CRM_Utils_Type::BIG,
                 ) ,
                 'filter' => array(
                     'name' => 'filter',
@@ -275,10 +275,10 @@ class CRM_Core_DAO_OptionValue extends CRM_Core_DAO
                 ) ,
                 'description' => array(
                     'name' => 'description',
-                    'type' => CRM_Utils_Type::T_TEXT,
+                    'type' => CRM_Utils_Type::T_STRING,
                     'title' => ts('Description') ,
-                    'rows' => 8,
-                    'cols' => 60,
+                    'maxlength' => 255,
+                    'size' => CRM_Utils_Type::HUGE,
                 ) ,
                 'is_optgroup' => array(
                     'name' => 'is_optgroup',

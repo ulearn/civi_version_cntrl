@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,8 +32,11 @@
 
 {capture assign=newCaseURL}{crmURL p="civicrm/contact/view/case" q="action=add&context=standalone&reset=1"}{/capture}
 
+
+
+
 <div class="crm-submit-buttons">
-    {if $newClient and $allowToAddNewCase}	
+    {if $newClient}	
 	    <a href="{$newCaseURL}" class="button"><span><div class="icon add-icon"></div> {ts}Add Case{/ts}</span></a>
     {/if}
     <div class="crm-case-dashboard-switch-view-buttons">
@@ -50,13 +53,7 @@
 </div>
 
 
-<h3>
-{if $myCases}
-  {ts}Summary of Case Involvement{/ts}
-{else}
-  {ts}Summary of All Cases{/ts}
-{/if}
-</h3>
+<h3>{ts}Summary of Case Involvement{/ts}</h3>
 <table class="report">
   <tr class="columnheader">
     <th>&nbsp;</th>
@@ -107,5 +104,11 @@
 	    {ts 1=$findCasesURL}There are no cases with activities scheduled in the past two weeks. Use %1 to expand your search.{/ts}
         </div>
     {/if}
+
+    {*include activity view js file*}
+    {include file="CRM/common/activityView.tpl"}
+    <div id="view-activity">
+        <div id="activity-content"></div>
+    </div>
 {/if}
 </div>

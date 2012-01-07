@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -44,7 +44,7 @@
         </td>
     </tr>
     </table>   
-	<h3>{ts}System-generated Mail Settings{/ts}</h3>
+	<fieldset><legend>{ts}System-generated Mail Settings{/ts}</legend>
 		<table class="form-layout-compressed">
 		<tr>
 			<td>
@@ -58,11 +58,13 @@
 			</td>
 		</tr>
 		</table>
+	</fieldset>
     
-    <h3>{ts}Domain Address{/ts}</h3>
+    <fieldset><legend>{ts}Domain Address{/ts}</legend>
         <div class="description">{ts 1=&#123;domain.address&#125;}CiviMail mailings must include the sending organization's address. This is done by putting the %1 token in either the body or footer of the mailing. This token may also be used in regular 'Send Email to Contacts' messages and in other Message Templates. The token is replaced by the address entered below when the message is sent.{/ts}</div>
         {include file="CRM/Contact/Form/Edit/Address.tpl"} 
-    <h3>{ts}Additional Domain Contact Information{/ts}</h3>
+    </fieldset>
+    <fieldset><legend>{ts}Additional Domain Contact Information{/ts}</legend>
         <div class="description">{ts}You can also include general email and/or phone contact information in mailings.{/ts} {help id="additional-contact"}</div>
         <table class="form-layout-compressed">
             {* Display the email block *}  
@@ -71,6 +73,7 @@
             {* Display the phone block *}
             {include file="CRM/Contact/Form/Edit/Phone.tpl"} 
         </table>
+    </fieldset>
     
     <div class="spacer"></div>
     

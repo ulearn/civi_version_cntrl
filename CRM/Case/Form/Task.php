@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -87,7 +87,7 @@ class CRM_Case_Form_Task extends CRM_Core_Form
     {
         $form->_caseIds = array( );
         
-        $values = $form->controller->exportValues( $form->get( 'searchFormName' ) );
+        $values = $form->controller->exportValues( 'Search' );
 
         $form->_task = $values['task'];
         $caseTasks = CRM_Case_Task::tasks();
@@ -104,8 +104,6 @@ class CRM_Case_Form_Task extends CRM_Core_Form
             $queryParams =  $form->get( 'queryParams' );
             $query       = new CRM_Contact_BAO_Query( $queryParams, null, null, false, false, 
                                                        CRM_Contact_BAO_Query::MODE_CASE );
-            $query->_distinctComponentClause = " DISTINCT ( civicrm_case.id )";
-            $query->_groupByComponentClause  = " GROUP BY civicrm_case.id ";
             $result = $query->searchQuery(0, 0, null);
             while ($result->fetch()) {
                 $ids[] = $result->case_id;
@@ -128,13 +126,7 @@ class CRM_Case_Form_Task extends CRM_Core_Form
         if ( CRM_Utils_Rule::qfKey( $qfKey ) ) $urlParams .= "&qfKey=$qfKey";
         
         $session = CRM_Core_Session::singleton( );
-        $searchFormName = strtolower( $form->get( 'searchFormName' ) );
-        if ( $searchFormName == 'search' ) {
-            $session->replaceUserContext( CRM_Utils_System::url( 'civicrm/case/search', $urlParams ) );
-        } else {
-            $session->replaceUserContext( CRM_Utils_System::url( "civicrm/contact/search/$searchFormName",
-                                                                 $urlParams ) );
-        }
+        $session->replaceUserContext( CRM_Utils_System::url( 'civicrm/case/search', $urlParams ) );
     }
 
     /**

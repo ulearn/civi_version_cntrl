@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,17 +23,13 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-
-{* enclosed all tabs and its content in a block *}	
-<div class="crm-block crm-content-block">
-
 {if $tabHeader and count($tabHeader) gt 1}
 <div id="mainTabContainer">
 <ul>
    {foreach from=$tabHeader key=tabName item=tabValue}
       <li id="tab_{$tabName}" class="crm-tab-button ui-corner-all {if !$tabValue.valid}disabled{/if}">
       {if $tabValue.link and $tabValue.active}
-         <a href="{$tabValue.link}" title="{$tabValue.title}{if !$tabValue.valid} ({ts}disabled{/ts}){/if}">{$tabValue.title}</a>
+         <a href="{$tabValue.link}" title="{$tabValue.title}{if !$tabValue.valid} ({ts}disabled{/ts}){/if}"><span> </span> {$tabValue.title}</a>
       {else}
          <span {if !$tabValue.valid}title="{ts}disabled{/ts}"{/if}>{$tabValue.title}</span>
       {/if}
@@ -64,12 +60,7 @@ function stopSpinner( ) {
                 var url = cj.data(ui.tab, 'load.tabs');
                 {/literal}{if $config->userFramework eq 'Drupal'}{literal}
                     var actionUrl = url.split( '?' );
-                    {/literal}{if $config->cleanURL}{literal}
-                      var actualUrl = actionUrl[0];
-                    {/literal}{else}{literal}
-                      var getParams = actionUrl[1].split( '&' );
-                      var actualUrl = actionUrl[0] + '?' + getParams[0];
-                    {/literal}{/if}{literal}
+                    var actualUrl = actionUrl[0];
                 {/literal}{else}{literal}
                     var actionUrl = url.split( '&' );
                     var actualUrl = actionUrl[0] + '&' + actionUrl[1];
@@ -87,16 +78,8 @@ function stopSpinner( ) {
                 }
                 return true;
             },
-            load: function(event, ui) {
-            	stopSpinner();
-            	if ((typeof(Drupal) != 'undefined') && Drupal.attachBehaviors) {
-            	 Drupal.attachBehaviors(ui.panel);
-            	}
-            }
+	    load: stopSpinner
         });        
     });
 {/literal}
 </script>
-
-<div class="clear"></div>
-</div> {* crm-content-block ends here *}

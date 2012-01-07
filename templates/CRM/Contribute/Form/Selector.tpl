@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -68,7 +68,7 @@
     <td class="crm-contribution-receive_date">{$row.receive_date|crmDate}</td>
     <td class="crm-contribution-thankyou_date">{$row.thankyou_date|crmDate}</td>
     <td class="crm-contribution-status"> 
-        {$row.contribution_status}<br />
+        {$row.contribution_status_id}<br />
         {if $row.cancel_date}    
         {$row.cancel_date|crmDate}
         {/if}

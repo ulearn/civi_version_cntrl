@@ -2,9 +2,9 @@
 
 /* 
  +--------------------------------------------------------------------+ 
- | CiviCRM version 3.4                                                | 
+ | CiviCRM version 3.1                                                | 
  +--------------------------------------------------------------------+ 
- | Copyright CiviCRM LLC (c) 2004-2011                                | 
+ | Copyright CiviCRM LLC (c) 2004-2010                                | 
  +--------------------------------------------------------------------+ 
  | This file is a part of CiviCRM.                                    | 
  |                                                                    | 
@@ -30,7 +30,7 @@
  * 
  * 
  * @package CRM 
- * @copyright CiviCRM LLC (c) 2004-2011 
+ * @copyright CiviCRM LLC (c) 2004-2010 
  * $Id$ 
  * 
  */ 
@@ -99,13 +99,6 @@ class CRM_Core_BAO_CustomQuery
     public $_fields;
 
     /**
-     * Searching for contacts?
-     *    
-     * @var boolean    
-     */ 
-    protected $_contactSearch;
-
-    /**
      * This stores custom data group types and tables that it extends
      *
      * @var array    
@@ -138,7 +131,7 @@ class CRM_Core_BAO_CustomQuery
      *
      * @access public
      */
-    function __construct( $ids, $contactSearch = false ) 
+    function __construct( $ids ) 
     {
         $this->_ids    =& $ids;
 
@@ -151,7 +144,6 @@ class CRM_Core_BAO_CustomQuery
         $this->_options      = array( );
 
         $this->_fields       = array( );
-        $this->_contactSearch = $contactSearch;
 
         if ( empty( $this->_ids ) ) {
             return;
@@ -291,9 +283,6 @@ SELECT label, value
                 }
                 if ( $joinTable != 'contact_a' ) {
                     $this->_whereTables[$joinTable] = $this->_tables[$joinTable] = 1;
-                } else if ( $this->_contactSearch ) {
-                    require_once 'CRM/Contact/BAO/Query.php';
-                    CRM_Contact_BAO_Query::$_openedPanes[ts('Custom Fields')] = true;
                 }
             }
         }
@@ -358,12 +347,7 @@ SELECT label, value
                                         continue;
                                     }
                                 
-                                    $sqlValue[] = 
-                                        "( $sql like '%" . 
-                                        CRM_Core_DAO::VALUE_SEPARATOR .
-                                        $k . 
-                                        CRM_Core_DAO::VALUE_SEPARATOR .
-                                        "%' ) ";
+                                    $sqlValue[] = "( $sql like '%" . CRM_Core_BAO_CustomOption::VALUE_SEPERATOR . $k . CRM_Core_BAO_CustomOption::VALUE_SEPERATOR . "%' ) ";
                                 }
                             }
                             //if user check only 'CiviCRM_OP_OR' check box
@@ -380,12 +364,7 @@ SELECT label, value
                                     continue;
                                 }
                                 $v = CRM_Core_DAO::escapeString($v);
-                                $sqlValue[] = 
-                                    "( $sql like '%" .
-                                    CRM_Core_DAO::VALUE_SEPARATOR .
-                                    $v .
-                                    CRM_Core_DAO::VALUE_SEPARATOR .
-                                    "%' ) ";
+                                $sqlValue[] = "( $sql like '%" . CRM_Core_BAO_CustomOption::VALUE_SEPERATOR . $v . CRM_Core_BAO_CustomOption::VALUE_SEPERATOR . "%' ) ";
                             }
                             //if user select only 'CiviCRM_OP_OR' value
                             //of custom multi select field, then ignore this field.
@@ -426,7 +405,8 @@ SELECT label, value
                     } 
                     continue;
                 case 'ContactReference':
-                    $label = $value ? CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_Contact', $value,  'sort_name') : '';
+                    $label = $value;
+                    $value = CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_Contact', str_replace( '\\', '', $value), 'id', 'sort_name' );
                     $this->_where[$grouping][] = CRM_Contact_BAO_Query::buildClause( $fieldName, $op, $value, 'String' );
                     $this->_qill[$grouping][]  = $field['label'] . " $op $label";                    
                     continue;
@@ -492,14 +472,18 @@ SELECT label, value
                         } 
                         
                         // hack to handle yy format during search
+                        $actualValue = $value;
                         if ( is_numeric( $value ) && strlen( $value) == 4 ) {
                             $value = "01-01-{$value}";
                         }
                         
                         $date = CRM_Utils_Date::processDate( $value ); 
                         $this->_where[$grouping][] = CRM_Contact_BAO_Query::buildClause( $fieldName, $op, $date, 'String' );
-                        $this->_qill[$grouping][]  = $field['label'] . " {$op} " . CRM_Utils_Date::customFormat( $date ); 
+                        $this->_qill[$grouping][]  = $field['label'] . " {$op} " . CRM_Utils_Date::customFormat( $actualValue ); 
                     } else {
+                        // hack to handle yy format during search
+                        $actualFromValue = $fromValue;
+                        $actualToValue   = $toValue;
                         if ( is_numeric( $fromValue ) && strlen( $fromValue ) == 4 ) {
                             $fromValue = "01-01-{$fromValue}";
                         }
@@ -517,12 +501,12 @@ SELECT label, value
                         if ( $fromDate ) {
                             $this->_where[$grouping][] = "$fieldName >= $fromDate";
                             $this->_qill[$grouping][]  = $field['label'] . ' >= ' .
-                                CRM_Utils_Date::customFormat( $fromDate );
+                                CRM_Utils_Date::customFormat( $actualFromValue );
                         }
                         if ( $toDate ) {
                             $this->_where[$grouping][] = "$fieldName <= $toDate";
                             $this->_qill[$grouping][]  = $field['label'] . ' <= ' .
-                                CRM_Utils_Date::customFormat( $toDate );
+                                CRM_Utils_Date::customFormat( $actualToValue );
                         }
                     }
                     continue;
@@ -541,12 +525,7 @@ SELECT label, value
                                 $sqlOPlabel = ts('match ANY');
                                 continue;
                             }
-                            $sqlValue[] = 
-                                "( $fieldName like '%" .
-                                CRM_Core_DAO::VALUE_SEPARATOR .
-                                $v .
-                                CRM_Core_DAO::VALUE_SEPARATOR .
-                                "%' ) ";
+                            $sqlValue[] = "( $fieldName like '%" . CRM_Core_BAO_CustomOption::VALUE_SEPERATOR . $v . CRM_Core_BAO_CustomOption::VALUE_SEPERATOR . "%' ) ";
                         }
 
                         //if user select only 'CiviCRM_OP_OR' value

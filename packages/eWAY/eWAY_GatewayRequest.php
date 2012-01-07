@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -67,17 +67,13 @@ class GatewayRequest
 
 	var $txInvoiceDescription = "";
 
-    var $txCVN = "";
+   var $txCVN = "";
 
 	var $txOption1 = "";
 
 	var $txOption2 = "";
 
 	var $txOption3 = "";
-    
-    var $txCustomerBillingCountry = "";
-
-    var $txCustomerIPAddress = "";
 
    function GatewayRequest()   
    {
@@ -178,17 +174,7 @@ class GatewayRequest
    {
       $this->txOption3=$value; 
    }
-
-   function CustomerBillingCountry($value) 
-   {
-       $this->txCustomerBillingCountry=$value; 
-   }
-
-   function CustomerIPAddress($value) 
-   {
-       $this->txCustomerIPAddress=$value; 
-   }
-
+	
    function ToXml()
    {
       // We don't really need the overhead of creating an XML DOM object
@@ -213,8 +199,6 @@ class GatewayRequest
       $xml .= $this->CreateNode("ewayOption1",                    $this->txOption1);
       $xml .= $this->CreateNode("ewayOption2",                    $this->txOption2);
       $xml .= $this->CreateNode("ewayOption3",                    $this->txOption3);
-      $xml .= $this->CreateNode("ewayCustomerIPAddress",          $this->txCustomerIPAddress);
-      $xml .= $this->CreateNode("ewayCustomerBillingCountry",     $this->txCustomerBillingCountry);
       $xml .= "</ewaygateway>";
       
       return $xml;

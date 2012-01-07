@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -83,7 +83,7 @@ class CRM_Core_BAO_IM extends CRM_Core_DAO_IM
      * @access public
      * @static
      */
-    static function allIMs( $id, $updateBlankLocInfo = false ) 
+    static function allIMs( $id ) 
     {
         if ( !$id ) {
             return null;
@@ -91,33 +91,24 @@ class CRM_Core_BAO_IM extends CRM_Core_DAO_IM
 
         $query = "
 SELECT civicrm_im.name as im, civicrm_location_type.name as locationType, civicrm_im.is_primary as is_primary,
-civicrm_im.id as im_id, civicrm_im.location_type_id as locationTypeId,
-civicrm_im.provider_id as providerId
+civicrm_im.id as im_id, civicrm_im.location_type_id as locationTypeId
 FROM      civicrm_contact
 LEFT JOIN civicrm_im ON ( civicrm_im.contact_id = civicrm_contact.id )
 LEFT JOIN civicrm_location_type ON ( civicrm_im.location_type_id = civicrm_location_type.id )
 WHERE
   civicrm_contact.id = %1
 ORDER BY
-  civicrm_im.is_primary DESC, im_id ASC ";
+  civicrm_im.is_primary DESC, civicrm_im.location_type_id DESC, im_id ASC ";
         $params = array( 1 => array( $id, 'Integer' ) );
 
-        $ims = $values = array( );
+        $ims = array( );
         $dao =& CRM_Core_DAO::executeQuery( $query, $params );
-        $count = 1;
         while ( $dao->fetch( ) ) {
-            $values = array( 'locationType'   => $dao->locationType,
-                             'is_primary'     => $dao->is_primary,
-                             'id'             => $dao->im_id,
-                             'name'           => $dao->im,
-                             'locationTypeId' => $dao->locationTypeId,
-                             'providerId'     => $dao->providerId );
-            
-            if ( $updateBlankLocInfo ) {
-                $ims[$count++] = $values; 
-            } else {
-                $ims[$dao->im_id] = $values;
-            }
+            $ims[$dao->im_id] = array( 'locationType'   => $dao->locationType,
+                                       'is_primary'     => $dao->is_primary,
+                                       'id'             => $dao->im_id,
+                                       'name'           => $dao->im,
+                                       'locationTypeId' => $dao->locationTypeId );
         }
         return $ims;
     }

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -115,9 +115,7 @@ class CRM_Core_Payment_PayPalIPN extends CRM_Core_Payment_BaseIPN {
             break;
             
         case 'subscr_eot':
-            if ( $recur->contribution_status_id != 3 ) {
-                $recur->contribution_status_id = 1;
-            }
+            $recur->contribution_status_id = 1;
             $recur->end_date               = $now;
             $sendNotification              = true;
             $subscriptionPaymentStatus     = CRM_Core_Payment::RECURRING_PAYMENT_END;
@@ -130,7 +128,7 @@ class CRM_Core_Payment_PayPalIPN extends CRM_Core_Payment_BaseIPN {
 
         case 'subscr_failed':
             $recur->contribution_status_id = 4;
-            $recur->modified_date          = $now;
+            $recur->cancel_date            = $now;
             break;
 
         case 'subscr_modify':
@@ -156,19 +154,10 @@ class CRM_Core_Payment_PayPalIPN extends CRM_Core_Payment_BaseIPN {
         $recur->save( );
 
         if ( $sendNotification ) {
-            
-            $autoRenewMembership = false;
-            if ( $recur->id && 
-                 isset( $ids['membership'] ) && $ids['membership'] ) {
-                $autoRenewMembership = true;
-            }
-            
             //send recurring Notification email for user
-            CRM_Contribute_BAO_ContributionPage::recurringNofify( $subscriptionPaymentStatus, 
-                                                                  $ids['contact'], 
-                                                                  $ids['contributionPage'], 
-                                                                  $recur,
-                                                                  $autoRenewMembership );
+            require_once 'CRM/Contribute/BAO/ContributionPage.php';
+            CRM_Contribute_BAO_ContributionPage::recurringNofify( $subscriptionPaymentStatus, $ids['contact'],
+                                                                  $ids['contributionPage'], $recur );
         }
 
         if ( $txnType != 'subscr_payment' ) {
@@ -328,7 +317,7 @@ class CRM_Core_Payment_PayPalIPN extends CRM_Core_Payment_BaseIPN {
         }
 
         $input['is_test']    = self::retrieve( 'test_ipn'     , 'Integer', 'POST', false );
-        $input['fee_amount'] = self::retrieve( 'mc_fee'       , 'Money'  , 'POST', false );
+        $input['fee_amount'] = self::retrieve( 'payment_fee'  , 'Money'  , 'POST', false );
         $input['net_amount'] = self::retrieve( 'settle_amount', 'Money'  , 'POST', false );
         $input['trxn_id']    = self::retrieve( 'txn_id'       , 'String' , 'POST', false );
         

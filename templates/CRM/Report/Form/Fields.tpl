@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -38,7 +38,7 @@
 </div><!-- /.crm-accordion-wrapper -->       
 </div> {* criteria section ends *}
 
-{if $instanceForm OR $instanceFormError} {* settings section starts *}
+{if ($instanceForm and $rows) OR $instanceFormError} {* settings section starts *}
 <div class="crm-accordion-wrapper crm-report_setting-accordion crm-accordion_title-accordion {if $rows}crm-accordion-closed{else}crm-accordion-open{/if}">
  <div class="crm-accordion-header" {if $updateReportButton} onclick="hide('update-button'); return false;" {/if} >
   <div class="icon crm-accordion-pointer"></div> 
@@ -55,13 +55,13 @@
                 </div>
         </div>
  </div><!-- /.crm-accordion-body -->
-</div><!-- /.crm-accordion-wrapper -->  
-{if $updateReportButton}
-<div id='update-button' class="crm-submit-buttons">
-   {$form.$save.html}
-</div>
-{/if}
-{/if} {* settings section ends *}
+</div><!-- /.crm-accordion-wrapper -->    {/if} {* settings section ends *}
+    
+    {if $updateReportButton}
+    <div id="update-button" class="crm-submit-buttons">
+        &nbsp;&nbsp;{$form.$save.html} 
+    </div>           
+    {/if}
 
 {literal}
 <script type="text/javascript">

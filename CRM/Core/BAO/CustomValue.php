@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -162,9 +162,9 @@ class CRM_Core_BAO_CustomValue extends CRM_Core_DAO
             return null;
         }
         foreach( array_keys( $formValues ) as $key ){
-            if ( substr($key,0,7) != 'custom_' ) {
+            if ( substr($key,0,7) != 'custom_' ){
                 continue;
-            } else if( empty($formValues[$key]) ){
+            }else if( empty($formValues[$key]) ){
                 continue;
             }
             
@@ -176,13 +176,6 @@ class CRM_Core_BAO_CustomValue extends CRM_Core_DAO
                 $formValues[$key] = '%' .  $formValues[$key] . '%';
                 
             }
-           
-            $dataType = CRM_Core_DAO::getFieldValue( 'CRM_Core_BAO_CustomField', 
-                                                     substr($key,7), 'data_type');
-            if ( ( $dataType == 'ContactReference' ) && ( $htmlType == 'Autocomplete-Select' ) ) {
-                $formValues[$key] = $formValues[$key.'_id'];
-             }
-            
         }
     }
     

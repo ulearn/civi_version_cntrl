@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,13 +29,12 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
 
 require_once 'CRM/Event/Form/Task.php';
-require_once "CRM/Event/BAO/Participant.php";
 
 /**
  * This class provides the functionality to delete a group of
@@ -59,21 +58,14 @@ class CRM_Event_Form_Task_Delete extends CRM_Event_Form_Task
      * @access public
      */
     function preProcess( ) 
-    {  
-       
+    {
         //check for delete
         if ( !CRM_Core_Permission::checkActionPermission( 'CiviEvent', CRM_Core_Action::DELETE ) ) {
-            CRM_Core_Error::fatal( ts( 'You do not have permission to access this page' ) );
-           
+            CRM_Core_Error::fatal( ts( 'You do not have permission to access this page' ) );  
         }
         parent::preProcess( );
-        foreach (  $this->_participantIds as $participantId ) {
-            if ( CRM_Event_BAO_Participant::isPrimaryParticipant( $participantId ) ){
-                $this->assign( 'additionalParticipants',true );
-            }  
-        }
     }
-    
+
     /**
      * Build the form
      *
@@ -81,17 +73,10 @@ class CRM_Event_Form_Task_Delete extends CRM_Event_Form_Task
      * @return void
      */
     function buildQuickForm( ) 
-    {       
-        $deleteParticipants  = array( 1 => ts( 'Delete this participant record along with associated participant record(s).' ), 
-                                      2 => ts( 'Delete only this participant record.' ) );
-        
-        
-        $this->addRadio( 'delete_participant', null, $deleteParticipants, null, '<br />');
-        $this->setDefaults( array( 'delete_participant' => 1 ) );
-      
+    {
         $this->addDefaultButtons( ts( 'Delete Participations' ), 'done' );
     }
-    
+
     /**
      * process the form after the input has been submitted and validated
      *
@@ -99,48 +84,21 @@ class CRM_Event_Form_Task_Delete extends CRM_Event_Form_Task
      * @return None
      */
     public function postProcess( ) 
-    {  
-        $params = $this->controller->exportValues( $this->_name );
-        require_once "CRM/Event/BAO/Participant.php";
-        
-        if(  CRM_Utils_Array::value( 'delete_participant', $params ) == 2 ) {
-            $links = array();
-            foreach( $this->_participantIds as $participantId ) {
-                $additionalId = (CRM_Event_BAO_Participant::getAdditionalParticipantIds( $participantId ));
-                $participantLinks = (CRM_Event_BAO_Participant::getAdditionalParticipantUrl( $additionalId ));
+    {
+        $deletedParticipants = 0;
+        require_once 'CRM/Event/BAO/Participant.php';
+        foreach ( $this->_participantIds as $participantId ) {
+            if ( CRM_Event_BAO_Participant::deleteParticipant( $participantId ) ) {
+                $deletedParticipants++;
             }
         }
-        $deletedParticipants = $additionalCount = 0;
-        foreach( $this->_participantIds as $participantId ) {
-            if( CRM_Utils_Array::value( 'delete_participant', $params ) == 1 ){ 
-                if( CRM_Event_BAO_Participant::isPrimaryParticipant( $participantId ) ){
-                    $additionalIds = (CRM_Event_BAO_Participant::getAdditionalParticipantIds( $participantId ));
-                    $additionalCount = count( $additionalIds );
-                    foreach( $additionalIds as $value ) {
-                        CRM_Event_BAO_Participant::deleteParticipant( $value );
-                    }
-                    CRM_Event_BAO_Participant::deleteParticipant(  $participantId );
-                } 
-                $deletedParticipants++; 
-            }
-            else{ 
-                CRM_Event_BAO_Participant::deleteParticipant( $participantId );
-                $deletedParticipants++;
-            }    
-        } 
-        if( $additionalCount ) $deletedParticipants += $additionalCount;
-        
-        $status = array(
-                        ts( 'Participant(s) Deleted: %1',        array( 1 => $deletedParticipants ) ),
-                        ts( 'Total Selected Participant(s): %1', array( 1 => $deletedParticipants) ) );
-            
-    
-    if ( !empty( $participantLinks ) ) {
-        $status[]= ts( 'The following participants no longer have an event fee recorded. You can edit their registration and record a replacement contribution by clicking the links below:' ) . '<br>' .$participantLinks;         
-    }
-    CRM_Core_Session::setStatus( $status );
-}
-}
 
+        $status = array(
+                        ts( 'Deleted Participation(s): %1',        array( 1 => $deletedParticipants ) ),
+                        ts( 'Total Selected Participation(s): %1', array( 1 => count($this->_participantIds ) ) ),
+                        );
+        CRM_Core_Session::setStatus( $status );
+    }
+}
 
 

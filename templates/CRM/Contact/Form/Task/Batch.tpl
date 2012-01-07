@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -78,11 +78,12 @@
 					<td class="compressed">{$form.field.$cid.$n.html}</td>
 				{/if}
               {/foreach}
+             </tr>
             {/foreach}
            </tr>
          </table>
        
-        {if $fields}{$form._qf_BatchUpdateProfile_refresh.html}{/if} &nbsp;<div class="crm-submit-buttons">{$form.buttons.html}</div>
+        {if $fields}{$form._qf_BatchUpdateProfile_refresh.html}{/if} &nbsp;<div class="crm-submit-buttons" {$form.buttons.html}</div>
         
 </div>
 

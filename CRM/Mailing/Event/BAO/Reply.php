@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -68,10 +68,8 @@ class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
         /* First make sure there's a matching queue event */
         $q =& CRM_Mailing_Event_BAO_Queue::verify($job_id, $queue_id, $hash);
 
-        $success = null;
-
         if (! $q) {
-            return $success;
+            return null;
         }
 
         $mailing = new CRM_Mailing_BAO_Mailing();
@@ -93,7 +91,7 @@ class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
         $re->save();
 
         if (! $mailing->forward_replies || empty($mailing->replyto_email)) {
-            return $success;
+            return null;
         }
         
         return $mailing;
@@ -123,7 +121,7 @@ class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
 
             // CRM-5567: we need to set Reply-To: so that any response
             // to the forward goes to the sender of the reply
-            $parsed->setHeader('Reply-To', $replyto instanceof ezcMailAddress ? $parsed->from->__toString() : $replyto);
+            $parsed->setHeader('Reply-To', empty($replyto) ? $parsed->from->__toString() : $replyto);
 
             // $h must be an array, so we can't use generateHeaders()'s result, 
             // but we have to regenerate the headers because we changed To
@@ -396,17 +394,8 @@ class CRM_Mailing_Event_BAO_Reply extends CRM_Mailing_Event_DAO_Reply {
             $query .= " GROUP BY $queue.id ";
         }
 
-        $orderBy = "sort_name ASC, {$reply}.time_stamp DESC";
-        if ($sort) {
-            if ( is_string( $sort ) ) {
-                $orderBy = $sort;
-            } else {
-                $orderBy = trim( $sort->orderBy() );
-            }
-        }
-        
-        $query .= " ORDER BY {$orderBy} ";
-        
+        $query .= " ORDER BY $contact.sort_name, $reply.time_stamp DESC ";
+
         if ($offset||$rowCount) {//Added "||$rowCount" to avoid displaying all records on first page
             $query .= ' LIMIT ' 
                     . CRM_Utils_Type::escape($offset, 'Integer') . ', ' 

@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,10 +24,7 @@
  +--------------------------------------------------------------------+
 *}
 <div id="pricesetTotal" class="crm-section section-pricesetTotal">
-	<div class="label" id="pricelabel"><label>
-         {if ( $extends eq 'Contribution' ) || ( $extends eq 'Membership' )}
-           {ts}Total Amount{/ts}{else}{ts}Total Fee(s){/ts}
-         {/if}</label></div>
+	<div class="label" id="pricelabel"><label>Total Fee(s)</label></div>
 	<div class="content view-value" id="pricevalue" ></div>
 </div>
 
@@ -38,7 +35,7 @@ var totalfee       = 0;
 var thousandMarker = '{/literal}{$config->monetaryThousandSeparator}{literal}';
 var seperator      = '{/literal}{$config->monetaryDecimalPoint}{literal}';
 var symbol         = '{/literal}{$currencySymbol}{literal}';
-var optionSep      = '|';
+
 var priceSet = price = Array( );
 cj("input,#priceset select,#priceset").each(function () {
 
@@ -50,8 +47,7 @@ cj("input,#priceset select,#priceset").each(function () {
     //default calcution of element. 
     eval( 'var option = ' + cj(this).attr('price') ) ;
     ele        = option[0];
-    optionPart = option[1].split(optionSep);
-    addprice   = parseFloat( optionPart[0] );    
+    addprice   = parseFloat( option[1] );    
     
     if( cj(this).attr('checked') ) {
       totalfee   += addprice;
@@ -78,8 +74,7 @@ cj("input,#priceset select,#priceset").each(function () {
     //default calcution of element. 
     eval( 'var option = ' + cj(this).attr('price') ); 
     ele        = option[0];
-    optionPart = option[1].split(optionSep);
-    addprice   = parseFloat( optionPart[0] );
+    addprice   = parseFloat( option[1] );
     if ( ! price[ele] ) {
       price[ele] = 0;
     }
@@ -109,8 +104,7 @@ cj("input,#priceset select,#priceset").each(function () {
       if ( ! price[ele] ) {
        price[ele] = 0;
       }
-      optionPart = option[1].split(optionSep);
-      addprice   = parseFloat( optionPart[0] );
+      addprice    = parseFloat( option[1] );
       var curval  = textval * addprice;
       if ( textval >= 0 ) {
   	totalfee   = parseFloat(totalfee) + curval - parseFloat(price[ele]);
@@ -133,12 +127,7 @@ cj("input,#priceset select,#priceset").each(function () {
 	price[ele] = 0;
       }
       eval( 'var selectedText = ' + cj(this).attr('price') );
-      var addprice = 0;
-      if ( cj(this).val( ) ) {
-        optionPart = selectedText[cj(this).val( )].split(optionSep);
-        addprice   = parseFloat( optionPart[0] );
-      } 
-
+      var addprice = parseFloat( selectedText[cj(this).val( )] );
     if ( addprice ) {
 	totalfee   = parseFloat(totalfee) + addprice - parseFloat(price[ele]);
 	price[ele] = addprice;
@@ -151,13 +140,8 @@ cj("input,#priceset select,#priceset").each(function () {
 	price[ele] = 0;
       }
       eval( 'var selectedText = ' + cj(this).attr('price') );
-
-      var addprice = 0;
-      if ( cj(this).val( ) ) {
-        optionPart = selectedText[cj(this).val( )].split(optionSep);
-        addprice   = parseFloat( optionPart[0] );
-      }
-
+      var addprice = parseFloat( cj(selectedText).attr( cj(this).val( ) ) );
+      
       if ( addprice ) {
 	totalfee   = parseFloat(totalfee) + addprice - parseFloat(price[ele]);
 	price[ele] = addprice;
@@ -180,8 +164,7 @@ function calculateText( object ) {
   if ( ! price[ele] ) {
     price[ele] = 0;
   }
-  var optionPart = option[1].split(optionSep);
-  addprice    = parseFloat( optionPart[0] );
+  addprice    = parseFloat( option[1] );
   var textval = parseFloat( cj(object).attr('value') );
   var curval  = textval * addprice;
     if ( textval >= 0 ) {

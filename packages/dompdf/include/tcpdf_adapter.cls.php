@@ -28,16 +28,16 @@
  * the case, you can obtain a copy at http://www.php.net/license/3_0.txt.
  *
  * The latest version of DOMPDF might be available at:
- * http://www.dompdf.com/
+ * http://www.digitaljunkies.ca/dompdf
  *
- * @link http://www.dompdf.com/
+ * @link http://www.digitaljunkies.ca/dompdf
  * @copyright 2004 Benj Carson
  * @author Benj Carson <benjcarson@digitaljunkies.ca>
  * @package dompdf
-
+ * @version 0.5.1
  */
 
-/* $Id: tcpdf_adapter.cls.php 311 2010-09-05 20:02:01Z fabien.menager $ */
+/* $Id$ */
 
 require_once(DOMPDF_LIB_DIR . '/tcpdf/tcpdf.php');
 
@@ -145,8 +145,10 @@ class TCPDF_Adapter implements Canvas {
     else
       $size = self::$PAPER_SIZE["letter"];
 
-    if ( mb_strtolower($orientation) === "landscape" ) {
-      list($size[2], $size[3]) = array($size[3], $size[2]);
+    if ( mb_strtolower($orientation) == "landscape" ) {
+      $a = $size[3];
+      $size[3] = $size[2];
+      $size[2] = $a;
     }
 
     $this->_width = $size[2] - $size[0];
@@ -343,7 +345,7 @@ class TCPDF_Adapter implements Canvas {
    * @param bool  $fill  Fills the polygon if true
    */
   function polygon($points, $color, $width = null, $style = null, $fill = false) {
-    // FIXME
+    // FIXME: FPDF sucks
   }
 
   /**
@@ -361,9 +363,7 @@ class TCPDF_Adapter implements Canvas {
    * @param array $style
    * @param bool $fill Fills the circle if true   
    */   
-  function circle($x, $y, $r, $color, $width = null, $style = null, $fill = false) {
-    // FIXME
-  }
+  function circle($x, $y, $r, $color, $width = null, $style = null, $fill = false);
 
   /**
    * Add an image to the pdf.
@@ -378,9 +378,7 @@ class TCPDF_Adapter implements Canvas {
    * @param int $w width (in pixels)
    * @param int $h height (in pixels)
    */
-  function image($img_url, $img_type, $x, $y, $w, $h) {
-    // FIXME
-  }
+  function image($img_url, $img_type, $x, $y, $w, $h);
 
   /**
    * Writes text at the specified x and y coordinates
@@ -395,22 +393,14 @@ class TCPDF_Adapter implements Canvas {
    * @param array $color
    * @param float $adjust word spacing adjustment
    */
-  function text($x, $y, $text, $font, $size, $color = array(0,0,0), $adjust = 0) {
-    // FIXME
-  }
+  function text($x, $y, $text, $font, $size, $color = array(0,0,0), $adjust = 0);
 
-  function javascript($code) {
-    // FIXME
-  }
-  
   /**
    * Add a named destination (similar to <a name="foo">...</a> in html)
    *
    * @param string $anchorname The name of the named destination
    */
-  function add_named_dest($anchorname) {
-    // FIXME
-  }
+  function add_named_dest($anchorname);
 
   /**
    * Add a link to the pdf
@@ -421,22 +411,7 @@ class TCPDF_Adapter implements Canvas {
    * @param float  $width   The width of the link
    * @param float  $height   The height of the link
    */
-  function add_link($url, $x, $y, $width, $height) {
-    // FIXME
-  }
-  
-  /**
-   * Add meta information to the PDF
-   *
-   * @param string $label  label of the value (Creator, Producer, etc.)
-   * @param string $value  the text to set
-   */
-  function add_info($label, $value) {
-    $method = "Set$label";
-    if ( in_array("Title", "Author", "Keywords", "Subject") && method_exists($this->_pdf, $method) ) {
-      $this->_pdf->$method($value);
-    }
-  }
+  function add_link($url, $x, $y, $width, $height);
   
   /**
    * Calculates text size, in points
@@ -447,9 +422,7 @@ class TCPDF_Adapter implements Canvas {
    * @param float  $spacing word spacing, if any
    * @return float
    */
-  function get_text_width($text, $font, $size, $spacing = 0) {
-    // FIXME
-  }
+  function get_text_width($text, $font, $size, $spacing = 0);
 
   /**
    * Calculates font height, in points
@@ -458,9 +431,7 @@ class TCPDF_Adapter implements Canvas {
    * @param float $size
    * @return float
    */
-  function get_font_height($font, $size) {
-    // FIXME
-  }
+  function get_font_height($font, $size);
 
   
   /**
@@ -468,9 +439,7 @@ class TCPDF_Adapter implements Canvas {
    *
    * Subsequent drawing operations will appear on the new page.
    */
-  function new_page() {
-    // FIXME
-  }
+  function new_page();
 
   /**
    * Streams the PDF directly to the browser
@@ -478,9 +447,7 @@ class TCPDF_Adapter implements Canvas {
    * @param string $filename the name of the PDF file
    * @param array  $options associative array, 'Attachment' => 0 or 1, 'compress' => 1 or 0
    */
-  function stream($filename, $options = null) {
-    // FIXME
-  }
+  function stream($filename, $options = null);
 
   /**
    * Returns the PDF as a string
@@ -488,11 +455,10 @@ class TCPDF_Adapter implements Canvas {
    * @param array  $options associative array: 'compress' => 1 or 0
    * @return string
    */
-  function output($options = null) {
-    // FIXME
-  }
+  function output($options = null);
   
 }
     
 // Workaround for idiotic limitation on statics...
 PDFLib_Adapter::$PAPER_SIZES = CPDF_Adapter::$PAPER_SIZES;
+?>

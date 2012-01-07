@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,8 +31,8 @@
  * @package CiviCRM_APIv2
  * @subpackage API_Group
  *
- * @copyright CiviCRM LLC (c) 2004-2011
- * @version $Id: GroupContact.php 32998 2011-03-14 22:00:35Z kurund $
+ * @copyright CiviCRM LLC (c) 2004-2010
+ * @version $Id: GroupContact.php 27749 2010-05-18 19:20:17Z lobo $
  *
  */
 

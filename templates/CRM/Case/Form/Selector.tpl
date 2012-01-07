@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -86,16 +86,15 @@
     	<td class="crm-case-id crm-case-id_{$row.case_id}"><a href="{crmURL p='civicrm/contact/view' q="reset=1&cid=`$row.contact_id`"}" title="{ts}view contact details{/ts}">{$row.sort_name}</a>{if $row.phone}<br /><span class="description">{$row.phone}</span>{/if}<br /><span class="description">{ts}Case ID{/ts}: {$row.case_id}</span></td>
     {/if}
     
-    <td class="crm-case-subject">{$row.case_subject}</td>
-    <td class="{$row.class} crm-case-status_{$row.case_status}">{$row.case_status}</td>
-    <td class="crm-case-case_type">{$row.case_type}</td>
+    <td class="{$row.class} crm-case-status_{$row.case_status_id}">{$row.case_status_id}</td>
+    <td class="crm-case-case_type_id">{$row.case_type_id}</td>
     <td class="crm-case-case_role">{if $row.case_role}{$row.case_role}{else}---{/if}</td>
     <td class="crm-case-case_manager">{if $row.casemanager_id}<a href="{crmURL p='civicrm/contact/view' q="reset=1&cid=`$row.casemanager_id`"}">{$row.casemanager}</a>{else}---{/if}</td>
     <td class="crm-case-case_recent_activity_type">{if $row.case_recent_activity_type}
 	{$row.case_recent_activity_type}<br />{$row.case_recent_activity_date|crmDate}{else}---{/if}</td>
     <td class="crm-case-case_scheduled_activity_type">{if $row.case_scheduled_activity_type}
 	{$row.case_scheduled_activity_type}<br />{$row.case_scheduled_activity_date|crmDate}{else}---{/if}</td>
-    <td>{$row.action|replace:'xx':$row.case_id}{$row.moreActions|replace:'xx':$row.case_id}</td>
+    <td>{$row.action|replace:'xx':$row.case_id}</td>
    </tr>
 {if $context != 'case'}
    <tr id="{$list}{$row.case_id}_hide" class='{$rowClass}'>

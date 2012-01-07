@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -62,8 +62,7 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page
         // ensure that the user has permission to see this page
         if ( ! CRM_Core_Permission::event( CRM_Core_Permission::VIEW,
                                            $this->_id ) ) {
-            CRM_Utils_System::setUFMessage( ts( 'You do not have permission to view this event' ) );
-            return CRM_Utils_System::permissionDenied( );
+            CRM_Core_Error::fatal( ts( 'You do not have permission to view this event' ) );
         }
 
         $action  = CRM_Utils_Request::retrieve( 'action', 'String'  , $this, false );
@@ -86,22 +85,11 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page
             CRM_Core_Error::fatal( ts( 'The page you requested is currently unavailable.' ) );
         }          
         
-        if ( !empty(  $values['event']['is_template'] ) ) {
-            // form is an Event Template
-            CRM_Core_Error::fatal( ts( 'The page you requested is currently unavailable.' ) );
-        }
-        
         $this->assign( 'isShowLocation', CRM_Utils_Array::value( 'is_show_location', $values['event'] ) );
         
         // show event fees.
         require_once 'CRM/Price/BAO/Set.php';
         if ( $this->_id && CRM_Utils_Array::value( 'is_monetary', $values['event'] ) ) {
-            //CRM-6907
-            $config = CRM_Core_Config::singleton( );
-            $config->defaultCurrency = CRM_Utils_Array::value( 'currency', 
-                                                               $values['event'], 
-                                                               $config->defaultCurrency );
-
             // get price set options, - CRM-5209
             if ( $priceSetId = CRM_Price_BAO_Set::getFor( 'civicrm_event', $this->_id ) ) {
                 $setDetails     = CRM_Price_BAO_Set::getSetDetail( $priceSetId );
@@ -129,7 +117,7 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page
                         }
                         
                         foreach ( $fieldValues['options'] as $optionId => $optionVal ) {
-                            $values['feeBlock']['value'][$fieldCnt] = $optionVal['amount'];
+                            $values['feeBlock']['value'][$fieldCnt] = $optionVal['value'];
                             $values['feeBlock']['label'][$fieldCnt] = $optionVal['label'];
                             $values['feeBlock']['lClass'][$fieldCnt] = $labelClass;
                             $fieldCnt++;
@@ -252,20 +240,16 @@ class CRM_Event_Page_EventInfo extends CRM_Core_Page
         
         $this->assign( 'allowRegistration', $allowRegistration );
         
-        $session = CRM_Core_Session::singleton( );
-        $params  = array( 'contact_id' => $session->get( 'userID' ),
-                          'event_id'   => CRM_Utils_Array::value( 'id', $values['event'] ),
-                          'role_id'    => CRM_Utils_Array::value( 'default_role_id', $values['event'] ) );   
-						     
-        if ( $eventFullMessage && ( $noFullMsg == 'false' ) || CRM_Event_BAO_Event::checkRegistration( $params ) ) {
+        if ( $eventFullMessage && ( $noFullMsg == 'false' ) ) {
             $statusMessage =  $eventFullMessage;
+            
+            $session = CRM_Core_Session::singleton( );
+            $params  = array( 'contact_id' => $session->get( 'userID' ),
+                              'event_id'   => CRM_Utils_Array::value( 'id', $values['event'] ),
+                              'role_id'    => CRM_Utils_Array::value( 'default_role_id', $values['event'] ) );
+            
             if ( CRM_Event_BAO_Event::checkRegistration( $params ) ) {
-                if ( $noFullMsg == 'false' ) {
-                    $registerUrl = CRM_Utils_System::url( 'civicrm/event/register',
-                                                          "reset=1&id={$values['event']['id']}&cid=0" );
-                    $statusMessage = ts("It looks like you are already registered for this event. If you want to change your registration, or you feel that you've gotten this message in error, please contact the site administrator.") 
-                              . ' ' . ts('You can also <a href="%1">register another participant</a>.', array(1 => $registerUrl));
-                }
+                $statusMessage = ts( "Oops. It looks like you are already registered for this event. If you want to change your registration, or you feel that you've gotten this message in error, please contact the site administrator." );
             } else if ( $hasWaitingList ) {
                 $statusMessage = CRM_Utils_Array::value( 'waitlist_text', $values['event'] );
                 if ( !$statusMessage ) {

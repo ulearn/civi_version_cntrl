@@ -26,19 +26,12 @@ class HTMLPurifier_Lexer_PEARSax3 extends HTMLPurifier_Lexer
      * Internal accumulator array for SAX parsers.
      */
     protected $tokens = array();
-    protected $last_token_was_empty;
-
-    private $parent_handler;
-    private $stack = array();
 
     public function tokenizeHTML($string, $config, $context) {
 
         $this->tokens = array();
-        $this->last_token_was_empty = false;
 
         $string = $this->normalize($string, $config, $context);
-
-        $this->parent_handler = set_error_handler(array($this, 'muteStrictErrorHandler'));
 
         $parser = new XML_HTMLSax3();
         $parser->set_object($this);
@@ -50,8 +43,6 @@ class HTMLPurifier_Lexer_PEARSax3 extends HTMLPurifier_Lexer
         $parser->set_option('XML_OPTION_ENTITIES_PARSED', 1);
 
         $parser->parse($string);
-
-        restore_error_handler();
 
         return $this->tokens;
 
@@ -67,11 +58,9 @@ class HTMLPurifier_Lexer_PEARSax3 extends HTMLPurifier_Lexer
         }
         if ($closed) {
             $this->tokens[] = new HTMLPurifier_Token_Empty($name, $attrs);
-            $this->last_token_was_empty = true;
         } else {
             $this->tokens[] = new HTMLPurifier_Token_Start($name, $attrs);
         }
-        $this->stack[] = $name;
         return true;
     }
 
@@ -82,12 +71,10 @@ class HTMLPurifier_Lexer_PEARSax3 extends HTMLPurifier_Lexer
         // HTMLSax3 seems to always send empty tags an extra close tag
         // check and ignore if you see it:
         // [TESTME] to make sure it doesn't overreach
-        if ($this->last_token_was_empty) {
-            $this->last_token_was_empty = false;
+        if ($this->tokens[count($this->tokens)-1] instanceof HTMLPurifier_Token_Empty) {
             return true;
         }
         $this->tokens[] = new HTMLPurifier_Token_End($name);
-        if (!empty($this->stack)) array_pop($this->stack);
         return true;
     }
 
@@ -95,7 +82,6 @@ class HTMLPurifier_Lexer_PEARSax3 extends HTMLPurifier_Lexer
      * Data event handler, interface is defined by PEAR package.
      */
     public function dataHandler(&$parser, $data) {
-        $this->last_token_was_empty = false;
         $this->tokens[] = new HTMLPurifier_Token_Text($data);
         return true;
     }
@@ -105,18 +91,7 @@ class HTMLPurifier_Lexer_PEARSax3 extends HTMLPurifier_Lexer
      */
     public function escapeHandler(&$parser, $data) {
         if (strpos($data, '--') === 0) {
-            // remove trailing and leading double-dashes
-            $data = substr($data, 2);
-            if (strlen($data) >= 2 && substr($data, -2) == "--") {
-                $data = substr($data, 0, -2);
-            }
-            if (isset($this->stack[sizeof($this->stack) - 1]) &&
-                $this->stack[sizeof($this->stack) - 1] == "style") {
-                $this->tokens[] = new HTMLPurifier_Token_Text($data);
-            } else {
-                $this->tokens[] = new HTMLPurifier_Token_Comment($data);
-            }
-            $this->last_token_was_empty = false;
+            $this->tokens[] = new HTMLPurifier_Token_Comment($data);
         }
         // CDATA is handled elsewhere, but if it was handled here:
         //if (strpos($data, '[CDATA[') === 0) {
@@ -124,14 +99,6 @@ class HTMLPurifier_Lexer_PEARSax3 extends HTMLPurifier_Lexer
         //        substr($data, 7, strlen($data) - 9) );
         //}
         return true;
-    }
-
-    /**
-     * An error handler that mutes strict errors
-     */
-    public function muteStrictErrorHandler($errno, $errstr, $errfile=null, $errline=null, $errcontext=null) {
-        if ($errno == E_STRICT) return;
-        return call_user_func($this->parent_handler, $errno, $errstr, $errfile, $errline, $errcontext);
     }
 
 }

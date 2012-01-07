@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -146,14 +146,11 @@ class CRM_Admin_Form_Options extends CRM_Admin_Form
                    ts('Label'),
                    CRM_Core_DAO::getAttribute( 'CRM_Core_DAO_OptionValue', 'label' ),
                    true );
-        
-        if ( !in_array( $this->_gName, array( 'email_greeting', 'postal_greeting', 'addressee' ) ) && ! $isReserved ) {
-            $this->addRule( 'label',
-                            ts('This Label already exists in the database for this option group. Please select a different Value.'),
-                            'optionExists',
-                            array( 'CRM_Core_DAO_OptionValue', $this->_id, $this->_gid, 'label' ) );
-        }
-        
+        $this->addRule( 'label',
+                        ts('This Label already exists in the database for this option group. Please select a different Value.'),
+                        'optionExists',
+                        array( 'CRM_Core_DAO_OptionValue', $this->_id, $this->_gid, 'label' ) );
+
         if ( $this->_gName == 'case_status' ) {
             $classes = array( 'Opened' => ts('Opened'),
                               'Closed' => ts('Closed') );
@@ -168,17 +165,15 @@ class CRM_Admin_Form_Options extends CRM_Admin_Form
         $required = false;
         if ( $this->_gName == 'custom_search' ) {
             $required = true;
-        } elseif ( $this->_gName == 'redaction_rule' || $this->_gName == 'engagement_index' ) {
+        } elseif ( $this->_gName == 'redaction_rule' ) {
             $this->add( 'text', 
                         'value', 
                         ts('Value'), 
                         CRM_Core_DAO::getAttribute( 'CRM_Core_DAO_OptionValue', 'value' ),
                         true );
-            if ( $this->_gName == 'redaction_rule' ) {
-                $this->add( 'checkbox', 
-                            'filter', 
-                            ts('Regular Expression?'));
-            }
+            $this->add( 'checkbox', 
+                        'filter', 
+                        ts('Regular Expression?'));
         }
         if ( $this->_gName == 'participant_listing' ) {
             $this->add('text', 
@@ -224,25 +219,24 @@ class CRM_Admin_Form_Options extends CRM_Admin_Form
         }
 
         $enabled = $this->add('checkbox', 'is_active', ts('Enabled?'));
-       
-        if ( $isReserved ) {
+        
+        if ($isReserved) {
             $enabled->freeze( );
         }
         
         //fix for CRM-3552, CRM-4575
-        if ( in_array( $this->_gName, array('email_greeting', 'postal_greeting', 'addressee', 'from_email_address', 'case_status', 'encounter_medium') ) ) {
+        if ( in_array( $this->_gName, array('email_greeting', 'postal_greeting', 'addressee', 'from_email_address') ) ) {
             $this->assign( 'showDefault', true );
             $this->add('checkbox', 'is_default', ts('Default Option?'));
         }
         
-        //get contact type for which user want to create a new greeting/addressee type, CRM-4575
+         //get contact type for which user want to create a new greeting/addressee type, CRM-4575
         if ( in_array( $this->_gName, array( 'email_greeting', 'postal_greeting', 'addressee' ) ) && ! $isReserved ) {
             $values = array( 1 => ts('Individual'), 2 => ts('Household') );
             if ( $this->_gName == 'addressee' ) {
                 $values[] =  ts('Organization'); 
             }
-            $values[4] = ts('Multiple Contact Merge');
-            $this->add( 'select', 'contactOptions', ts('Contact Type'), array( '' => '-select-' ) + $values, true );
+            $this->add( 'select', 'contactOptions', ts('Contact Type'),array('' => '-select-' ) + $values, true );
             $this->assign( 'showContactFilter', true );
         }
         
@@ -277,23 +271,6 @@ class CRM_Admin_Form_Options extends CRM_Admin_Form
         if ( $self->_gName == 'case_status' && !CRM_Utils_Array::value( 'grouping', $fields ) ) {
             $errors['grouping'] = ts('Status class is a required field');
         } 
-
-        if ( in_array( $self->_gName, array( 'email_greeting', 'postal_greeting', 'addressee' ) ) 
-             && !$self->_defaultValues['is_reserved'] ) {
-            $label     = $fields['label'];
-            $condition = " AND v.label = '{$label}' ";
-            $values    = CRM_Core_OptionGroup::values( $self->_gName, false, false, false, $condition, 'filter' );
-            $checkContactOptions = true;
-            
-            if ( $self->_id && ( $self->_defaultValues['contactOptions'] == $fields['contactOptions'] ) ) {
-                $checkContactOptions = false;
-            }
-            
-            if ( $checkContactOptions && in_array( $fields['contactOptions'], $values ) ) {
-                $errors['label'] = ts('This Label already exists in the database for the selected contact type.');
-            }
-        }
-
         if ( $self->_gName == 'from_email_address' ) {
             require_once 'CRM/Utils/Mail.php';
             $formEmail = CRM_Utils_Mail::pluckEmailFromHeader( $fields['label'] );
@@ -346,15 +323,10 @@ class CRM_Admin_Form_Options extends CRM_Admin_Form
                     $params['filter'] = $filter;
                     $params['reset_default_for'] = array( 'filter' => "0, ". $params['filter'] );
                 }
-                
-                //make sure we should has to have space, CRM-6977
-                if ( $this->_gName == 'from_email_address' ) {
-                    $params['label'] = str_replace( '"<', '" <', $params['label'] );  
-                }
             }
             
             // set db value of filter in params if filter is non editable
-            if ( $this->_id && !array_key_exists( 'filter', $params ) && !$this->_gName == 'participant_role' ) {
+            if ( $this->_id && !array_key_exists( 'filter', $params ) ) {
                 $params['filter'] = CRM_Core_DAO::getFieldValue( 'CRM_Core_DAO_OptionValue', $this->_id, 'filter', 'id' ) ;
             }
             

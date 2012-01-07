@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -87,7 +87,7 @@ class CRM_Event_Form_Task extends CRM_Core_Form
     {
         $form->_participantIds = array( );
         
-        $values = $form->controller->exportValues( $form->get( 'searchFormName' ) );
+        $values = $form->controller->exportValues( 'Search' );
 
         $form->_task = $values['task'];
         $eventTasks = CRM_Event_Task::tasks();
@@ -102,15 +102,9 @@ class CRM_Event_Form_Task extends CRM_Core_Form
             }
         } else {
             $queryParams =  $form->get( 'queryParams' );
-            $sortOrder = null;
-            if ( $form->get( CRM_Utils_Sort::SORT_ORDER  ) ) {
-                $sortOrder = $form->get( CRM_Utils_Sort::SORT_ORDER );
-            }
-
             $query       = new CRM_Contact_BAO_Query( $queryParams, null, null, false, false, 
                                                        CRM_Contact_BAO_Query::MODE_EVENT);
-            $query->_distinctComponentClause = " DISTINCT(civicrm_participant.id)";
-            $result = $query->searchQuery(0, 0, $sortOrder);
+            $result = $query->searchQuery(0, 0, null);
             while ($result->fetch()) {
                 $ids[] = $result->participant_id;
             }
@@ -133,13 +127,7 @@ class CRM_Event_Form_Task extends CRM_Core_Form
         $urlParams = 'force=1';
         if ( CRM_Utils_Rule::qfKey( $qfKey ) ) $urlParams .= "&qfKey=$qfKey";
         
-        $searchFormName = strtolower( $form->get( 'searchFormName' ) );
-        if ( $searchFormName == 'search' ) {
-            $session->replaceUserContext( CRM_Utils_System::url( 'civicrm/event/search', $urlParams ) );
-        } else {
-            $session->replaceUserContext( CRM_Utils_System::url( "civicrm/contact/search/$searchFormName",
-                                                                 $urlParams ) );
-        }
+        $session->replaceUserContext( CRM_Utils_System::url( 'civicrm/event/search', $urlParams ) );
     }
 
     /**

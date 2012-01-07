@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -217,11 +217,6 @@ class CRM_Member_Import_Form_MapField extends CRM_Core_Form {
                 $highlightedFields[] = $name;
             }
         }    
-
-        // modify field title
-        $this->_mapperFields['status_id']          = ts('Membership Status');
-        $this->_mapperFields['membership_type_id'] = ts('Membership Type');
-        
         self::$_contactType = $this->get('contactType');
         $this->assign( 'highlightedFields', $highlightedFields );
     }
@@ -262,7 +257,7 @@ class CRM_Member_Import_Form_MapField extends CRM_Core_Form {
             $this->assign('loadedMapping', $mappingDetails->name);
             $this->set('loadedMapping', $savedMapping);
             
-            $getMappingName = new CRM_Core_DAO_Mapping();
+            $getMappingName =&  new CRM_Core_DAO_Mapping();
             $getMappingName->id = $savedMapping;
             $getMappingName->mapping_type = 'Import Memberships';
             $getMappingName->find();
@@ -445,7 +440,6 @@ class CRM_Member_Import_Form_MapField extends CRM_Core_Form {
                     $weightSum += $ruleFields[$val];
                 }
             }
-            $fieldMessage = '';
             foreach ($ruleFields as $field => $weight) {
                 $fieldMessage .= ' '.$field.'(weight '.$weight.')';
             }
@@ -458,16 +452,10 @@ class CRM_Member_Import_Form_MapField extends CRM_Core_Form {
                              in_array('membership_id', $importKeys) ) {
                             continue;    
                         } else {
-                            if ( !isset($errors['_qf_default']) ) {
-                                $errors['_qf_default'] = '';
-                            }
                             $errors['_qf_default'] .= ts('Missing required contact matching fields.') . " $fieldMessage " . ts('(Sum of all weights should be greater than or equal to threshold: %1).',array(1 => $threshold)) . ' ' . ts('(OR Membership ID if update mode.)') . '<br />';
                         }
                         
                     } else {
-                        if ( !isset($errors['_qf_default']) ) {
-                            $errors['_qf_default'] = '';
-                        }
                         $errors['_qf_default'] .= ts('Missing required field: %1', array(1 => $title)) . '<br />';
                     }
                 }
@@ -535,13 +523,13 @@ class CRM_Member_Import_Form_MapField extends CRM_Core_Form {
             $mapper[$i]     = $this->_mapperFields[$mapperKeys[$i][0]];
             $mapperKeysMain[$i] = $mapperKeys[$i][0];
             
-            if ( CRM_Utils_Array::value( 1, $mapperKeys[$i] ) && is_numeric( $mapperKeys[$i][1] ) ) {
+            if (is_numeric($mapperKeys[$i][1])) {
                 $mapperLocType[$i] = $mapperKeys[$i][1];
             } else {
                 $mapperLocType[$i] = null;
             }
 
-            if ( CRM_Utils_Array::value( 2, $mapperKeys[$i] ) && ( !is_numeric( $mapperKeys[$i][2] ) ) ) {
+            if ( !is_numeric($mapperKeys[$i][2])) {
                 $mapperPhoneType[$i] = $mapperKeys[$i][2];
             } else {
                 $mapperPhoneType[$i] = null;
@@ -572,10 +560,7 @@ class CRM_Member_Import_Form_MapField extends CRM_Core_Form {
                 $updateMappingFields->mapping_id = $params['mappingId'];
                 $updateMappingFields->column_number = $i;
 
-                $mapperKeyParts = explode( '_', $mapperKeys[$i][0], 3 );
-                $id     = isset( $mapperKeyParts[0] ) ? $mapperKeyParts[0] : null;
-                $first  = isset( $mapperKeyParts[1] ) ? $mapperKeyParts[1] : null;
-                $second = isset( $mapperKeyParts[2] ) ? $mapperKeyParts[2] : null;
+                list($id, $first, $second) = explode('_', $mapperKeys[$i][0]);
                 $updateMappingFields->name = $mapper[$i];
                 $updateMappingFields->save();                
             }
@@ -596,10 +581,7 @@ class CRM_Member_Import_Form_MapField extends CRM_Core_Form {
                 $saveMappingFields->mapping_id = $saveMapping->id;
                 $saveMappingFields->column_number = $i;                             
                 
-                $mapperKeyParts = explode( '_', $mapperKeys[$i][0], 3 );
-                $id     = isset( $mapperKeyParts[0] ) ? $mapperKeyParts[0] : null;
-                $first  = isset( $mapperKeyParts[1] ) ? $mapperKeyParts[1] : null;
-                $second = isset( $mapperKeyParts[2] ) ? $mapperKeyParts[2] : null;
+                list($id, $first, $second) = explode('_', $mapperKeys[$i][0]);
                 $saveMappingFields->name = $mapper[$i];
                 $saveMappingFields->save();
             }

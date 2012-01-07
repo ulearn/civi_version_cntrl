@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -65,23 +65,16 @@ class CRM_Case_Form_Activity_ChangeCaseType
         
         $defaults['reset_date_time'] = array( );
         list( $defaults['reset_date_time'], $defaults['reset_date_time_time'] ) = CRM_Utils_Date::setDateDefaults( null, 'activityDateTime' );
-        $defaults['case_type_id'] = $form->_caseTypeId;
+        $caseType  = CRM_Case_PseudoConstant::caseTypeName( $form->_caseId );
+        $defaults['case_type_id'] = $caseType['id'];
 
         return $defaults;
     }
 
     static function buildQuickForm( &$form ) 
     { 
-        require_once 'CRM/Case/PseudoConstant.php';
-        $form->_caseType   = CRM_Case_PseudoConstant::caseType( );
-        $caseTypeId        = explode( CRM_Case_BAO_Case::VALUE_SEPARATOR, CRM_Core_DAO::getFieldValue( 'CRM_Case_DAO_Case',
-                                                                                                       $form->_caseId,
-                                                                                                       'case_type_id' ) );
-        $form->_caseTypeId = $caseTypeId[1];
-        if ( !in_array( $form->_caseTypeId, $form->_caseType ) ) {
-            $form->_caseType[$form->_caseTypeId] = CRM_Core_OptionGroup::getLabel( 'case_type', $form->_caseTypeId, false );
-        }
-
+        require_once 'CRM/Core/OptionGroup.php';        
+        $form->_caseType = CRM_Core_OptionGroup::values('case_type');
         $form->add('select', 'case_type_id',  ts( 'New Case Type' ),  
                    $form->_caseType , true);
 
@@ -137,9 +130,7 @@ class CRM_Case_Form_Activity_ChangeCaseType
             return;
         }
 
-        require_once 'CRM/Case/PseudoConstant.php';
-        $caseTypes    = CRM_Case_PseudoConstant::caseType( 'name' );
-        $allCaseTypes = CRM_Case_PseudoConstant::caseType( 'label', false );
+        $caseTypes = CRM_Case_PseudoConstant::caseType( 'name' );
         
         if ( CRM_Utils_Array::value($params['case_type_id'], $caseTypes) ) {
             $caseType  = $caseTypes[$params['case_type_id']];
@@ -154,10 +145,7 @@ class CRM_Case_Form_Activity_ChangeCaseType
         }
         
         if ($activity->subject == 'null'){
-            $activity->subject = ts( 'Case type changed from %1 to %2', 
-                                     array( 1 => CRM_Utils_Array::value( $form->_defaults['case_type_id'], $allCaseTypes ),
-                                            2 => CRM_Utils_Array::value( $params['case_type_id'], $allCaseTypes ) )
-                                     );
+            $activity->subject = ts('Case type changed to:') . ' ' . CRM_Utils_Array::value( $params['case_type_id'], $form->_caseType );
             $activity->save();            
         }
         

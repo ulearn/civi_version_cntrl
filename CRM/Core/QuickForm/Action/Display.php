@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  * Redefine the display action.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -127,13 +127,9 @@ class CRM_Core_QuickForm_Action_Display extends CRM_Core_QuickForm_Action {
         }
 
         $template->assign( 'action' , $page->getAction( ) );
-
-        $pageTemplateFile = $page->getTemplateFileName( );
-        $template->assign( 'tplFile', $pageTemplateFile );
+        $template->assign( 'tplFile', $page->getTemplateFileName() ); 
 
         $content = $template->fetch( $controller->getTemplateFile( ) );
-
-        CRM_Utils_System::appendTPLFile( $pageTemplateFile, $content );
 
         $print = $controller->getPrint( );
         if ( $print ) {
@@ -149,8 +145,7 @@ class CRM_Core_QuickForm_Action_Display extends CRM_Core_QuickForm_Action {
         if ( $print ) {
             if ( $print == CRM_Core_Smarty::PRINT_PDF ) {
                 require_once 'CRM/Utils/PDF/Utils.php';
-                CRM_Utils_PDF_Utils::html2pdf( $content, "{$page->_name}.pdf", false,
-                                               array( 'paper_size' => 'a3', 'orientation' => 'landscape' ) );
+                CRM_Utils_PDF_Utils::domlib( $content, "{$page->_name}.pdf" );
             } else {
                 echo $html;
             }
@@ -192,14 +187,8 @@ class CRM_Core_QuickForm_Action_Display extends CRM_Core_QuickForm_Action {
         }
 
         $config = CRM_Core_Config::singleton();
-
-        $templateDir = $config->templateDir;
-        if ( is_array( $templateDir ) ) {
-            $templateDir = array_pop( $templateDir );
-        }
-
-        self::$_requiredTemplate = file_get_contents( $templateDir . '/CRM/Form/label.tpl' );
-        self::$_errorTemplate    = file_get_contents( $templateDir . '/CRM/Form/error.tpl' );
+        self::$_requiredTemplate = file_get_contents( $config->templateDir . '/CRM/Form/label.tpl' );
+        self::$_errorTemplate    = file_get_contents( $config->templateDir . '/CRM/Form/error.tpl' );
     }
 
 }

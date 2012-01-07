@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -27,7 +27,6 @@
 <script type="text/javascript" >
 var text_message = null;
 var html_message = null;
-var isPDF        = false;
 var isMailing    = false;
 
 {/literal}
@@ -44,12 +43,6 @@ var isMailing    = false;
     {/literal}
 {/if}
 
-{if $form.formName eq 'PDF'}
-    {literal}
-    isPDF = true;
-    {/literal}
-{/if}
-
 {if $templateSelected}
     {literal}
     if ( document.getElementsByName("saveTemplate")[0].checked ) {
@@ -60,6 +53,17 @@ var isMailing    = false;
 {literal}
 
 var editor = {/literal}"{$editor}"{literal};
+function loadEditor()
+{
+    var msg =  {/literal}"{$htmlContent}"{literal};
+    if (msg) {
+        if ( editor == "ckeditor" ) {
+            oEditor = CKEDITOR.instances[html_message];
+            oEditor.setData( msg );
+        }
+    }
+}
+
 function showSaveUpdateChkBox()
 {
     if ( document.getElementById('template') == null ) {
@@ -89,29 +93,16 @@ function showSaveUpdateChkBox()
 }
 
 function selectValue( val ) {
-    document.getElementsByName("saveTemplate")[0].checked = false;
-    document.getElementsByName("updateTemplate")[0].checked = false;
-    showSaveUpdateChkBox();
     if ( !val ) {
-        if ( !isPDF ) {
-            document.getElementById(text_message).value ="";
-            document.getElementById("subject").value ="";
-        }
+        document.getElementById(text_message).value ="";
+        document.getElementById("subject").value ="";
         if ( editor == "ckeditor" ) {
             oEditor = CKEDITOR.instances[html_message];
             oEditor.setData('');
         } else if ( editor == "tinymce" ) {
             tinyMCE.getInstanceById(html_message).setContent( html_body );
-        } else if ( editor == "joomlaeditor" ) { 
-            document.getElementById(html_message).value = '' ;
-            tinyMCE.execCommand('mceSetContent',false, '');               
-        } else if (editor == "drupalwysiwyg") {
-            //doesn't work! WYSIWYG API doesn't support a clear or replace method
         } else {	
             document.getElementById(html_message).value = '' ;
-        }
-        if ( isPDF ) {
-            showBindFormatChkBox();
         }
         return;
     }
@@ -119,18 +110,17 @@ function selectValue( val ) {
     var dataUrl = {/literal}"{crmURL p='civicrm/ajax/template' h=0 }"{literal};
 
     cj.post( dataUrl, {tid: val}, function( data ) {
-        if ( !isPDF ) {
-            cj("#subject").val( data.subject );
-            
-            if ( data.msg_text ) {      
-                cj("#"+text_message).val( data.msg_text );
-                cj("div.text").show();
-                cj(".head").find('span').removeClass().addClass('ui-icon ui-icon-triangle-1-s');
-                cj("#helptext").show(); 
-            } else {
-                cj("#"+text_message).val("");
-            }
+        cj("#subject").val( data.subject );
+
+        if ( data.msg_text ) {      
+            cj("#"+text_message).val( data.msg_text );
+            cj("div.text").show();
+            cj(".head").find('span').removeClass().addClass('ui-icon ui-icon-triangle-1-s');
+            cj("#helptext").show(); 
+        } else {
+            cj("#"+text_message).val("");
         }
+
         var html_body  = "";
         if (  data.msg_html ) {
             html_body = data.msg_html;
@@ -140,27 +130,17 @@ function selectValue( val ) {
             oEditor = CKEDITOR.instances[html_message];
             oEditor.setData( html_body );
         } else if ( editor == "tinymce" ) {
-            tinyMCE.execInstanceCommand('html_message',"mceInsertContent",false, html_body );
-        } else if ( editor == "joomlaeditor" ) { 
-            cj("#"+ html_message).val( html_body );
-            tinyMCE.execCommand('mceSetContent',false, html_body);           
-        } else if ( editor =="drupalwysiwyg" ) {
-            Drupal.wysiwyg.instances[html_message].insert(html_body);
-        } else {
+            cj('#'+ html_message).tinymce().execCommand('mceSetContent',false, html_body);
+        } else {	
             cj("#"+ html_message).val( html_body );
         }
-        if ( isPDF ) {
-            var bind = data.pdf_format_id ? true : false ;
-            selectFormat( data.pdf_format_id, bind );
-            if ( !bind ) {
-                document.getElementById("bindFormat").style.display = "none";
-            }
-        }
-    }, 'json');    
-}
+
+        }, 'json');    
+    }
 
  if ( isMailing ) { 
      document.getElementById("editMessageDetails").style.display = "block";
+    
 
     function verify( select )
     {
@@ -200,47 +180,26 @@ function selectValue( val ) {
     {if $editor eq "ckeditor"}
         {literal}
         cj( function() {
-            oEditor = CKEDITOR.instances['html_message'];
+            oEditor = CKEDITOR.instances[html_message];
+            oEditor.setData( {/literal}'{$message_html}'{literal});
             oEditor.BaseHref = '' ;
             oEditor.UserFilesPath = '' ; 
-	    oEditor.on( 'focus', verify );
+            loadEditor();
+	        oEditor.on( 'focus', verify );
         });
         {/literal}
-    {elseif $editor eq "tinymce"}
+    {else if $editor eq "tinymce"}
         {literal}
         cj( function( ) {
-	if ( isMailing ) { 
- 	  cj('div.html').hover( 
-	  function( ) {
-	     if ( cj('#'+ html_message).tinymce() ) {
-	     cj('#'+ html_message).tinymce().onKeyUp.add(function() {
- 	        verify( );
-  	     });
-	     }
-          },
-	  function( ) {
-	     if ( cj('#'+ html_message).tinymce() ) {
-	       if ( tinyMCE.get(html_message).getContent() ) {
-                 verify( );
-               } 
-	     }
-          }
-	  );
-        }
+            cj("#"+ html_message).keypress( function( ) {
+               if ( isMailing ) { 
+                    verify();
+               }
+               
+            });
         });
         {/literal}
-    {elseif $editor eq "drupalwysiwyg"}
-      {literal}
-      cj( function( ) {
-        if ( isMailing ) { 
-          cj('div.html').hover(
-            verify,
-            verify
-          );  
-        }
-     });
-     {/literal}
-     {/if}
+    {/if}
     {literal}
  }
 
@@ -252,9 +211,14 @@ function selectValue( val ) {
         }else {
            ( isMailing ) ? text_message = "text_message" : text_message = "msg_text";
         }          
-        
-        cj( "#"+ text_message ).replaceSelection( token ); 
-
+        var msg       = cj("#"+ text_message).val( );
+        var cursorlen = document.getElementById(text_message).selectionStart;
+        var textlen   = msg.length;
+        document.getElementById(text_message).value = msg.substring(0, cursorlen) + token + msg.substring(cursorlen, textlen);
+        var cursorPos = (cursorlen + token.length);
+        document.getElementById(text_message).selectionStart = cursorPos;
+        document.getElementById(text_message).selectionEnd   = cursorPos;
+        document.getElementById(text_message).focus();
         if ( isMailing ) { 
              verify();
         }
@@ -265,9 +229,11 @@ function selectValue( val ) {
         var token2     = cj("#token2").val( )[0];
         var editor     = {/literal}"{$editor}"{literal};
         if ( editor == "tinymce" ) {
-            tinyMCE.execInstanceCommand('html_message',"mceInsertContent",false, token2 );
-        } else if ( editor == "joomlaeditor" ) { 
-            tinyMCE.execCommand('mceInsertContent',false, token2);
+            cj('#'+ html_message).tinymce().execCommand('mceInsertContent',false, token2);
+        } else if ( editor == "ckeditor" ) {
+            oEditor = CKEDITOR.instances[html_message];
+            oEditor.insertHtml(token2.toString() );
+        } else {
             var msg       = document.getElementById(html_message).value;
             var cursorlen = document.getElementById(html_message).selectionStart;
             var textlen   = msg.length;
@@ -275,14 +241,7 @@ function selectValue( val ) {
             var cursorPos = (cursorlen + token2.length);
             document.getElementById(html_message).selectionStart = cursorPos;
             document.getElementById(html_message).selectionEnd   = cursorPos;
-            document.getElementById(html_message).focus();            
-        } else if ( editor == "ckeditor" ) {
-            oEditor = CKEDITOR.instances[html_message];
-            oEditor.insertHtml(token2.toString() );
-        } else if ( editor == "drupalwysiwyg" ) {
-            Drupal.wysiwyg.instances[html_message].insert(token2.toString());
-        } else {
-            cj( "#"+ html_message ).replaceSelection( token2 );
+            document.getElementById(html_message).focus();
         }
 
         if ( isMailing ) { 
@@ -341,7 +300,6 @@ function selectValue( val ) {
                             switch ({/literal}"{$editor}"{literal}) {
                                 case 'ckeditor': { oEditor = CKEDITOR.instances[html_message]; oEditor.focus(); break;}
                                 case 'tinymce'  : { tinyMCE.get(html_message).focus(); break; } 
-                                case 'joomlaeditor' : { tinyMCE.get(html_message).focus(); break; } 
                                 default         : { cj("#"+ html_message).focus(); break; } 
                         }
                     } else if (element == 'Subject') {
@@ -356,10 +314,8 @@ function selectValue( val ) {
     }
 
     cj(function() {
-        if ( !cj().find('div.crm-error').text() ) {
-          cj(window).load(function () {           
-            setSignature();
-          });
+        if ( !cj().find('div.crm-error').text() ) {            
+            setSignature( );
         }
 
         cj("#fromEmailAddress").change( function( ) {
@@ -383,16 +339,14 @@ function selectValue( val ) {
                 
                 if ( data.signature_html ) {
                     var htmlMessage =  cj("#"+ html_message).val( ) + '<br/><br/>--<br/>' + data.signature_html;
-                    
+
                     // set wysiwg editor
                     if ( editor == "ckeditor" ) {
                         oEditor = CKEDITOR.instances[html_message];
                         var htmlMessage = oEditor.getData( ) + '<br/><br/>--' + data.signature_html;
                         oEditor.setData( htmlMessage  );
                     } else if ( editor == "tinymce" ) {
-                        tinyMCE.execInstanceCommand('html_message',"mceInsertContent",false, htmlMessage );
-                    }  else if ( editor == "drupalwysiwyg" ) {
-                        Drupal.wysiwyg.instances[html_message].insert(htmlMessage);
+                        cj('#'+ html_message).tinymce().execCommand('mceSetContent',false, htmlMessage );
                     } else {	
                         cj("#"+ html_message).val( htmlMessage );
                     }

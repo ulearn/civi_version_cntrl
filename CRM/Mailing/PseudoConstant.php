@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -38,14 +38,7 @@
  * This class holds all the Pseudo constants that are specific to Mass mailing. This avoids
  * polluting the core class and isolates the mass mailer class
  */
-class CRM_Mailing_PseudoConstant extends CRM_Core_PseudoConstant
-{
-    /**
-     * mailing approval status
-     * @var array
-     * @static
-     */
-    private static $approvalStatus;
+class CRM_Mailing_PseudoConstant extends CRM_Core_PseudoConstant {
 
     /**
      * mailing templates
@@ -176,52 +169,6 @@ class CRM_Mailing_PseudoConstant extends CRM_Core_PseudoConstant
         return self::$completed;
     }
 
-    /**
-     * Get all mail approval status.
-     *
-     * The static array approvalStatus is returned
-     *
-     * @access public
-     * @static
-     *
-     * @return array - array reference of all mail approval statuses
-     *
-     */
-    public static function &approvalStatus( )
-    {
-        if ( ! self::$approvalStatus ) {
-            require_once 'CRM/Core/OptionGroup.php';
-            self::$approvalStatus = CRM_Core_OptionGroup::values('mail_approval_status');
-        }
-        return self::$approvalStatus;
-    }
-
-    /**
-     * Labels for advanced search against mailing summary.
-     * 
-     * @param $field
-     * @return unknown_type
-     */
-    public static function &yesNoOptions($field) {
-        static $options;
-        if (! $options) {
-            $options = array(
-                'bounce'  => array( 
-                    'N' => ts('Successful '), 'Y' => ts('Bounced '), 
-                ),
-                'open' => array( 
-                    'Y' => ts('Opened '), 'N' => ts('Unopened/Hidden '),
-                ),
-                'click'  => array( 
-                    'Y' => ts('Clicked '), 'N' => ts('Not Clicked '),
-                ),
-                'reply' => array(
-                     'Y' => ts('Replied '), 'N' => ts('No Reply '),
-                ),
-            );
-        }
-        return $options[$field];
-    }
 
 }
 

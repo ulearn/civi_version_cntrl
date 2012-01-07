@@ -1,3 +1,4 @@
+;
 ; Copyright (C) Neil Goodman 2010
 ; @license GNU General Public License version 2 or later
 ;
@@ -7,4 +8,4 @@ description = "Synchronize CiviCRM Contacts with Membership Status to a specifie
 dependencies[] = civicrm
 package = CiviCRM
 core = 6.x
-version = 3.4
+version = 3.1

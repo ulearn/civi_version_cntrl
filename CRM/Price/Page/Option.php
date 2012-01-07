@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -97,13 +97,13 @@ class CRM_Price_Page_Option extends CRM_Core_Page
                                                                           ),
                                         CRM_Core_Action::DISABLE => array(
                                                                           'name'  => ts('Disable'),
-                                                                          'extra' => 'onclick = "enableDisable( %%oid%%,\''. 'CRM_Price_BAO_FieldValue' . '\',\'' . 'enable-disable' . '\' );"',
+                                                                          'extra' => 'onclick = "enableDisable( %%oid%%,\''. 'CRM_Core_BAO_OptionValue' . '\',\'' . 'enable-disable' . '\' );"',
                                                                           'ref'   => 'disable-action',
                                                                           'title' => ts('Disable Price Option') 
                                                                           ),
                                         CRM_Core_Action::ENABLE  => array(
                                                                           'name'  => ts('Enable'),
-                                                                          'extra' => 'onclick = "enableDisable( %%oid%%,\''. 'CRM_Price_BAO_FieldValue' . '\',\'' . 'disable-enable' . '\' );"',
+                                                                          'extra' => 'onclick = "enableDisable( %%oid%%,\''. 'CRM_Core_BAO_OptionValue' . '\',\'' . 'disable-enable' . '\' );"',
                                                                           'ref'   => 'enable-action',
                                                                           'title' => ts('Enable Price Option') 
                                                                           ),
@@ -129,10 +129,11 @@ class CRM_Price_Page_Option extends CRM_Core_Page
     function browse( )
     {
         $customOption = array( );
-
-        require_once 'CRM/Price/BAO/FieldValue.php';
-        CRM_Price_BAO_FieldValue::getValues( $this->_fid, $customOption );
-
+        
+        $groupParams  = array( 'name' => "civicrm_price_field.amount.{$this->_fid}" );
+        
+        require_once 'CRM/Core/OptionValue.php';
+        CRM_Core_OptionValue::getValues( $groupParams, $customOption );
         $config = CRM_Core_Config::singleton( );
         foreach ( $customOption as $id => $values ) {
             $action = array_sum( array_keys( $this->actionLinks( ) ) );
@@ -156,13 +157,12 @@ class CRM_Price_Page_Option extends CRM_Core_Page
         }
         // Add order changing widget to selector
         $returnURL = CRM_Utils_System::url( 'civicrm/admin/price/field/option', "action=browse&reset=1&fid={$this->_fid}&sid={$this->_sid}" );
-        $filter    = "price_field_id = {$this->_fid}";
+        $filter    = "option_group_id = (SELECT id FROM civicrm_option_group WHERE name = 'civicrm_price_field.amount.{$this->_fid}')";
         require_once 'CRM/Utils/Weight.php';
-        CRM_Utils_Weight::addOrder( $customOption, 'CRM_Price_DAO_FieldValue',
+        CRM_Utils_Weight::addOrder( $customOption, 'CRM_Core_DAO_OptionValue',
                                     'id', $returnURL, $filter );
 
         $this->assign('customOption', $customOption);
-        $this->assign('sid', $this->_sid);
     }
 
 
@@ -191,7 +191,6 @@ class CRM_Price_Page_Option extends CRM_Core_Page
         }
         // set the userContext stack
         $session = CRM_Core_Session::singleton( );
-
         $session->pushUserContext( CRM_Utils_System::url( 'civicrm/admin/price/field/option', 
                                                           "reset=1&action=browse&fid={$this->_fid}&sid={$this->_sid}" ) );
         $controller = new CRM_Core_Controller_Simple( 'CRM_Price_Form_Option', ts('Price Field Option'), $action );
@@ -199,8 +198,6 @@ class CRM_Price_Page_Option extends CRM_Core_Page
         $controller->setEmbedded( true );
         $controller->process( );
         $controller->run( );
-               
-
         $this->browse( );
                
         if ( $action &  CRM_Core_Action::DELETE ) {
@@ -209,8 +206,7 @@ class CRM_Price_Page_Option extends CRM_Core_Page
             $url = CRM_Utils_System::url( 'civicrm/admin/price/field/option', 'reset=1' );
             CRM_Utils_System::appendBreadCrumb( ts('Price Option'),
                                                 $url );
-            require_once 'CRM/Price/BAO/FieldValue.php';
-            $this->assign( 'usedPriceSetTitle', CRM_Price_BAO_FieldValue::getOptionLabel($oid) );
+            $this->assign( 'usedPriceSetTitle', CRM_Core_BAO_OptionValue::getTitle($oid) );
             $this->assign( 'usedBy', $usedBy );
             $comps = array( "Event"        => "civicrm_event", 
                             "Contribution" => "civicrm_contribution_page" );

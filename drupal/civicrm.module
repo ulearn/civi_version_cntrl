@@ -23,7 +23,7 @@
  * Drupal module file.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -40,12 +40,8 @@ function civicrm_html_head()
         return;
     }
 
-    $head = null;
     if ( arg(0) == 'civicrm' ) {
-        require_once 'CRM/Core/Config.php';
-        $config = CRM_Core_Config::singleton();
-
-        $template = CRM_Core_Smarty::singleton( );
+        $template =& CRM_Core_Smarty::singleton( );
         $buffer = $template->fetch( 'CRM/common/jquery.files.tpl' );
         $lines  = preg_split( '/\s+/', $buffer );
         foreach ( $lines as $line ) {
@@ -53,12 +49,27 @@ function civicrm_html_head()
             if ( empty( $line ) ) {
                 continue;
             }
-            if ( strpos( $line, '.css' ) !== false ) {
+            if ( strpos( $line, '.js' ) !== false ) {
+                drupal_add_js( drupal_get_path('module', 'civicrm' ) . '/../' . $line );
+            } else if ( strpos( $line, '.css' ) !== false ) {
                 drupal_add_css( drupal_get_path('module', 'civicrm' ) . '/../' . $line );
             }
         }
-        
+
+        // add Common.js
+        drupal_add_js( drupal_get_path('module', 'civicrm' ) . '/../js/Common.js' );
+
+        // add the final assignment
+        drupal_add_js( 'var cj = jQuery.noConflict(); $ = cj;',
+                       'inline' );
+   
     }
+
+    require_once 'CRM/Core/Config.php';
+    $config = CRM_Core_Config::singleton();
+
+    $head = null;
+
     if ( isset( $config->customCSSURL ) && ! empty( $config->customCSSURL ) ) {
         $head  = "<style type=\"text/css\">@import url({$config->customCSSURL});</style>\n";
     } else {
@@ -66,6 +77,7 @@ function civicrm_html_head()
         drupal_add_css(drupal_get_path('module', 'civicrm') . '/../css/civicrm.css'); 
         drupal_add_css(drupal_get_path('module', 'civicrm') . '/../css/extras.css'); 
     }
+    
     return $head;
 }
 
@@ -86,38 +98,37 @@ function civicrm_html_head()
  */
 function civicrm_help($section)
 {	
+    if ( ! civicrm_initialize( ) ) {
+        return;
+    }
+    require_once 'CRM/Utils/System.php';
+    $docLinkAdmin = CRM_Utils_System::docURL2( "Administrator's Guide", true );
+    $docLinkAccess = CRM_Utils_System::docURL2( "Access Control", true );
     switch ($section) {
     case 'admin/help#civicrm':
-        if ( ! civicrm_initialize( ) ) {
-    	    return;
-        }
-
-        require_once 'CRM/Utils/System.php';
-        $docLinkAdmin = CRM_Utils_System::docURL2( "Administrator's Guide", true );
-        $docLinkAccess = CRM_Utils_System::docURL2( "Access Control", true );
-        $output = '<p>'. t('The CiviCRM module stores information on the universe of people associated with a community and on their interactions such as emails, donations, petitions, events, etc. It can act as a stand alone contact management system or it can be integrated with mass mailer, volunteer management, petition, and event finding. CiviCRM enables organizations to maintain all these activities in a single database, creating efficiencies and new opportunities for communities to better communicate and benefit from relationships with their community members.') .'</p>';
-        $output .= '<p>'. t('The CiviCRM module allows you to create contacts, or import them from other sources. You can record relationships between contacts, such as indicating they live in the same household. There are two types of groups of contacts. You can create static groups which have a set list of contacts. You can also create dynamic (smart) groups based on characteristics that contacts have in common. For example, you could create a group of all contacts who live in California AND who have volunteered for your organization within the past year. The CiviCRM module also allows for tagging for less formal categorization of contacts or groups. You can easily extend CiviCRM to record community member information which is specific to your community or organization using custom fields. For example, you can create a set of fields to track volunteer skills and preferences. CiviCRM profile gives you a way to allow community members (\'users\') to update their own information, as well as share some of that information with others. Finally, you can configure custom activity types such as volunteering or attending events.') .'</p>';
-        $output .= '<p>' . t('You can:') . '</p>';
-        $output .= '<ul>';
-        $output .= '<li>' . t('read the <a href="!1">CiviCRM Administrator Guide</a>.', array('!1' => $docLinkAdmin)) . '</li>';
-        $output .= '<li>' . t('enable CiviCRM blocks at <a href="!1">Administer &raquo; Site Building &raquo; Blocks</a>.', array('!1' => url('admin/build/block'))) . '</li>';
-        $output .= '<li>' . t('read about <a href="!1">CiviCRM access permissions</a> and set access permissions at <a href="!2">Administer CiviCRM &raquo; Access Control</a>.', array('!1' => $docLinkAccess, '!2' => url('civicrm/admin/access', array('query' => 'reset=1')))) . '</li>';
-        $output .= '<li>' . t('find contacts by name, email address, group membership and or tagging at <a href="!1">Find Contacts</a>.', array('!1' => url('civicrm/contact/search/basic', array('query' => 'reset=1')))) . '</li>';
-        $output .= '<li>' . t('do complex searches based on tags, group membership, location, activities and custom fields at <a href="!1">Advanced Search</a>.', array('!1' => url('civicrm/contact/search/advanced', array('query' => 'reset=1')))) . '</li>';
-        $output .= '<li>' . t('create or manage groups at <a href="!1">Manage Groups</a>.', array('!1' => url('civicrm/group', array('query' => 'reset=1')))) . '</li>';
-        $output .= '<li>' . t('import contacts from other sources at <a href="!1">Import Contacts</a>.', array('!1' => url('civicrm/import', array('query' => 'reset=1')))) . '</li>';
-        $output .= '<li>' . t('create or administer tags (e.g. organizer, foundation, environment...) at <a href="!1">CiviCRM &raquo; Administer &raquo; Tags</a>.', array('!1' => url('civicrm/admin/tag', array('query' => 'reset=1')))) . '</li>';
-        $output .= '<li>' . t('create or administer relationship types (e.g. household member, board member, spouse...) <a href="!1">CiviCRM &raquo; Administer &raquo; Relationship Types</a>.', array('!1' => url('civicrm/admin/reltype', array('query' => 'reset=1')))) . '</li>';
-        $output .= '<li>' . t('create or administer location types (e.g. home, work, school...) <a href="!1">CiviCRM &raquo; Administer &raquo; Location Types</a>.', array('!1' => url('civicrm/admin/locationType', array('query' => 'reset=1')))) . '</li>';
-        $output .= '<li>' . t('create or administer activity types (e.g. house meeting, intake interview...) at <a href="!1">CiviCRM &raquo; Administer &raquo; Activity Types</a>.', array('!1' => url('civicrm/admin/options/activity_type', array('query' => 'group=activity_type&reset=1')))) . '</li>';
-        $output .= '<li>' . t('create or administer custom data fields (e.g. volunteer skills, emergency contact info...) <a href="!1">CiviCRM &raquo; Administer &raquo; Custom Data</a>.', array('!1' => url('civicrm/admin/custom/group', array('query' => 'reset=1')))) . '</li>';
-        $output .= '<li>' . t('create or administer CiviCRM profiles (i.e. what contact data is collected during user registration and included in My Account) at <a href="!1">CiviCRM &raquo; Administer &raquo; CiviCRM Profiles</a>.', array('!1' => url('civicrm/admin/uf/group', array('query' => 'reset=1')))) . '</li>';
-        $output .= '</ul>';
-        $output .= '<p>'. t('For more information please refer to the <a href="!1">CiviCRM web-site</a> which includes project information, documentation and support resources and more.', array('!1' => 'http://civicrm.org')) .'</p>';
-        return $output;
-    case 'admin/modules#description':
-        // This description is shown in the listing at admin/modules.
-        return t('Constituent Relationship Management (CiviCRM !1). Allows sites to manage contacts, relationships and groups, and track contact activities, contributions, memberships and events. For more information please refer to the <a href="!2">CiviCRM web-site</a> which includes project information, documentation and support resources and more.', array('!1' => '2.2', '!2' => 'http://civicrm.org/'));
+      $output = '<p>'. t('The CiviCRM module stores information on the universe of people associated with a community and on their interactions such as emails, donations, petitions, events, etc. It can act as a stand alone contact management system or it can be integrated with mass mailer, volunteer management, petition, and event finding. CiviCRM enables organizations to maintain all these activities in a single database, creating efficiencies and new opportunities for communities to better communicate and benefit from relationships with their community members.') .'</p>';
+      $output .= '<p>'. t('The CiviCRM module allows you to create contacts, or import them from other sources. You can record relationships between contacts, such as indicating they live in the same household. There are two types of groups of contacts. You can create static groups which have a set list of contacts. You can also create dynamic (smart) groups based on characteristics that contacts have in common. For example, you could create a group of all contacts who live in California AND who have volunteered for your organization within the past year. The CiviCRM module also allows for tagging for less formal categorization of contacts or groups. You can easily extend CiviCRM to record community member information which is specific to your community or organization using custom fields. For example, you can create a set of fields to track volunteer skills and preferences. CiviCRM profile gives you a way to allow community members (\'users\') to update their own information, as well as share some of that information with others. Finally, you can configure custom activity types such as volunteering or attending events.') .'</p>';
+      $output .= '<p>' . t('You can:') . '</p>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('read the <a href="!1">CiviCRM Administrator Guide</a>.', array('!1' => $docLinkAdmin)) . '</li>';
+      $output .= '<li>' . t('enable CiviCRM blocks at <a href="!1">Administer &raquo; Site Building &raquo; Blocks</a>.', array('!1' => url('admin/build/block'))) . '</li>';
+      $output .= '<li>' . t('read about <a href="!1">CiviCRM access permissions</a> and set access permissions at <a href="!2">Administer CiviCRM &raquo; Access Control</a>.', array('!1' => $docLinkAccess, '!2' => url('civicrm/admin/access', array('query' => 'reset=1')))) . '</li>';
+      $output .= '<li>' . t('find contacts by name, email address, group membership and or tagging at <a href="!1">Find Contacts</a>.', array('!1' => url('civicrm/contact/search/basic', array('query' => 'reset=1')))) . '</li>';
+      $output .= '<li>' . t('do complex searches based on tags, group membership, location, activities and custom fields at <a href="!1">Advanced Search</a>.', array('!1' => url('civicrm/contact/search/advanced', array('query' => 'reset=1')))) . '</li>';
+      $output .= '<li>' . t('create or manage groups at <a href="!1">Manage Groups</a>.', array('!1' => url('civicrm/group', array('query' => 'reset=1')))) . '</li>';
+      $output .= '<li>' . t('import contacts from other sources at <a href="!1">Import Contacts</a>.', array('!1' => url('civicrm/import', array('query' => 'reset=1')))) . '</li>';
+      $output .= '<li>' . t('create or administer tags (e.g. organizer, foundation, environment...) at <a href="!1">CiviCRM &raquo; Administer &raquo; Tags</a>.', array('!1' => url('civicrm/admin/tag', array('query' => 'reset=1')))) . '</li>';
+      $output .= '<li>' . t('create or administer relationship types (e.g. household member, board member, spouse...) <a href="!1">CiviCRM &raquo; Administer &raquo; Relationship Types</a>.', array('!1' => url('civicrm/admin/reltype', array('query' => 'reset=1')))) . '</li>';
+      $output .= '<li>' . t('create or administer location types (e.g. home, work, school...) <a href="!1">CiviCRM &raquo; Administer &raquo; Location Types</a>.', array('!1' => url('civicrm/admin/locationType', array('query' => 'reset=1')))) . '</li>';
+      $output .= '<li>' . t('create or administer activity types (e.g. house meeting, intake interview...) at <a href="!1">CiviCRM &raquo; Administer &raquo; Activity Types</a>.', array('!1' => url('civicrm/admin/options/activity_type', array('query' => 'group=activity_type&reset=1')))) . '</li>';
+      $output .= '<li>' . t('create or administer custom data fields (e.g. volunteer skills, emergency contact info...) <a href="!1">CiviCRM &raquo; Administer &raquo; Custom Data</a>.', array('!1' => url('civicrm/admin/custom/group', array('query' => 'reset=1')))) . '</li>';
+      $output .= '<li>' . t('create or administer CiviCRM profiles (i.e. what contact data is collected during user registration and included in My Account) at <a href="!1">CiviCRM &raquo; Administer &raquo; CiviCRM Profiles</a>.', array('!1' => url('civicrm/admin/uf/group', array('query' => 'reset=1')))) . '</li>';
+      $output .= '</ul>';
+      $output .= '<p>'. t('For more information please refer to the <a href="!1">CiviCRM web-site</a> which includes project information, documentation and support resources and more.', array('!1' => 'http://civicrm.org')) .'</p>';
+      return $output;
+     case 'admin/modules#description':
+         // This description is shown in the listing at admin/modules.
+         return t('Constituent Relationship Management (CiviCRM !1). Allows sites to manage contacts, relationships and groups, and track contact activities, contributions, memberships and events. For more information please refer to the <a href="!2">CiviCRM web-site</a> which includes project information, documentation and support resources and more.', array('!1' => '2.2', '!2' => 'http://civicrm.org/'));
     }
 }
 
@@ -139,7 +150,7 @@ function civicrm_perm()
     $config = CRM_Core_Config::singleton();
 
     require_once 'CRM/Core/Permission.php';
-    $permissions = CRM_Core_Permission::basicPermissions( );
+    $permissions =& CRM_Core_Permission::basicPermissions( );
 	return array_keys( $permissions );
 }
 
@@ -273,19 +284,6 @@ function civicrm_initialize( )
       
         // Add module-specific header elements
         drupal_set_html_head(civicrm_html_head());
-        require_once 'CRM/Core/BAO/Preferences.php';
-        //fixme - after 3.4 is discontinued remove 3.4 support
-        //As this file may be shared between 3.4 & 4.1 releases use the BAO_Preferences::value legacy function if it exists
-        // in future only CRM_Core_BAO_Setting::getItem will be required
-        if ((method_exists('CRM_Core_BAO_Preferences','value') && CRM_Core_BAO_Preferences::value( 'editor_id' ) == 4)
-             || ( method_exists('CRM_Core_BAO_Setting','getItem') && CRM_Core_BAO_Setting::getItem( CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME,
- 						 'editor_id' ) == 4 )) { //drupal wysiwyg 
-           //we have to ensure that wysiwyg is loaded since 
-            $formats = filter_formats();
-            foreach ($formats as $id => $format) {
-                wysiwyg_get_profile($id);
-            }
-        }
     }
 
     return true;
@@ -347,7 +345,7 @@ function civicrm_invoke( )
         CRM_Core_BAO_UFMatch::synchronize( $user, false, 'Drupal',
                                            civicrm_get_ctype( 'Individual' ) );
     }
-
+      
     require_once 'CRM/Core/Invoke.php';
     return CRM_Core_Invoke::invoke( $args );
 }
@@ -369,6 +367,7 @@ function civicrm_invoke( )
  */
 function civicrm_user( $type, &$edit, &$user, $category = NULL ) 
 {
+
     if ( $type == 'load' ) {
         return;
     }			
@@ -430,13 +429,6 @@ function civicrm_user( $type, &$edit, &$user, $category = NULL )
                                                       trim( $edit['mail'] ) );
         }
         break;
-        
-    case 'after_update':
-        // ensure preferences navigation is cleared so new role perms are reflected
-        // CRM-7450
-        require_once 'CRM/Core/BAO/Navigation.php';
-        CRM_Core_BAO_Navigation::resetNavigation( );
-        break;
 
     case 'form':
         $inCategory = true;
@@ -450,7 +442,7 @@ function civicrm_user( $type, &$edit, &$user, $category = NULL )
                 }
             }
         }
-
+        
         // only return a form to drupal my account page
         if ( $inCategory      &&
              arg(0) == 'user' &&
@@ -469,11 +461,6 @@ function civicrm_user( $type, &$edit, &$user, $category = NULL )
 	case 'delete':
         require_once 'CRM/Core/BAO/UFMatch.php';
         return CRM_Core_BAO_UFMatch::deleteUser( $user->uid );
-        
-    case 'logout':
-        $session = CRM_Core_Session::singleton();
-        $session->reset();
-        return;
     }
 
 }
@@ -495,7 +482,7 @@ function civicrm_categories( &$user )
     require_once 'CRM/Core/BAO/UFGroup.php';
     require_once 'CRM/Core/BAO/UFField.php';
 
-    $allUFGroups = CRM_Core_BAO_UFGroup::getModuleUFGroup('User Account');
+    $allUFGroups =& CRM_Core_BAO_UFGroup::getModuleUFGroup('User Account');
     $ufGroups = array( );
 
     $weight = 100;
@@ -503,30 +490,12 @@ function civicrm_categories( &$user )
         if ( $value['is_active'] ) {
             $ufGroups[] = array( 'name'   => $value['name'],
                                  'title'  => $value['name'],
-                                 'weight' => $weight,
-                                 'access callback' => '_civicrm_categories_access',
-                                 'access arguments' => array( "$key" ),
-                                 );
+                                 'weight' => $weight );
             $weight += 10;
         }
     }
 
     return $ufGroups;
-}
-
-function _civicrm_categories_access( $profile_id ) {
-    if ( ! civicrm_initialize( ) ) {
-        return FALSE;
-    }
-
-    require_once 'CRM/Core/BAO/UFGroup.php';
-    $allUFGroups = CRM_Core_BAO_UFGroup::getModuleUFGroup( 'User Account', 0, false );
-
-    require_once 'CRM/Utils/Array.php';
-    if ( is_array( CRM_Utils_Array::value( $profile_id, $allUFGroups ) ) ) {
-        return TRUE;
-    }
-
 }
 
 function civicrm_register_data($edit, &$user, $category, $reset, $doNotProcess = false ) 
@@ -594,23 +563,6 @@ function civicrm_form_data($edit, &$user, $category, $reset, $doNotProcess = fal
         return;
     }
 
-    // check for permission
-    // CRM-7509
-    $session = CRM_Core_Session::singleton();
-    $sessionUserID = $session->get( 'userID' );
-
-    require_once 'CRM/Contact/BAO/Contact/Utils.php';
-    if ( $sessionUserID != $userID ) {
-        // do not allow edit for anon users in joomla frontend, CRM-4668, unless u have checksum CRM-5228
-        require_once 'CRM/Contact/BAO/Contact/Permission.php';
-        $config = CRM_Core_Config::singleton( );
-        if ( $config->userFrameworkFrontend ) {
-            CRM_Contact_BAO_Contact_Permission::validateOnlyChecksum( $userID, $this );
-        } else {
-            CRM_Contact_BAO_Contact_Permission::validateChecksumContact( $userID, $this );
-        }
-    }
-
     $ctype = CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_Contact', $userID, 'contact_type' );
 
     //to allow Edit any profile if user have permission
@@ -652,8 +604,7 @@ function civicrm_view_data( &$user )
             $contactURL = '<a href="' .$url. '">&raquo; ' .t("View Contact Record") . '</a>';
         }
 
-        if ( CRM_Core_Permission::check( 'access Contact Dashboard' ) &&
-             CRM_Contact_BAO_Contact_Permission::allow( $userID ) ) {
+        if ( CRM_Core_Permission::check( 'access Contact Dashboard' ) ) {
             $url = CRM_Utils_System::url( 'civicrm/user', "reset=1&id=$userID" );
             if ( ! empty( $contactURL ) ) {
                 $contactURL .= '<br/>';
@@ -667,7 +618,7 @@ function civicrm_view_data( &$user )
 
         $ctype = CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_Contact', $userID, 'contact_type' );
 
-        $ufGroups = CRM_Core_BAO_UFGroup::getModuleUFGroup('User Account', 0, false);
+        $ufGroups =& CRM_Core_BAO_UFGroup::getModuleUFGroup('User Account', 0, false);
         $weight   = 100;
         foreach ( $ufGroups as $id => $title ) {
             
@@ -763,9 +714,6 @@ function civicrm_key_disable( ) {
 }
 
 function civicrm_enable( ) {
-    // set system weight higher than jQuery_update so Civi's preprocess can run
-    // last. This is the only way to make sure the jquery noconflict works.
-    db_query("UPDATE {system} SET weight = 100 WHERE name = 'civicrm'");
     menu_rebuild( );
 
     menu_link_maintain( 'civicrm', 'delete', 'civicrm', 'CiviCRM' );
@@ -872,7 +820,7 @@ function civicrm_theme_registry_alter(&$theme_registry) {
  * 
  * Strips out JS and CSS for a path. 
  */
-function civicrm_preprocess_page(&$variables) {	
+ function civicrm_preprocess_page(&$variables) {	
 	// to increase it's flexibility. 
   	if ( module_exists('date_popup') && ( in_array( arg(0), array('civicrm', 'user') ) ) ) { 
 		/** 
@@ -896,165 +844,4 @@ function civicrm_preprocess_page(&$variables) {
   			$variables['styles'] = drupal_get_css( $variables['css'] ); 
   		} 
   	}
-
-    if ( ! civicrm_initialize( ) ) {
-      return;
-    }
-    if ( in_array( arg(0), array('civicrm', 'user') ) ) { 
-        // Move the CiviCRM jquery and jQuery UI libraries above Drupal's core jQuery
-        // and relatively gracefully handle noConflict.
-        $path = drupal_get_path('module', 'civicrm');
-        $scripts = array();
-        $val = array('cache' => TRUE, 'defer' => FALSE, 'preprocess' => TRUE);
-
-        $template = CRM_Core_Smarty::singleton( );
-        $buffer = $template->fetch( 'CRM/common/jquery.files.tpl' );
-        $lines  = preg_split( '/\s+/', $buffer );
-        foreach ( $lines as $line ) {
-          $line = trim( $line );
-          if ( empty( $line ) ) {
-            continue;
-          }
-          if ( strpos( $line, '.js' ) !== false ) {
-            $scripts[$path . '/../' . $line ] = $val;
-          }
-        }
-
-        // add localized calendar js
-        $config = CRM_Core_Config::singleton( );
-        $localisation     = explode( '_', $config->lcMessages );
-        $localizationFile = $path . '/../packages/jquery/jquery-ui-1.8.11/development-bundle/ui/i18n/jquery.ui.datepicker-'. $localisation[0] . '.js';
-
-        if ( file_exists( $localizationFile ) ) {
-          $scripts[$localizationFile] = $val;
-        }
-
-        // add Common.js
-        $scripts[$path . '/../js/Common.js'] = $val;
-        $scripts[$path . '/../js/noconflict.js'] = $val;
-
-        $variables['scripts'] = drupal_get_js('header', array('core' => $scripts)) . $variables['scripts'];
-    }
 }
-
-
-/**
- * Supporting functions to allow using drupal input formats and WYSIWYG API 
- * as a CiviCRM rich text editor. This code is in the Drupal module because it's
- * Drupal-version dependent.
- * 
- */
-function civicrm_drupal_get_wysiwyg_html($attributes, $value='', $format = FILTER_FORMAT_DEFAULT) {
-    $form = drupal_get_form('civicrm_drupal_wysiwyg_form', $attributes, $value, $format);
-    $embed_prefix = "\n<!--//--><![CDATA[//><!--\n";
-    $embed_suffix = "\n//--><!]]>\n";
-    $script = drupal_add_js();
-    return $form . '<script type="text/javascript">' . $embed_prefix . 'jQuery.extend(Drupal.settings, ' . drupal_to_js(call_user_func_array('array_merge_recursive', $script['setting'])) . ");" . $embed_suffix . "</script>\n";
-}
-
-function civicrm_drupal_wysiwyg_form($form_state, $attributes, $value='', $format = FILTER_FORMAT_DEFAULT) {
-    $id = $attributes['id'];
-    $form = array();
-    $form[$id] = array();
-    $form[$id][$id] = array(
-        '#type' => 'textarea',
-        '#title' => '', //$attributes['label'],  //title comes from quickform output
-        '#default_value' => $value,
-        '#rows' => $attributes['rows'],
-        '#cols' => $attributes['cols'],
-        '#id' => $attributes['id'],
-        '#name' => $attributes['name'],
-    );
-    $form[$id]['format'] = filter_form($format);
-    foreach (element_children($form[$id]['format']) as $index) {
-        if (isset($form[$id]['format'][$index]['#id'])) {
-            $form[$id]['format'][$index]['#id'] = 'edit-' . $attributes['id'] . '-format-' . $index;
-            $form[$id]['format'][$index]['#name'] =  $attributes['id'] . '-format';
-        }
-    }
-    $form['#printed'] = true;
-    return $form;
-}
-
-function civicrm_drupal_wysiwyg_update_value($element, $caller) {
-    $format = $element->getAttribute('name') . '_format';
-    // get the format value
-    if (isset($caller->_submitValues['format'])) {
-        $caller->set($format, check_plain($caller->_submitValues['format']));
-        $element->format = $caller->get($format);
-    }
-    // constant values override both default and submitted ones
-    // default values are overriden by submitted
-    $value = $element->_findValue($caller->_constantValues);
-    if (null === $value) {
-        $value = $element->_findValue($caller->_submitValues);
-        if (null === $value) {
-            $value = $element->_findValue($caller->_defaultValues);
-        }
-    }
-    if (null !== $value) {
-        $element->setValue(check_markup($value, $element->format));
-    }
-}
-
-/**
- * Implementation of hook_filter_tips().
- *
- * This is a D6 hook; for D7, see hook_filter_info
- */
-function civicrm_filter_tips($delta, $format, $long = false) {
-    switch ($delta) {
-    case 0:
-        return
-            t('Evaluate <a target="_blank" href="@smarty">Smarty</a> and <a target="_blank" href="@civiapi">CiviCRM API</a> codes',
-              array(
-                    '@smarty' => 'http://www.smarty.net/docsv2/en/',
-                    '@civiapi' => 'http://wiki.civicrm.org/confluence/display/CRMDOC/CiviCRM+Public+APIs'
-                    ));
-    }
-}
-   
-/**
- * Implementation of hook_filter().
- *
- * This is a D6 hook; for D7, see hook_filter_info
- */
-function civicrm_filter($op, $delta = 0, $format = -1, $text = "") {
-    switch ($op) {
-    case 'list':
-        return array(0 => t('CiviCRM-Smarty filter'));
-
-    case 'no cache':
-        return TRUE;
-
-    case 'description':
-        return t('Evaluate Smarty and CiviCRM API codes with CiviCRM\'s embedded Smarty engine');
-
-    case 'settings':
-        return $form;
-
-    case 'process':
-        civicrm_initialize();
-        $config = CRM_Core_Config::singleton();
-        $smarty = CRM_Core_Smarty::singleton();
-        require_once 'CRM/Core/Smarty/resources/String.php';
-        civicrm_smarty_register_string_resource( );
-        $was_secure= $smarty->security;
-        $smarty->security = true;
-        $text = $smarty->fetch("string:${text}");
-        $smarty->security = $was_secure;
-        
-        // In the use-case of embedding Smarty codes inside a Drupal page, one is likely
-        // to load data using 'pull MVC' instead of 'push MVC', so the interesting
-        // data isn't loaded until after processing the main content. Therefore, we
-        // evaluate debug codes after the main content.
-        if ($config->debug) {
-            $text .= $smarty->fetch('CRM/common/debug.tpl');
-        }
-        return $text;
-    default:
-        return $text;
-    }
-    
-}
-

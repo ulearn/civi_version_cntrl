@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -56,7 +56,6 @@ class CRM_Mailing_Event_BAO_Opened extends CRM_Mailing_Event_DAO_Opened {
     public static function open($queue_id) {
         /* First make sure there's a matching queue event */
         require_once 'CRM/Mailing/Event/BAO/Queue.php';
-        $success = false;
 
         $q = new CRM_Mailing_Event_BAO_Queue();
         $q->id = $queue_id;
@@ -65,10 +64,7 @@ class CRM_Mailing_Event_BAO_Opened extends CRM_Mailing_Event_DAO_Opened {
             $oe->event_queue_id = $queue_id;
             $oe->time_stamp = date('YmdHis');
             $oe->save();
-            $success = true;
         }
-        
-        return $success;
     }
 
   /**
@@ -178,16 +174,7 @@ class CRM_Mailing_Event_BAO_Opened extends CRM_Mailing_Event_DAO_Opened {
             $query .= " GROUP BY $queue.id ";
         }
 
-        $orderBy = "sort_name ASC, {$open}.time_stamp DESC";
-        if ($sort) {
-            if ( is_string( $sort ) ) {
-                $orderBy = $sort;
-            } else {
-                $orderBy = trim( $sort->orderBy() );
-            }
-        }
-        
-        $query .= " ORDER BY {$orderBy} ";
+        $query .= " ORDER BY $contact.sort_name, $open.time_stamp DESC ";
 
         if ($offset||$rowCount) {//Added "||$rowCount" to avoid displaying all records on first page
             $query .= ' LIMIT ' 

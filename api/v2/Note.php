@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,8 +32,8 @@
  * @package CiviCRM_APIv2
  * @subpackage API_Note
  * 
- * @copyright CiviCRM LLC (c) 2004-2011
- * @version $Id: Note.php 32998 2011-03-14 22:00:35Z kurund $
+ * @copyright CiviCRM LLC (c) 2004-2010
+ * @version $Id: Note.php 26310 2010-02-18 15:10:24Z shot $
  *
  */
 
@@ -161,7 +161,7 @@ function &civicrm_note_get( &$params ) {
         return civicrm_create_error( ts( 'Input parameters is not an array' ) );
     }
    
-    if ( ! CRM_Utils_Array::value( 'entity_id', $params ) || ( CRM_Utils_Array::value( 'entity_id', $params ) && ( !is_numeric( $params['entity_id'] ) ) ) ) {
+    if ( !is_numeric( $params['entity_id'] ) ) {
         return civicrm_create_error( ts ( "Invalid entity ID" ) );
     }
 
@@ -184,30 +184,3 @@ function &civicrm_note_get( &$params ) {
     return $note;
 }
 
-/**
- * Get all descendents of given note
- * @param array $params Associative array; only required 'id' parameter is used
- * @return array Nested associative array beginning with direct children of given note.
- */
- function &civicrm_note_tree_get( &$params ) {
-
-     if ( empty( $params ) ) {
-        return civicrm_create_error( ts( 'No input parameters present' ) );
-    }
-
-    if ( ! is_array( $params ) ) {
-        return civicrm_create_error( ts( 'Input parameters is not an array' ) );
-    }
-
-    if ( ! isset( $params['id'] ) ) {
-        return civicrm_create_error( 'Required parameter ("id") missing.' );
-    }
-
-    if ( !is_numeric( $params['id'] ) ) {
-        return civicrm_create_error( ts ( "Invalid note ID" ) );
-    }
-    if ( !isset( $params['max_depth'] ) ) $params['max_depth'] = 0;
-    if ( !isset( $params['snippet'] ) ) $params['snippet'] = FALSE;
-    $noteTree = CRM_Core_BAO_Note::getNoteTree( $params['id'], $params['max_depth'], $params['snippet'] );
-    return $noteTree;
-}

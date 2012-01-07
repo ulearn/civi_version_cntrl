@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -54,6 +54,11 @@ class CRM_Core_BAO_OpenID extends CRM_Core_DAO_OpenID
     static function add( &$params ) 
     {
         $openId = new CRM_Core_DAO_OpenID();
+        
+        // normalize the OpenID URL
+        require_once 'Auth/OpenID.php';
+        $params['openid'] = Auth_OpenID::normalizeURL($params['openid']);
+        
         $openId->copyValues($params);
 
         return $openId->save( );
@@ -101,7 +106,7 @@ class CRM_Core_BAO_OpenID extends CRM_Core_DAO_OpenID
      * @access public
      * @static
      */
-    static function allOpenIDs( $id, $updateBlankLocInfo = false ) 
+    static function allOpenIDs( $id ) 
     {
         if ( ! $id ) {
             return null;
@@ -117,25 +122,18 @@ LEFT JOIN civicrm_location_type ON ( civicrm_openid.location_type_id = civicrm_l
 WHERE
   civicrm_contact.id = %1
 ORDER BY
-  civicrm_openid.is_primary DESC,  openid_id ASC ";
+  civicrm_openid.is_primary DESC, civicrm_openid.location_type_id DESC, openid_id ASC ";
         $params = array( 1 => array( $id, 'Integer' ) );
 
-        $openids = $values = array( );
+        $openids = array( );
         $dao =& CRM_Core_DAO::executeQuery( $query, $params );
-        $count = 1;
         while ( $dao->fetch( ) ) {
-            $values = array( 'locationType'     => $dao->locationType,
-                             'is_primary'       => $dao->is_primary,
-                             'id'               => $dao->openid_id,
-                             'openid'           => $dao->openid,
-                             'locationTypeId'   => $dao->locationTypeId,
-                             'allowed_to_login' => $dao->allowed_to_login );
-            
-            if ( $updateBlankLocInfo ) {
-                $openids[$count++] = $values;
-            } else {
-                $openids[$dao->openid_id] = $values;
-            }
+            $openids[$dao->openid_id] = array( 'locationType'     => $dao->locationType,
+                                               'is_primary'       => $dao->is_primary,
+                                               'id'               => $dao->openid_id,
+                                               'openid'           => $dao->openid,
+                                               'locationTypeId'   => $dao->locationTypeId,
+                                               'allowed_to_login' => $dao->allowed_to_login );
         }
         return $openids;
     }

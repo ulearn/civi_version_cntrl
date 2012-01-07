@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -63,15 +63,15 @@ function checkSelection( field ) {
     clientName = selectedContact.split('::');
     
     if ( selectedContactName == '' ) {
-        validationMessage = '{/literal}{ts escape="js"}Please select another client for this case.{/ts}{literal}';
+        validationMessage = '{/literal}{ts}Please select another client for this case.{/ts}{literal}';
 	alert( validationMessage );
         return false;
     } else if ( cj('#contact_id').val( ) == {/literal}{$contactId}{literal} ) {
-      	validationMessage = '{/literal}{ts 1="'+clientName[0]+'"}%1 is already assigned to this case. Please select some other client for this case.{/ts}{literal}';
+      	validationMessage = '{/literal}{ts}'+clientName[0]+' is already assigned to this case. Please select some other client for this case.{/ts}{literal}';
 	alert( validationMessage );
         return false;    
     } else {
-        validationMessage = '{/literal}{ts 1="'+clientName[0]+'"}Are you sure you want to reassign this case and all related activities and relationships to %1?{/ts}{literal}';
+        validationMessage = '{/literal}{ts}Are you sure you want to reassign this case and all related activities and relationships to '+clientName[0]+'?{/ts}{literal}';
         if ( confirm( validationMessage ) ) {
 	    this.href+='&amp;confirmed=1'; 
         } else {

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -140,12 +140,10 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
             // get price if it's a text field
             if ( $priceFieldBAO->html_type == 'Text' ) {
                 $optionValues = array( );
-                $params       = array( 'price_field_id' => $priceFieldBAO->id );
-                
-                require_once 'CRM/Price/BAO/FieldValue.php';
-                CRM_Price_BAO_FieldValue::retrieve($params , $optionValues );
-
-                $priceField[$priceFieldBAO->id]['price'] = CRM_Utils_Array::value( 'amount', $optionValues );
+                $params       = array( 'name' => "civicrm_price_field.amount.{$priceFieldBAO->id}" );
+                require_once 'CRM/Core/OptionValue.php';
+                CRM_Core_OptionValue::getValues( $params, $optionValues );
+                $priceField[$priceFieldBAO->id]['price'] = CRM_Utils_Array::value( 'value', array_pop( $optionValues ) );
             }
             
             $action = array_sum(array_keys($this->actionLinks()));
@@ -232,27 +230,17 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
                                               $this, false, 'browse'); // default to 'browse'
         
         if ( $this->_sid ) {
-            $usedBy =& CRM_Price_BAO_Set::getUsedBy( $this->_sid );
-            
-            $this->assign( 'usedBy', $usedBy );
+            require_once 'CRM/Price/BAO/Set.php';
             CRM_Price_BAO_Set::checkPermission( $this->_sid );
-            $comps = array( 'Event'        => 'civicrm_event', 
-                            'Contribution' => 'civicrm_contribution_page' );
-            $priceSetContexts = array( );
-            foreach ( $comps as $name => $table ) {
-                if ( array_key_exists( $table, $usedBy ) ) {
-                    $priceSetContexts[] = $name;
-                }
-            }
-            $this->assign( 'contexts', $priceSetContexts );
         }
-
         if ($action & ( CRM_Core_Action::DELETE)) {
+            require_once 'CRM/Price/BAO/Set.php';
+            $usedBy =& CRM_Price_BAO_Set::getUsedBy( $this->_sid );
             if ( empty( $usedBy ) ) {
                 // prompt to delete
                 $session = & CRM_Core_Session::singleton();
                 $session->pushUserContext(CRM_Utils_System::url('civicrm/admin/price/field', 'reset=1&action=browse&sid=' . $this->_sid));
-                $controller = new CRM_Core_Controller_Simple( 'CRM_Price_Form_DeleteField','Delete Price Field','' );
+                $controller = new CRM_Core_Controller_Simple( 'CRM_Price_Form_DeleteField',"Delete Price Field",'' );
                 $controller->set('fid', $fid);
                 $controller->setEmbedded( true );
                 $controller->process( );
@@ -265,6 +253,16 @@ class CRM_Price_Page_Field extends CRM_Core_Page {
                 CRM_Utils_System::appendBreadCrumb( ts('Price'),
                                                     $url );
                 $this->assign( 'usedPriceSetTitle', CRM_Price_BAO_Field::getTitle( $fid ) );
+                $this->assign( 'usedBy', $usedBy );
+                $comps = array( "Event"        => "civicrm_event", 
+                                "Contribution" => "civicrm_contribution_page" );
+                $priceSetContexts = array( );
+                foreach ( $comps as $name => $table ) {
+                    if ( array_key_exists( $table, $usedBy ) ) {
+                        $priceSetContexts[] = $name;
+                    }
+                }
+                $this->assign( 'contexts', $priceSetContexts );
             }
         }
                 

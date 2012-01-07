@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -172,28 +172,13 @@ class CRM_Report_Form_Event_Income extends CRM_Report_Form {
         $roleDAO  = CRM_Core_DAO::executeQuery( $role );
        
         while ( $roleDAO->fetch( ) ) {
-            // fix for multiple role, CRM-6507
-            $roles = explode( CRM_Core_DAO::VALUE_SEPARATOR, $roleDAO->ROLEID );
-            foreach( $roles as $roleId ) {
-                if ( !isset($roleRows[$roleDAO->event_id][$participantRole[$roleId]] ) ) {
-                    $roleRows[$roleDAO->event_id][$participantRole[$roleId]]['total']  = 0;
-                    $roleRows[$roleDAO->event_id][$participantRole[$roleId]]['round']  = 0;
-                    $roleRows[$roleDAO->event_id][$participantRole[$roleId]]['amount'] = 0;
-                }
-                $roleRows[$roleDAO->event_id][$participantRole[$roleId]]['total'] += $roleDAO->participant;
-                $roleRows[$roleDAO->event_id][$participantRole[$roleId]]['amount'] += $roleDAO->amount;
-            }
+            $roleRows[$roleDAO->event_id][$participantRole[$roleDAO->ROLEID]][] = $roleDAO->participant;
+            $roleRows[$roleDAO->event_id][$participantRole[$roleDAO->ROLEID]][] = 
+                round( ( $roleDAO->participant / $count[$roleDAO->event_id] ) * 100, 2 );
+            $roleRows[$roleDAO->event_id][$participantRole[$roleDAO->ROLEID]][] = $roleDAO->amount;
         }
-
-        foreach( $roleRows as $eventId => $roleInfo ) {
-            foreach( $participantRole as $roleName ) {
-                if ( isset($roleInfo[$roleName]) ) {
-                    $roleRows[$eventId][$roleName]['round'] =  round( ( $roleRows[$eventId][$roleName]['total'] / $count[$eventId] ) * 100, 2 );
-                }
-            }
-        }
-        
         $rows['Role'] = $roleRows;
+
 
         //Count the Participant by status ID for Event
         $status = "
@@ -213,10 +198,10 @@ class CRM_Report_Form_Event_Income extends CRM_Report_Form {
         $statusDAO = CRM_Core_DAO::executeQuery( $status );
       
         while ( $statusDAO->fetch( ) ) {
-            $statusRows[$statusDAO->event_id][$participantStatus[$statusDAO->STATUSID]]['total'] = $statusDAO->participant;
-            $statusRows[$statusDAO->event_id][$participantStatus[$statusDAO->STATUSID]]['round'] = 
+            $statusRows[$statusDAO->event_id][$participantStatus[$statusDAO->STATUSID]][] = $statusDAO->participant;
+            $statusRows[$statusDAO->event_id][$participantStatus[$statusDAO->STATUSID]][] = 
                 round( ( $statusDAO->participant / $count[$statusDAO->event_id] ) * 100, 2 );
-            $statusRows[$statusDAO->event_id][$participantStatus[$statusDAO->STATUSID]]['amount'] = $statusDAO->amount;
+            $statusRows[$statusDAO->event_id][$participantStatus[$statusDAO->STATUSID]][] = $statusDAO->amount;
         }
 
         $rows['Status'] = $statusRows;
@@ -244,11 +229,11 @@ class CRM_Report_Form_Event_Income extends CRM_Report_Form {
         while ( $instrumentDAO->fetch( ) ) {
             //allow only if instrument is present in contribution table
             if ( $instrumentDAO->INSTRUMENT ) {
-                $instrumentRows[$instrumentDAO->event_id][$paymentInstruments[$instrumentDAO->INSTRUMENT]]['total'] = 
+                $instrumentRows[$instrumentDAO->event_id][$paymentInstruments[$instrumentDAO->INSTRUMENT]][] = 
                     $instrumentDAO->participant;
-                $instrumentRows[$instrumentDAO->event_id][$paymentInstruments[$instrumentDAO->INSTRUMENT]]['round'] = 
+                $instrumentRows[$instrumentDAO->event_id][$paymentInstruments[$instrumentDAO->INSTRUMENT]][] = 
                     round(($instrumentDAO->participant / $count[$instrumentDAO->event_id] ) * 100, 2 );
-                $instrumentRows[$instrumentDAO->event_id][$paymentInstruments[$instrumentDAO->INSTRUMENT]]['amount'] = $instrumentDAO->amount;
+                $instrumentRows[$instrumentDAO->event_id][$paymentInstruments[$instrumentDAO->INSTRUMENT]][] = $instrumentDAO->amount;
             }
         }
         $rows['Payment Method'] = $instrumentRows;

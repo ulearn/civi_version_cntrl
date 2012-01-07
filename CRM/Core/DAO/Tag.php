@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.4                                                |
+| CiviCRM version 3.1                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,7 +79,7 @@ class CRM_Core_DAO_Tag extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = true;
+    static $_log = false;
     /**
      * Tag ID
      *
@@ -126,18 +126,6 @@ class CRM_Core_DAO_Tag extends CRM_Core_DAO
      */
     public $used_for;
     /**
-     * FK to civicrm_contact, who created this tag
-     *
-     * @var int unsigned
-     */
-    public $created_id;
-    /**
-     * Date and time that tag was created.
-     *
-     * @var datetime
-     */
-    public $created_date;
-    /**
      * class constructor
      *
      * @access public
@@ -158,7 +146,6 @@ class CRM_Core_DAO_Tag extends CRM_Core_DAO
         if (!(self::$_links)) {
             self::$_links = array(
                 'parent_id' => 'civicrm_tag:id',
-                'created_id' => 'civicrm_contact:id',
             );
         }
         return self::$_links;
@@ -218,16 +205,6 @@ class CRM_Core_DAO_Tag extends CRM_Core_DAO
                     'maxlength' => 64,
                     'size' => CRM_Utils_Type::BIG,
                     'default' => 'UL',
-                ) ,
-                'created_id' => array(
-                    'name' => 'created_id',
-                    'type' => CRM_Utils_Type::T_INT,
-                    'FKClassName' => 'CRM_Contact_DAO_Contact',
-                ) ,
-                'created_date' => array(
-                    'name' => 'created_date',
-                    'type' => CRM_Utils_Type::T_DATE + CRM_Utils_Type::T_TIME,
-                    'title' => ts('Tag Created Date') ,
                 ) ,
             );
         }

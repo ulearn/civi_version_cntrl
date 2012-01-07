@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -66,7 +66,7 @@
     {if $lineItems.$participant_id}
         <td>
         {foreach from=$lineItems.$participant_id item=line name=lineItemsIter}
-	    {if $line.html_type eq 'Text'}{$line.label}{else}{$line.field_title} - {$line.label}{/if}: {$line.qty}
+            {$line.description}: {$line.qty}
             {if ! $smarty.foreach.lineItemsIter.last}<br />{/if}
         {/foreach}
         </td>
@@ -74,14 +74,14 @@
         <td class="crm-participant-participant_fee_level">{if !$row.paid && !$row.participant_fee_level} {ts}(no fee){/ts}{else} {$row.participant_fee_level}{/if}</td>
     {/if}
     <td class="right nowrap crm-paticipant-participant_fee_amount">{$row.participant_fee_amount|crmMoney:$row.participant_fee_currency}</td>
-    <td class="crm-participant-participant_register_date">{$row.participant_register_date|truncate:10:''|crmDate}</td>	
     <td class="crm-participant-event_start_date">{$row.event_start_date|truncate:10:''|crmDate}
         {if $row.event_end_date && $row.event_end_date|date_format:"%Y%m%d" NEQ $row.event_start_date|date_format:"%Y%m%d"}
             <br/>- {$row.event_end_date|truncate:10:''|crmDate}
         {/if}
    </td>
-    <td class="crm-participant-participant_status crm-participant_status_{$row.participant_status_id}">{$row.participant_status}</td>
-    <td class="crm-participant-participant_role">{$row.participant_role_id}</td>
+    <td class="crm-participant-participant_register_date">{$row.participant_register_date|truncate:10:''|crmDate}</td>	
+    <td class="crm-participant-participant_status_id">{$row.participant_status_id}</td>
+    <td class="crm-participant-participant_role_id">{$row.participant_role_id}</td>
     <td>{$row.action|replace:'xx':$participant_id}</td>
    </tr>
   {/foreach}

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -271,7 +271,6 @@ SET    version = '$version'
 
     function processLocales($tplFile, $rev) {
         $smarty = CRM_Core_Smarty::singleton( );                                
-        $smarty->assign( 'domainID', CRM_Core_Config::domainID( ) );
         
         $this->source( $smarty->fetch($tplFile), true );
 

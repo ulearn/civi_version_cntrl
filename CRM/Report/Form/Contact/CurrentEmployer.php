@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -39,9 +39,7 @@ require_once 'CRM/Report/Form.php';
 class CRM_Report_Form_Contact_CurrentEmployer extends CRM_Report_Form {
 
     protected $_summary = null;
-
-    protected $_customGroupExtends = array( 'Contact', 'Individual' );
-
+    
     function __construct( ) {
         
         $this->_columns = 
@@ -65,7 +63,7 @@ class CRM_Report_Form_Contact_CurrentEmployer extends CRM_Report_Form {
                   'civicrm_contact' =>
                   array( 'dao'       => 'CRM_Contact_DAO_Contact',
                          'fields'    =>
-                         array( 'sort_name' => 
+                         array( 'display_name' => 
                                 array( 'title'    => ts( 'Employee Name' ),
                                        'required' => true,),
                                 
@@ -167,8 +165,8 @@ class CRM_Report_Form_Contact_CurrentEmployer extends CRM_Report_Form {
                          CRM_Utils_Array::value( $fieldName, $this->_params['fields'] ) ) {
                         
                         $select[] = "{$field['dbAlias']} as {$tableName}_{$fieldName}";
-                        $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = CRM_Utils_Array::value( 'type', $field );
-                        $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = CRM_Utils_Array::value( 'title', $field );
+                        $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = $field['type'];
+                        $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = $field['title'];
                     }
                 }
             }
@@ -206,7 +204,7 @@ FROM civicrm_contact {$this->_aliases['civicrm_contact']}
             if ( array_key_exists('filters', $table) ) {
                 foreach ( $table['filters'] as $fieldName => $field ) {
                     $clause = null;
-                    if ( CRM_Utils_Array::value( 'operatorType', $field )  & CRM_Report_Form::OP_DATE ) {
+                    if ( $field['operatorType'] & CRM_Report_Form::OP_DATE ) {
                         $relative = CRM_Utils_Array::value( "{$fieldName}_relative", $this->_params );
                         $from     = CRM_Utils_Array::value( "{$fieldName}_from"    , $this->_params );
                         $to       = CRM_Utils_Array::value( "{$fieldName}_to"      , $this->_params );
@@ -243,13 +241,11 @@ FROM civicrm_contact {$this->_aliases['civicrm_contact']}
     }
     
     function groupBy( ) {
+        
         $this->_groupBy = "GROUP BY {$this->_aliases['civicrm_employer']}.id,{$this->_aliases['civicrm_contact']}.id";
+        
     }
     
-    function orderBy( ) {
-        $this->_orderBy = "ORDER BY {$this->_aliases['civicrm_employer']}.organization_name, {$this->_aliases['civicrm_contact']}.display_name";
-    }
-
     function postProcess( ) {
         // get the acl clauses built before we assemble the query
         $this->buildACLClause( array( $this->_aliases['civicrm_contact'], $this->_aliases['civicrm_employer'] ) );

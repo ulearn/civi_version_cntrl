@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -83,34 +83,21 @@ class CRM_ACL_API {
      * @param  array $whereTables (reference ) add the tables that are needed for the where clause
      * @param int    $contactID the contactID for whom the check is made
      * @param bool   $onlyDeleted  whether to include only deleted contacts
-     * @param bool   $skipDeleteClause don't add delete clause if this is true, 
-     *               this means it is handled by generating query
      *
      * @return string the group where clause for this user
      * @access public
      */
-    public static function whereClause( $type,
-                                        &$tables,
-                                        &$whereTables,
-                                        $contactID = null,
-                                        $onlyDeleted = false,
-                                        $skipDeleteClause = false ) {
-        // the default value which is valid for rhe final AND
-        $deleteClause = ' ( 1 ) ';
-        if ( ! $skipDeleteClause ) {
-            if (CRM_Core_Permission::check('access deleted contacts') and $onlyDeleted) {
-                $deleteClause = '(contact_a.is_deleted)';
-            } else {
-                // CRM-6181
-                $deleteClause = '(contact_a.is_deleted = 0)';
-            }
-        }
-
+    public static function whereClause( $type, &$tables, &$whereTables, $contactID = null, $onlyDeleted = false ) {
         // first see if the contact has edit / view all contacts
         if ( CRM_Core_Permission::check( 'edit all contacts' ) ||
              ( $type == self::VIEW &&
                CRM_Core_Permission::check( 'view all contacts' ) ) ) {
-            return $skipDeleteClause ? ' ( 1 ) ' : $deleteClause;
+            if (CRM_Core_Permission::check('access deleted contacts') and $onlyDeleted) {
+                return '(contact_a.is_deleted)';
+            } else {
+// CRM-6181
+                return '(contact_a.is_deleted = 0)';
+            }
         }
 
         if ( $contactID == null ) {
@@ -123,14 +110,9 @@ class CRM_ACL_API {
         }
 
         require_once 'CRM/ACL/BAO/ACL.php';
-        return implode( ' AND ',
-                        array( CRM_ACL_BAO_ACL::whereClause( $type,
-                                                             $tables,
-                                                             $whereTables,
-                                                             $contactID ),
-                               $deleteClause ) );
+        return CRM_ACL_BAO_ACL::whereClause( $type, $tables, $whereTables, $contactID );
     }
-    
+
     /**
      * get all the groups the user has access to for the given operation
      *

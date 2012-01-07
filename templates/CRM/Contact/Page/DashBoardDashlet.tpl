@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -53,6 +53,7 @@
   {ts}Javascript must be enabled in your browser in order to use the dashboard features.{/ts}
 </div>
 <div class="clear"></div>
+
 {literal}
 <script type="text/javascript">
   function addDashlet(  ) {

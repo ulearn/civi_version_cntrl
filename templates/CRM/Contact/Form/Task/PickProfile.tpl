@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,10 +31,7 @@
        <td>{$form.uf_group_id.html}</td>
     </tr>
     <tr> 
-        <td class="label"></td>
-        <td>
-            {include file="CRM/Contact/Form/Task.tpl"}
-        </td>
+        {include file="CRM/Contact/Form/Task.tpl"}
     </tr>
 </table>
 <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl"}</div>

@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.4                                                |
+| CiviCRM version 3.1                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,7 +79,7 @@ class CRM_Member_DAO_MembershipStatus extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = true;
+    static $_log = false;
     /**
      * Membership Id
      *
@@ -194,17 +194,12 @@ class CRM_Member_DAO_MembershipStatus extends CRM_Core_DAO
                     'type' => CRM_Utils_Type::T_INT,
                     'required' => true,
                 ) ,
-                'membership_status' => array(
+                'name' => array(
                     'name' => 'name',
                     'type' => CRM_Utils_Type::T_STRING,
-                    'title' => ts('Membership Status') ,
+                    'title' => ts('Name') ,
                     'maxlength' => 128,
                     'size' => CRM_Utils_Type::HUGE,
-                    'import' => true,
-                    'where' => 'civicrm_membership_status.name',
-                    'headerPattern' => '',
-                    'dataPattern' => '',
-                    'export' => true,
                 ) ,
                 'label' => array(
                     'name' => 'label',

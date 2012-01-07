@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -158,20 +158,15 @@ class CRM_Member_Page_MembershipType extends CRM_Core_Page_Basic
             $membershipType[$dao->id] = array();
             CRM_Core_DAO::storeValues( $dao, $membershipType[$dao->id]);
             
+            // fix the display of the monetary value, CRM-4038
+            if ( CRM_Utils_Array::value( 'minimum_fee', $membershipType[$dao->id] ) ) {
+                $membershipType[$dao->id]['minimum_fee'] = CRM_Utils_Money::format($membershipType[$dao->id]['minimum_fee'], null, '%a');
+            }
             //adding column for relationship type label. CRM-4178.
             if ( $dao->relationship_type_id ) {
-                //If membership associated with 2 or more relationship then display all relationship with comma separated
-                $relTypeIds   = explode( CRM_Core_DAO::VALUE_SEPARATOR, $dao->relationship_type_id );
-                $relTypeNames = explode( CRM_Core_DAO::VALUE_SEPARATOR, $dao->relationship_direction );
-                $membershipType[$dao->id]['relationshipTypeName'] = null;
-                foreach( $relTypeIds as $key => $value ) {
-                    $relationshipName = 'label_'.$relTypeNames[$key];
-                    if ( $membershipType[$dao->id]['relationshipTypeName'] ) {
-                        $membershipType[$dao->id]['relationshipTypeName'] .= ", ";
-                    }
-                    $membershipType[$dao->id]['relationshipTypeName'] .= CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_RelationshipType', 
-                                                                                                      $value, $relationshipName );
-                }
+                $relationshipName = 'label_'.$dao->relationship_direction;
+                $membershipType[$dao->id]['relationshipTypeName'] = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_RelationshipType', 
+                                                                                                $dao->relationship_type_id, $relationshipName );
             }
             // form all action links
             $action = array_sum(array_keys($this->links()));

@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.4                                                |
+| CiviCRM version 3.1                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,7 +79,7 @@ class CRM_Price_DAO_LineItem extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = true;
+    static $_log = false;
     /**
      * Line Item
      *
@@ -104,6 +104,12 @@ class CRM_Price_DAO_LineItem extends CRM_Core_DAO
      * @var int unsigned
      */
     public $price_field_id;
+    /**
+     * FK to option group
+     *
+     * @var int unsigned
+     */
+    public $option_group_id;
     /**
      * descriptive label for item - from custom_option.label
      *
@@ -135,12 +141,6 @@ class CRM_Price_DAO_LineItem extends CRM_Core_DAO
      */
     public $participant_count;
     /**
-     * Implicit FK to civicrm_option_value
-     *
-     * @var int unsigned
-     */
-    public $price_field_value_id;
-    /**
      * class constructor
      *
      * @access public
@@ -161,7 +161,6 @@ class CRM_Price_DAO_LineItem extends CRM_Core_DAO
         if (!(self::$_links)) {
             self::$_links = array(
                 'price_field_id' => 'civicrm_price_field:id',
-                'price_field_value_id' => 'civicrm_price_field_value:id',
             );
         }
         return self::$_links;
@@ -200,6 +199,11 @@ class CRM_Price_DAO_LineItem extends CRM_Core_DAO
                     'required' => true,
                     'FKClassName' => 'CRM_Price_DAO_Field',
                 ) ,
+                'option_group_id' => array(
+                    'name' => 'option_group_id',
+                    'type' => CRM_Utils_Type::T_INT,
+                    'required' => true,
+                ) ,
                 'label' => array(
                     'name' => 'label',
                     'type' => CRM_Utils_Type::T_STRING,
@@ -231,12 +235,6 @@ class CRM_Price_DAO_LineItem extends CRM_Core_DAO
                     'type' => CRM_Utils_Type::T_INT,
                     'title' => ts('Participant Count') ,
                     'default' => 'UL',
-                ) ,
-                'price_field_value_id' => array(
-                    'name' => 'price_field_value_id',
-                    'type' => CRM_Utils_Type::T_INT,
-                    'default' => 'UL',
-                    'FKClassName' => 'CRM_Price_DAO_FieldValue',
                 ) ,
             );
         }

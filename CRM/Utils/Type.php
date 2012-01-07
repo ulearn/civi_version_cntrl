@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,8 +29,8 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
- * $Id: $
+ * @copyright CiviCRM LLC (c) 2004-2010
+ * $Id$
  *
  */
 
@@ -126,10 +126,6 @@ class CRM_Utils_Type
             break;
 
         case 'Positive':
-            // the below 2 are for custom fields of this type
-            // CRM-8925
-        case 'Country':
-        case 'StateProvince':
             if (CRM_Utils_Rule::positiveInteger($data)) {
                 return $data;
             }
@@ -149,7 +145,6 @@ class CRM_Utils_Type
             break;
             
         case 'String':
-        case 'Memo'  :
             return CRM_Core_DAO::escapeString($data);
             break;
             
@@ -261,17 +256,7 @@ class CRM_Utils_Type
                 return $data;
             }
             break;
-        case 'ContactReference':
-            // null is valid
-            if ( strlen( trim( $data ) ) == 0 ) {
-                return trim( $data );
-            }
-
-            if ( CRM_Utils_Rule::validContact( $data ) ) { 
-                return $data;
-            } 
-            break;
-
+            
         default:
             CRM_Core_Error::fatal( "Cannot recognize $type for $data" );
             break;

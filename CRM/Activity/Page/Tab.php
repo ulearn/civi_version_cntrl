@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -51,14 +51,35 @@ class CRM_Activity_Page_Tab extends CRM_Core_Page
      */
     function browse( )
     {
-        $this->assign( 'admin', false );
-        $this->assign( 'context'   , 'activity');
+        require_once 'CRM/Core/Selector/Controller.php';
+
+        $output = CRM_Core_Selector_Controller::SESSION;
+        require_once 'CRM/Activity/Selector/Activity.php';
+        $selector   = new CRM_Activity_Selector_Activity($this->_contactId, $this->_permission );
+        $sortID     = null;
+        if ( $this->get( CRM_Utils_Sort::SORT_ID  ) ) {
+            $sortID = CRM_Utils_Sort::sortIDValue( $this->get( CRM_Utils_Sort::SORT_ID  ),
+                                                   $this->get( CRM_Utils_Sort::SORT_DIRECTION ) );
+        }
+        $controller = new CRM_Core_Selector_Controller($selector,
+                                                        $this->get(CRM_Utils_Pager::PAGE_ID),
+                                                        $sortID,
+                                                        CRM_Core_Action::VIEW, $this, $output);
+        $controller->setEmbedded(true);
+        $controller->run();
+        $controller->moveFromSessionToTemplate( );
+
+        // check if case is enabled
+        require_once 'CRM/Core/BAO/Preferences.php';
+        $viewOptions = CRM_Core_BAO_Preferences::valueOptions( 'contact_view_options', true, null, true );
+
+        $enableCase = false;
+        if ( CRM_Utils_Array::value('CiviCase',$viewOptions ) ) { 
+            $enableCase = true;
+        }
         
-        // also create the form element for the activity filter box
-        $controller = new CRM_Core_Controller_Simple( 'CRM_Activity_Form_ActivityFilter',
-                                                       ts('Activity Filter'), null );
-        $controller->setEmbedded( true );
-        $controller->run( );        
+        $this->assign( 'enableCase', $enableCase);
+        $this->assign( 'context',      'activity');        
     }
 
     function edit( )
@@ -72,38 +93,18 @@ class CRM_Activity_Page_Tab extends CRM_Core_Page
         $this->_caseId = CRM_Utils_Request::retrieve( 'caseid', 'Integer', $this );
       
         $activityTypeId = CRM_Utils_Request::retrieve('atype', 'Positive', $this );
-
-        // Email and Create Letter activities use a different form class
-        require_once 'CRM/Core/OptionGroup.php';
-        $emailTypeValue = CRM_Core_OptionGroup::getValue( 'activity_type',
-                                                          'Email',
-                                                          'name' );
-                                                          
-        $letterTypeValue = CRM_Core_OptionGroup::getValue( 'activity_type',
-                                                          'Print PDF Letter',
-                                                          'name' );
-
-
-        switch ( $activityTypeId ) {
-        case $emailTypeValue:
+        
+        if ( $activityTypeId != 3 ) {
+            $controller = new CRM_Core_Controller_Simple( 'CRM_Activity_Form_Activity',
+                                                           ts('Contact Activities'),
+                                                           $this->_action,
+                                                           false, false, false, true );
+        } else {
             $wrapper = new CRM_Utils_Wrapper( );
             $arguments = array( 'attachUpload' => 1 );
             return $wrapper->run( 'CRM_Contact_Form_Task_Email', ts('Email a Contact'),  $arguments );
-            break;
-
-        case $letterTypeValue:
-            $wrapper = new CRM_Utils_Wrapper( );
-            $arguments = array( 'attachUpload' => 1 );
-            return $wrapper->run( 'CRM_Contact_Form_Task_PDF', ts('Create PDF Letter'),  $arguments );
-            break;
-
-        default:
-            $controller = new CRM_Core_Controller_Simple( 'CRM_Activity_Form_Activity',
-                                                          ts('Contact Activities'),
-                                                          $this->_action,
-                                                          false, false, false, true );
         }
-       
+
         $controller->setEmbedded( true );
 
         $controller->set( 'contactId', $this->_contactId );
@@ -130,8 +131,6 @@ class CRM_Activity_Page_Tab extends CRM_Core_Page
     {
         $this->_contactId = CRM_Utils_Request::retrieve( 'cid', 'Positive', $this, true );
         $this->assign( 'contactId', $this->_contactId );
-        //FIX ME: need to fix this conflict
-        $this->assign( 'contactID', $this->_contactId );
 
         // check logged in url permission
         require_once 'CRM/Contact/Page/View.php';
@@ -197,18 +196,7 @@ class CRM_Activity_Page_Tab extends CRM_Core_Page
            ( CRM_Core_Action::UPDATE | CRM_Core_Action::ADD | CRM_Core_Action::VIEW ) ) {
             $this->edit( );
             $activityTypeId = CRM_Utils_Request::retrieve('atype', 'Positive', $this );
-            
-            // Email and Create Letter activities use a different form class
-            require_once 'CRM/Core/OptionGroup.php';
-            $emailTypeValue = CRM_Core_OptionGroup::getValue( 'activity_type',
-                                                              'Email',
-                                                              'name' );
-
-            $letterTypeValue = CRM_Core_OptionGroup::getValue( 'activity_type',
-                                                               'Print PDF Letter',
-                                                               'name' );
-            
-            if ( in_array( $activityTypeId, array( $emailTypeValue, $letterTypeValue ) ) ) {
+            if ( $activityTypeId == 3 ) {
                 return;
             }
          } elseif ( $this->_action & ( CRM_Core_Action::DELETE | CRM_Core_Action::DETACH ) ) {

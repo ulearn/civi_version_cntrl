@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -25,7 +25,7 @@
 *}
 <div class="crm-block crm-form-block crm-localization-form-block">
 <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"} </div>
-    <h3>{ts}Language and Currency{/ts}</h3>    
+    <fieldset><legend>{ts}Language and Currency{/ts}</legend>    
         <table class="form-layout-compressed">
             <tr class="crm-localization-form-block-lcMessages">
                 <td class="label">{$form.lcMessages.label}</td>
@@ -66,6 +66,11 @@
                 <td class="label">{$form.currencyLimit.label}</td>
                 <td>{$form.currencyLimit.html}</td>
             </tr>
+            <tr class="crm-localization-form-block-lcMonetary">
+                <td class="label">{$form.lcMonetary.label}</td>
+                <td>{$form.lcMonetary.html}<br />
+                <span class="description">{ts}Locale for monetary display (affects formatting specifiers below).{/ts}</span></td>
+            </tr>
             <tr class="crm-localization-form-block-moneyformat">
                 <td class="label">{$form.moneyformat.label}</td>
                 <td>{$form.moneyformat.html}<br />
@@ -92,7 +97,8 @@
                 <span class="description">{ts}Global CSV separator character. Modify this setting to enable import and export of different kinds of CSV files (for example: ',' ';' ':' '|' ).{/ts}</span></td>
             </tr>
         </table>
-    <h3>{ts}Contact Address Fields - Selection Values{/ts}</h3>
+    </fieldset>
+    <fieldset><legend>{ts}Contact Address Fields - Selection Values{/ts}</legend>
         <table class="form-layout-compressed">
             <tr class="crm-localization-form-block-defaultContactCountry">
                 <td class="label">{$form.defaultContactCountry.label}</td>
@@ -110,7 +116,8 @@
                 <span class="description">{ts}State/province listings are populated dynamically based on the selected Country for all standard contact address editing forms, as well as for <strong>Profile forms which include both a Country and a State/Province field</strong>.  This setting controls which countries' states and/or provinces are available in the State / Province selection field <strong>for Custom Fields</strong> or for Profile forms which do NOT include a Country field.{/ts}</span></td>
             </tr>
         </table>
-    <h3>{ts}Multiple Languages Support{/ts}</h3>    
+    </fieldset>
+    <fieldset><legend>{ts}Multiple Languages Support{/ts}</legend>    
       <table class="form-layout-compressed">
         {if $form.languageLimit}
           <tr class="crm-localization-form-block-makeSinglelingual_description">
@@ -132,11 +139,12 @@
         {else}
           <tr class="crm-localization-form-block-description">
               <td>
-              <span class="description">{ts}In order to use this functionality, the installation's database user must have privileges to create triggers (in MySQL 5.0 – and in MySQL 5.1 if binary logging is enabled – this means the SUPER privilege). This install either does not seem to have the required privilege enabled.{/ts} {ts}(Multilingual support currenly cannot be enabled on installations with enabled logging.){/ts}</span><br /><br />
+              <span class="description">{ts}In order to use this functionality, the installation's database user must have privileges to create triggers (in MySQL 5.0 – and in MySQL 5.1 if binary logging is enabled – this means the SUPER privilege). This install does not seem to have the required privilege enabled.{/ts}</span><br /><br />   
               <span class="description" style="color:red">{$warning}</span></td>   
           </tr>
         {/if}
       </table>
+    </fieldset>
     <div class="crm-submit-buttons">
         {include file="CRM/common/formButtons.tpl" location="bottom"}
     </div>

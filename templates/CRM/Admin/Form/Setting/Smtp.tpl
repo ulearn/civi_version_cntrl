@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -86,11 +86,8 @@
             </fieldset>
         </div>
         <div class="spacer"></div>
-        <div class="crm-submit-buttons">
-            {include file="CRM/common/formButtons.tpl"}
-            <span class="place-left">&nbsp;</span>
-            <span class="crm-button crm-button-type-next crm-button_qf_Smtp_refresh_test">{$form._qf_Smtp_refresh_test.html}</span>
-        </div>
+        <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl"}
+         &nbsp;&nbsp;&nbsp;{$form._qf_Smtp_refresh_test.html}</div>
 </div>    
 
 {literal}

@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -37,18 +37,6 @@
   {else}
       <td>&nbsp;</td>
   {/if} 
-  {if $form.activity_survey_id || $buildEngagementLevel}
-    <td>
-        {if $form.activity_survey_id}
-            <label>{$form.activity_survey_id.label}</label><br />{$form.activity_survey_id.html}
-        {/if}
-        {if $buildEngagementLevel}
-            <br/ ><br />
-            <label>{$form.activity_engagement_level.label}</label><br />{$form.activity_engagement_level.html}
-        {/if}
-    </td>
-  {/if} 
-
   {if $form.activity_tags }
     <td><label>{ts}Activity Tag(s){/ts}</label>
       <div id ="Tags" class="listing-box">
@@ -64,42 +52,35 @@
 </tr>
 <tr>
    <td>
-          {$form.activity_date_low.label}<br/>
+      {$form.activity_date_low.label}<br/>
 	  {include file="CRM/common/jcalendar.tpl" elementName=activity_date_low} 
    </td>
    <td>
-   	  {$form.activity_date_high.label}<br/>
+	  {$form.activity_date_high.label}<br/>
 	  {include file="CRM/common/jcalendar.tpl" elementName=activity_date_high}
    </td>
 </tr>
 <tr>
    <td>
-	  {$form.activity_role.html}
-      <span class="crm-clear-link">(<a href="#" title="unselect" onclick="unselectRadio('activity_role', '{$form.formName}'); document.getElementById('activity_contact_name').value = ''; return false;" >{ts}clear{/ts}</a>)</span><br />
+	  {$form.activity_role.label}<span class="crm-clear-link">(<a href="#" title="unselect" onclick="unselectRadio('activity_role', '{$form.formName}'); document.getElementById('activity_target_name').value = ''; return false;" >{ts}clear{/ts}</a>)</span><br />
+      {$form.activity_role.html}
    </td>
    <td colspan="2"><br />
-	  {$form.activity_contact_name.html}<br />
-      <span class="description font-italic">{ts}Complete OR partial Name of the Source Contact or the Assignee Contact.{/ts}</span><br /><br />
+	  {$form.activity_target_name.html}<br />
+      <span class="description font-italic">{ts}Complete OR partial Contact Name.{/ts}</span><br /><br />
 	  {$form.activity_test.label} &nbsp; {$form.activity_test.html} 
    </td>
 </tr>
 <tr>
    <td>
-	  {$form.activity_subject.label}<br />
-      	  {$form.activity_subject.html|crmReplace:class:big} 
+      {$form.activity_subject.label}<br />
+      {$form.activity_subject.html|crmReplace:class:big} 
    </td>
    <td colspan="2">
-          {$form.activity_status.label}<br />
-          {$form.activity_status.html} 
+      {$form.activity_status.label}<br />
+      {$form.activity_status.html} 
    </td>
 </tr>
-
-<tr><td colspan="3">{include file="CRM/common/Tag.tpl" tagsetType='activity'}</td></tr>
-
-{* campaign in activity search *}
-{include file="CRM/Campaign/Form/addCampaignToComponent.tpl" 
-campaignContext="componentSearch" campaignTrClass='' campaignTdClass=''}
-
 {if $activityGroupTree}
 <tr id="activityCustom">
    <td id="activityCustomData" colspan="2">

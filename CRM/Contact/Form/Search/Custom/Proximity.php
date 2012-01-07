@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -47,10 +47,8 @@ class CRM_Contact_Form_Search_Custom_Proximity
     function __construct( &$formValues ) {
         parent::__construct( $formValues );
 
-        // unset search profile and other search params if set
+        // unset search profile if set
         unset( $this->_formValues['uf_group_id'] );
-        unset( $this->_formValues['component_mode'] );
-        unset( $this->_formValues['operator'] );
 
         if ( ! empty( $this->_formValues ) ) {
             // add the country and state

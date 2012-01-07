@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -47,17 +47,17 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search
      * number of columns in where
      *
      * @var int
-     * @access public
+     * @access protected
      */
-    public $_columnCount;
+    protected $_columnCount;
 
     /**
      * number of blocks to be shown
      *
      * @var int
-     * @access public
+     * @access protected
      */
-    public $_blockCount;
+    protected $_blockCount;
     
     /**
      * Function to actually build the form
@@ -66,8 +66,6 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search
      * @access public
      */
     public function preProcess() {
-        $this->set( 'searchFormName', 'Builder' );
-        
         $this->set('context', 'builder' );
         parent::preProcess( );
         
@@ -99,9 +97,9 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search
     public function buildQuickForm( ) {
         //get the saved search mapping id
         $mappingId = null;
-        if ( $this->_ssID ) {
-            $mappingId = CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_SavedSearch', $this->_ssID, 'mapping_id' );
-        }
+            if ( $this->_ssID ) {
+                $mappingId = CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_SavedSearch', $this->_ssID, 'mapping_id' );
+            }
 
         CRM_Core_BAO_Mapping::buildMappingForm($this, 'Search Builder', $mappingId, $this->_columnCount, $this->_blockCount);
         
@@ -179,7 +177,7 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search
                         }
                     }
                 } else if ( substr($v[0], 0, 7) === 'do_not_' or substr($v[0], 0, 3) === 'is_' ) { 
-                    if ( isset($v[2]) ) {
+                    if ( $v[2] ) {
                         $v2 = array($v[2]);
                         if ( !isset($v[2]) ) {
                             $errorMsg["value[$v[3]][$v[4]]"] = ts("Please enter the value.");  
@@ -230,22 +228,14 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search
                         if ( $v[1] == 'IN' ) {
                             $inVal = trim( $v[2] );
                             //checking for format to avoid db errors
-                            if ( $type == 'Int' ) {
-                                if (!preg_match( '/^[(]([A-Za-z0-9\,]+)[)]$/', $inVal) ) {
-                                    $errorMsg["value[$v[3]][$v[4]]"] = ts("Please enter correct Data ( in valid format ).");
-                                }
-                            } else {
-                                if (!preg_match( '/^[(]([A-Za-z0-9åäöÅÄÖüÜœŒæÆøØ\,\s]+)[)]$/', $inVal) ) {
-                                    $errorMsg["value[$v[3]][$v[4]]"] = ts("Please enter correct Data ( in valid format ).");
-                                }
+                            if (!preg_match( '/^[(]([A-Za-z0-9\'\,]+)[)]$/', $inVal) ) {
+                                $errorMsg["value[$v[3]][$v[4]]"] = ts("Please enter correct Data ( in valid format ).");
                             }
-
                             // Validate each value in parenthesis to avoid db errors
                             if( empty( $errorMsg ) ) {
                                 $parenValues = array();
                                 $parenValues = explode ( ',', trim( $inVal, "(..)" ) );
                                 foreach ( $parenValues as $val ) {
-                                    $val = trim( $val );
                                     if ( !$val && $val !='0' ) {
                                         $errorMsg["value[$v[3]][$v[4]]"] = ts("Please enter the values correctly.");
                                     }
@@ -300,6 +290,7 @@ class CRM_Contact_Form_Search_Builder extends CRM_Contact_Form_Search
         $this->set('showSearchForm', false);
 
         $params = $this->controller->exportValues( $this->_name );
+
         if (!empty($params)) {
             if ( CRM_Utils_Array::value('addBlock',$params) )  { 
                 $this->_blockCount = $this->_blockCount + 1;

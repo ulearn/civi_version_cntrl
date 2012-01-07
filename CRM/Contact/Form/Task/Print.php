@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -50,8 +50,6 @@ class CRM_Contact_Form_Task_Print extends CRM_Contact_Form_Task {
      */
     function preProcess()
     {
-        parent::preprocess( );
-
         // set print view, so that print templates are called
         $this->controller->setPrint( 1 );
         $this->assign( 'id', $this->get( 'id' ) );

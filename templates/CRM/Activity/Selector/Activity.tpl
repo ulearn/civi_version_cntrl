@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -26,7 +26,7 @@
 {* Displays Activities. *}
 
 <div>
-  {if empty($noFieldSet)}	
+  {if !$noFieldSet}	
   <h3 class="crm-table-title">{ts}Activities{/ts}</h3>
   {/if}
 {if $rows}
@@ -79,7 +79,7 @@
                     {assign var="showTarget" value=$showTarget+1}
                 {/if}
             {/foreach}
-            {if count($row.target_contact_name) > 5} ({ts}more{/ts}){/if}
+            {if count($row.target_contact_name) > 5}({ts}more{/ts}){/if}
         {/if}
         </td>
 
@@ -108,9 +108,9 @@
   {/strip}
 
   {include file="CRM/common/pager.tpl" location="bottom"}
+  </form>
   
   {include file="CRM/Case/Form/ActivityToCase.tpl" contactID=$contactId}
-  </form>
 {else}
 
   <div class="messages status">

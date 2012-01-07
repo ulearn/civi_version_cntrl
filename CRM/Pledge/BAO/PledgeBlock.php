@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -135,7 +135,7 @@ class CRM_Pledge_BAO_PledgeBlock extends CRM_Pledge_DAO_PledgeBlock
             
             $freqUnits =  $newFreqUnits;
             if ( is_array($freqUnits) && !empty($freqUnits) ) {
-                $freqUnits = implode(CRM_Core_DAO::VALUE_SEPARATOR,array_keys($freqUnits));
+                $freqUnits = implode(CRM_Core_BAO_CustomOption::VALUE_SEPERATOR,array_keys($freqUnits));
                 $pledgeBlock->pledge_frequency_unit = $freqUnits;
             } else {
                 $pledgeBlock->pledge_frequency_unit = '';
@@ -220,7 +220,7 @@ class CRM_Pledge_BAO_PledgeBlock extends CRM_Pledge_DAO_PledgeBlock
                                              $form->_values['pledge_id'], $allPayments, $returnProperties );
             //get all status
             require_once 'CRM/Contribute/PseudoConstant.php';
-            $allStatus = CRM_Contribute_PseudoConstant::contributionStatus( null, 'name' );
+            $allStatus = CRM_Contribute_PseudoConstant::contributionStatus( );
             
             $nextPayment = array( );
             $isNextPayment = false;
@@ -233,8 +233,8 @@ class CRM_Pledge_BAO_PledgeBlock extends CRM_Pledge_DAO_PledgeBlock
                                                       'scheduled_date'   => CRM_Utils_Date::customFormat( $value['scheduled_date'], 
                                                                                                           '%B %d') 
                                                       );
-                } else if ( !$isNextPayment && 
-                            $allStatus[$value['status_id']] == 'Pending' ) { 
+                } else if (  !$isNextPayment && 
+                             $allStatus[$value['status_id']] == 'Pending' ) { 
                     //get the next payment.
                     $nextPayment =  array( 'id'               => $payID ,
                                            'scheduled_amount' => CRM_Utils_Rule::cleanMoney( $value['scheduled_amount']),
@@ -285,14 +285,11 @@ class CRM_Pledge_BAO_PledgeBlock extends CRM_Pledge_DAO_PledgeBlock
                 $form->add( 'hidden', 'pledge_frequency_interval', 1 ); 
             }
             //Frequency unit drop-down label suffixes switch from *ly to *(s)
-            $freqUnitVals  = explode( CRM_Core_DAO::VALUE_SEPARATOR, $pledgeBlock['pledge_frequency_unit'] );
+            $freqUnitVals  = explode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR, $pledgeBlock['pledge_frequency_unit'] );
             $freqUnits = array( );
-            $frequencyUnits = CRM_Core_OptionGroup::values( 'recur_frequency_units' );
             foreach ( $freqUnitVals as $key => $val ) {
-                if ( array_key_exists( $val, $frequencyUnits )  ) { 
-                    $freqUnits[$val] = CRM_Utils_Array::value('is_pledge_interval', $pledgeBlock) ? 
-                        "{$frequencyUnits[$val]}(s)" : $frequencyUnits[$val];
-                }
+                // FIXME: this is not localisable
+                $freqUnits[$val] = CRM_Utils_Array::value('is_pledge_interval', $pledgeBlock) ? "{$val}(s)" : $val;
             }
             $form->addElement( 'select', 'pledge_frequency_unit', null, $freqUnits ); 
         }

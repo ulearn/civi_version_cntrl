@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -27,7 +27,7 @@
 {* smog = 'show members of group'; amtg = 'add members to group' *}
 {if $context EQ 'smog'}
     {* Provide link to modify smart group search criteria if we are viewing a smart group (ssID = saved search ID) *}
-    {if !empty($ssID)}
+    {if $ssID}
         {if $ssMappingID}
             {capture assign=editSmartGroupURL}{crmURL p="civicrm/contact/search/builder" q="reset=1&force=1&ssID=`$ssID`"}{/capture}
         {else}

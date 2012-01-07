@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -46,7 +46,7 @@
 
 {if $contact_id}
 <div class="messages status">
-    {ts 1=$display_name}Welcome %1{/ts}. (<a href="{crmURL p='civicrm/event/register' q="cid=0&reset=1&id=`$event.id`"}" title="{ts}Click here to register a different person for this event.{/ts}">{ts 1=$display_name}Not %1, or want to register a different person{/ts}</a>?)</div>
+    {ts 1=$display_name}Welcome %1{/ts}. (<a href="{crmURL p='civicrm/event/register' q="&cid=0&reset=1&id=`$event.id`"}" title="{ts}Click here to register a different person for this event.{/ts}">{ts 1=$display_name}Not %1, or want to register a different person{/ts}</a>?)</div>
 {/if}
 {if $event.intro_text}
     <div id="intro_text" class="crm-section intro_text-section">
@@ -67,8 +67,7 @@
 
 {if $priceSet}
     <fieldset id="priceset" class="crm-group priceset-group"><legend>{$event.fee_label}</legend>
-        {include file="CRM/Price/Form/PriceSet.tpl" extends="Event"}
-	{include file="CRM/Price/Form/ParticipantCount.tpl"}
+        {include file="CRM/Price/Form/PriceSet.tpl"}
     </fieldset>
     {if $form.is_pay_later}
         <div class="crm-section pay_later-section">
@@ -146,13 +145,8 @@
 
     function allowParticipant( ) { 		
 	{/literal}{if $allowGroupOnWaitlist}{literal}
-	    var additionalParticipants = cj('#additional_participants').val();
-	    var pricesetParticipantCount = 0;
-	    {/literal}{if $priceSet}{literal}
-	      pricesetParticipantCount = pPartiCount;
-	    {/literal}{/if}{literal}
-	
-	    allowGroupOnWaitlist( additionalParticipants, pricesetParticipantCount );
+	    var additionalParticipants = cj('#additional_participants').val();	
+	    allowGroupOnWaitlist( additionalParticipants );
 	{/literal}{/if}{literal}
     }
 
@@ -191,31 +185,20 @@
     }
     
     {/literal}{if $allowGroupOnWaitlist}{literal}
-       allowGroupOnWaitlist( 0, 0 );
+       allowGroupOnWaitlist( 0 );
     {/literal}{/if}{literal}
     
-    function allowGroupOnWaitlist( additionalParticipants, pricesetParticipantCount )
+    function allowGroupOnWaitlist( additionalParticipants )
     {	
-      {/literal}{if $isAdditionalParticipants}{literal}
       if ( !additionalParticipants ) {
       	additionalParticipants = cj('#additional_participants').val();
       }
-      {/literal}{else}{literal}
-        additionalParticipants = 0;
-      {/literal}{/if}{literal}
-
-      additionalParticipants = parseInt( additionalParticipants );
-      if ( ! additionalParticipants ) {
-      	 additionalParticipants = 0;
-      }     
-
+      if ( additionalParticipants == '' ) {
+           additionalParticipants = 0;
+      }
       var availableRegistrations = {/literal}'{$availableRegistrations}'{literal};
       var totalParticipants = parseInt( additionalParticipants ) + 1;
-      
-      if ( pricesetParticipantCount ) {
-      	// add priceset count if any 
-      	totalParticipants += parseInt(pricesetParticipantCount) - 1;
-      }
+
       var isrequireApproval = {/literal}'{$requireApprovalMsg}'{literal};
  
       if ( totalParticipants > availableRegistrations ) {

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -84,7 +84,7 @@ class CRM_Activity_Form_Search extends CRM_Core_Form
      * @var array 
      * @access protected 
      */ 
-    public $_formValues; 
+    protected $_formValues; 
 
     /**
      * the params that are sent to the query
@@ -150,8 +150,6 @@ class CRM_Activity_Form_Search extends CRM_Core_Form
      */ 
     function preProcess( ) 
     { 
-        $this->set( 'searchFormName', 'Search' );
-
         /** 
          * set the button names 
          */   
@@ -236,7 +234,7 @@ class CRM_Activity_Form_Search extends CRM_Core_Form
      */
     function buildQuickForm( ) 
     {
-        $this->addElement('text', 'sort_name', ts('With (name or email)'), CRM_Core_DAO::getAttribute('CRM_Contact_DAO_Contact', 'sort_name') );
+        $this->addElement('text', 'sort_name', ts('Name or Email'), CRM_Core_DAO::getAttribute('CRM_Contact_DAO_Contact', 'sort_name') );
         
         require_once 'CRM/Activity/BAO/Query.php';
         CRM_Activity_BAO_Query::buildSearchForm( $this );
@@ -253,7 +251,7 @@ class CRM_Activity_Form_Search extends CRM_Core_Form
                 foreach ($rows as $row) { 
                     $this->addElement( 'checkbox', $row['checkbox'], 
                                        null, null, 
-                                       array( 'onclick' => "toggleTaskAction( true ); return checkSelectedBox('" . $row['checkbox'] . "');" )
+                                       array( 'onclick' => "toggleTaskAction( true ); return checkSelectedBox('" . $row['checkbox'] . "', '" . $this->getName() . "');" )
                                        ); 
                 }
             }
@@ -289,8 +287,7 @@ class CRM_Activity_Form_Search extends CRM_Core_Form
                                          'isDefault' => true ) 
                                   )    );
     }
-   
- 
+    
     /**
      * The post processing of the form gets done here.
      *
@@ -326,19 +323,11 @@ class CRM_Activity_Form_Search extends CRM_Core_Form
             // if we are editing / running a saved search and the form has not been posted
             $this->_formValues = CRM_Contact_BAO_SavedSearch::getFormValues( $this->_ssID );
         }
-        if ( CRM_Utils_Array::value( 'activity_survey_id', $this->_formValues ) ) {
-            require_once ('CRM/Campaign/BAO/Survey.php');
-            // if the user has choosen a survey but not any activity type, we force the activity type
-            $sid = CRM_Utils_Array::value( 'activity_survey_id', $this->_formValues ) ;
-            $activity_type_id = CRM_Core_DAO::getFieldValue( 'CRM_Campaign_DAO_Survey', $sid, 'activity_type_id' );
-
-            $this->_formValues['activity_type_id'][ $activity_type_id ] = 1;
-        }
 
         if ( ! CRM_Utils_Array::value( 'activity_test', $this->_formValues ) ) {
             $this->_formValues["activity_test"] = 0;
         }
-        if ( ! CRM_Utils_Array::value( 'activity_contact_name', $this->_formValues ) && ! CRM_Utils_Array::value( 'contact_id', $this->_formValues ) ) {
+        if ( ! CRM_Utils_Array::value( 'activity_target_name', $this->_formValues ) ) {
             $this->_formValues['activity_role'] = null;
         }
         require_once 'CRM/Core/BAO/CustomValue.php';
@@ -451,33 +440,21 @@ class CRM_Activity_Form_Search extends CRM_Core_Form
         if ( ! $this->_force ) {
             return;
         }
-        $status = CRM_Utils_Request::retrieve( 'status', 'String', $this );
+        $status = CRM_Utils_Request::retrieve( 'status', 'String', CRM_Core_DAO::$_nullObject );
         if ( $status ) {
-            $this->_formValues['activity_status'] = $status;
-            $this->_defaults  ['activity_status'] = $status;
+            $this->_formValues['activity_status_id'] = $status;
+            $this->_defaults  ['activity_status_id'] = $status;
         }
 
-        $survey = CRM_Utils_Request::retrieve( 'survey', 'Positive',
-                                              CRM_Core_DAO::$_nullObject );
-        if ( $survey ) {
-            $this->_formValues['activity_survey_id'] = $survey;
-        }
-        $cid = CRM_Utils_Request::retrieve( 'cid', 'Positive', $this );
+        $cid = CRM_Utils_Request::retrieve( 'cid', 'Positive', CRM_Core_DAO::$_nullObject );
         
         if ( $cid ) {
             $cid = CRM_Utils_Type::escape( $cid, 'Integer' );
             if ( $cid > 0 ) {
                 $this->_formValues['contact_id'] = $cid;
-
-                $activity_role = CRM_Utils_Request::retrieve( 'activity_role', 'Positive', $this );
-
-                if ( $activity_role ) {
-                    $this->_formValues['activity_role'] = $activity_role;
-                } else {
-                    require_once 'CRM/Contact/BAO/Contact.php';
-                    list( $display, $image ) = CRM_Contact_BAO_Contact::getDisplayAndImage( $cid );
-                    $this->_defaults['sort_name'] = CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_Contact', $cid, 'sort_name' );
-                }
+                require_once 'CRM/Contact/BAO/Contact.php';
+                list( $display, $image ) = CRM_Contact_BAO_Contact::getDisplayAndImage( $cid );
+                $this->_defaults['sort_name'] = CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_Contact', $cid, 'sort_name' );
                 // also assign individual mode to the template
                 $this->_single = true;
             }

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -114,8 +114,7 @@ class CRM_Admin_Form_Setting_Smtp extends CRM_Admin_Form_Setting
                 $to   = '"' . $toDisplayName . '"' . "<$toEmail>";
                 $from = '"' . $domainEmailName . '" <' . $domainEmailAddress . '>';
                 $testMailStatusMsg = ts( 'Sending test email. FROM: %1 TO: %2.<br />', array( 1 => $domainEmailAddress, 2 => $toEmail ));
-
-                $params = array( );
+                    
                 if ($formValues['outBound_option'] == 0) {
                     $subject = "Test for SMTP settings";
                     $message = "SMTP settings are correct.";
@@ -168,7 +167,6 @@ class CRM_Admin_Form_Setting_Smtp extends CRM_Admin_Form_Setting
         $mailingDomain->find(true);
         if ( $mailingDomain->mailing_backend ) {
             $values = unserialize( $mailingDomain->mailing_backend );
-            require_once "CRM/Core/BAO/Setting.php";
             CRM_Core_BAO_Setting::formatParams( $formValues, $values );
         }
         

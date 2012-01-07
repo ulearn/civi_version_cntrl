@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,9 +24,6 @@
  +--------------------------------------------------------------------+
 *}
 {assign var="element_name" value=$element.element_name}
-{if $element.help_post}
-    {assign var="help_post" value=$element.help_post}
-{/if}
 {if $element.is_view eq 0}{* fix for CRM-3510 *}
     {if $element.help_pre}
         <tr class="custom_field-help-pre-row {$element.element_name}-row-help-pre">
@@ -36,7 +33,7 @@
     {/if}
      {if $element.options_per_line != 0 }
         <tr class="custom_field-row {$element.element_name}-row">
-            <td class="label">{$form.$element_name.label}{if $element.help_post}{help id=$element_name text=$help_post}{/if}</td>
+            <td class="label">{$form.$element_name.label}</td>
             <td class="html-adjust">
                 {assign var="count" value="1"}
                 <table class="form-layout-compressed" style="margin-top: -0.5em;">
@@ -65,9 +62,15 @@
             </td>
         </tr>
             
+        {if $element.help_post}
+            <tr class="custom_field-help-post-row {$element.element_name}-row-help-post">
+                <td>&nbsp;</td>
+                <td class="description">{$element.help_post}<br />&nbsp;</td>
+            </tr>
+             {/if}
     {else}
         <tr class="custom_field-row {$element.element_name}-row">
-            <td class="label">{$form.$element_name.label}{if $element.help_post}{help id=$element_name text=$help_post}{/if}</td>                                
+            <td class="label">{$form.$element_name.label}</td>                                
             <td class="html-adjust">
                 {if $element.data_type neq 'Date'}
                     {$form.$element_name.html}&nbsp;
@@ -82,7 +85,7 @@
                         <span class="html-adjust"><br />
                             &nbsp;{ts}Attached File{/ts}: &nbsp;
                             {if $element.element_value.displayURL }
-                                <a href="javascript:popUp('{$element.element_value.imageURL}')" ><img src="{$element.element_value.displayURL}" height = "{$element.element_value.imageThumbHeight}" width="{$element.element_value.imageThumbWidth}"></a>
+                                <a href="javascript:popUp('{$element.element_value.displayURL}')" ><img src="{$element.element_value.displayURL}" height = "{$element.element_value.imageThumbHeight}" width="{$element.element_value.imageThumbWidth}"></a>
                             {else}
                                 <a href="{$element.element_value.fileURL}">{$element.element_value.fileName}</a>
                             {/if}
@@ -98,5 +101,11 @@
             </td>
         </tr>
         
+        {if $element.help_post}
+
+<td>&nbsp;</td>
+<td class="description">{$element.help_post}<br />&nbsp;</td>
+</tr>
+        {/if}
     {/if}
 {/if}

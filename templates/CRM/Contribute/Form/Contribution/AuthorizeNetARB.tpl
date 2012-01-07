@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,16 +23,6 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-{if $subscriptionType eq 'cancel'}
-<?xml version="1.0" encoding="utf-8"?>
-<ARBCancelSubscriptionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
-  <merchantAuthentication>
-    <name>{$apiLogin}</name>
-    <transactionKey>{$paymentKey}</transactionKey>
-  </merchantAuthentication>
-  <subscriptionId>{$subscriptionId}</subscriptionId>
-</ARBCancelSubscriptionRequest>
-{else}
 <?xml version="1.0" encoding="utf-8"?>
 <ARBCreateSubscriptionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
   <merchantAuthentication>
@@ -41,7 +31,7 @@
   </merchantAuthentication>
   <refId>{$refId}</refId>
   <subscription>
-    {if $name}<name>{$name}</name>{/if}
+    <name>{$name}</name>
     <paymentSchedule>
       <interval>
         <length>{$intervalLength}</length>
@@ -57,13 +47,7 @@
         <expirationDate>{$expirationDate}</expirationDate>
       </creditCard>
     </payment>
-   {if $invoiceNumber}
-   <order>  
-     <invoiceNumber>{$invoiceNumber}</invoiceNumber>
-   </order>
-   {/if}  
     <customer>
-      <id>{$contactID}</id>
       <email>{$email}</email>
     </customer>
     <billTo>
@@ -77,4 +61,3 @@
     </billTo>
   </subscription>
 </ARBCreateSubscriptionRequest>
-{/if}

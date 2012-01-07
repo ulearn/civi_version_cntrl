@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -39,7 +39,7 @@ require_once 'CRM/Core/DAO/MailSettings.php';
 class CRM_Mailing_MailStore
 {
     // flag to decide whether to print debug messages
-    var $_debug = false;
+    var $_debug = true;
 
     /**
      * Return the proper mail store implementation, based on config settings
@@ -93,13 +93,6 @@ class CRM_Mailing_MailStore
     function allMails()
     {
         return $this->fetchNext(0);
-    }
-
-    /**
-     * Expunge the messages marked for deletion; stub function to be redefined by IMAP store
-     */
-    function expunge()
-    {
     }
 
     /**

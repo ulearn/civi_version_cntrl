@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,13 +29,13 @@
         {include file="CRM/Profile/Page/Overlay.tpl"}
     {else}
         <div id="crm-container" lang="{$config->lcMessages|truncate:2:"":true}" xml:lang="{$config->lcMessages|truncate:2:"":true}">
-            {foreach from=$profileFields item=field key=rowName}
-              <div id="row-{$rowName}" class="crm-section {$rowName}-section">
+            {foreach from=$row item=value key=rowName name=profile}
+              <div id="row-{$smarty.foreach.profile.iteration}" class="crm-section {$smarty.foreach.profile.iteration}-section">
                 <div class="label">
-                    {$field.label}
+                    {$rowName}
                 </div>
                  <div class="content">
-                    {$field.value}
+                    {$value}
                  </div>
                  <div class="clear"></div>
               </div>

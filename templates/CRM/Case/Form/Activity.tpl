@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,28 +23,33 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-
+<div class="crm-block crm-form-block crm-case-activity-form-block">
 {* this template is used for adding/editing activities for a case. *}
 {if $cdType }
    {include file="CRM/Custom/Form/CustomData.tpl"}
 {else}
-<div class="crm-block crm-form-block crm-case-activity-form-block">
     {if $action neq 8 and $action  neq 32768 }
 
 {* added onload javascript for source contact*}
 {literal}
 <script type="text/javascript">
 var target_contact = assignee_contact = target_contact_id = '';
-
 {/literal}
-{if $target_contact}
-    var target_contact = {$target_contact};
+
+{if $targetContactValues}
+{foreach from=$targetContactValues key=id item=name}
+     {literal} target_contact += '{"name":"'+{/literal}"{$name}"{literal}+'","id":"'+{/literal}"{$id}"{literal}+'"},';{/literal}
+{/foreach}
+{literal} eval( 'target_contact = [' + target_contact + ']'); {/literal}
 {/if}
-    
-{if $assignee_contact}
-    var assignee_contact = {$assignee_contact};
+
+{if $assigneeContactCount}
+{foreach from=$assignee_contact key=id item=name}
+     {literal} assignee_contact += '{"name":"'+{/literal}"{$name}"{literal}+'","id":"'+{/literal}"{$id}"{literal}+'"},';{/literal}
+{/foreach}
+{literal} eval( 'assignee_contact = [' + assignee_contact + ']'); {/literal}
 {/if}
- 
+
 {literal}
 var target_contact_id = assignee_contact_id = null;
 //loop to set the value of cc and bcc if form rule.
@@ -72,12 +77,14 @@ cj(document).ready( function( ) {
 
 {literal}
 
+eval( 'tokenClass = { tokenList: "token-input-list-facebook", token: "token-input-token-facebook", tokenDelete: "token-input-delete-token-facebook", selectedToken: "token-input-selected-token-facebook", highlightedToken: "token-input-highlighted-token-facebook", dropdown: "token-input-dropdown-facebook", dropdownItem: "token-input-dropdown-item-facebook", dropdownItem2: "token-input-dropdown-item2-facebook", selectedDropdownItem: "token-input-selected-dropdown-item-facebook", inputToken: "token-input-input-token-facebook" } ');
+
 var sourceDataUrl = "{/literal}{$dataUrl}{literal}";
 var tokenDataUrl  = "{/literal}{$tokenUrl}{literal}";
 
 var hintText = "{/literal}{ts}Type in a partial or complete name or email address of an existing contact.{/ts}{literal}";
-cj( "#assignee_contact_id").tokenInput( tokenDataUrl, { prePopulate: assignee_contact, theme: 'facebook', hintText: hintText });
-cj( "#target_contact_id"  ).tokenInput( tokenDataUrl, { prePopulate: target_contact,   theme: 'facebook', hintText: hintText });
+cj( "#assignee_contact_id").tokenInput( tokenDataUrl, { prePopulate: assignee_contact, classes: tokenClass, hintText: hintText });
+cj( "#target_contact_id"  ).tokenInput( tokenDataUrl, { prePopulate: target_contact,   classes: tokenClass, hintText: hintText });
 cj( 'ul.token-input-list-facebook, div.token-input-dropdown-facebook' ).css( 'width', '450px' );
 cj( "#source_contact_id").autocomplete( sourceDataUrl, { width : 180, selectFirst : false, matchContains:true
                             }).result( function(event, data, formatted) { cj( "#source_contact_qid" ).val( data[1] );
@@ -161,7 +168,7 @@ cj( "#source_contact_id").autocomplete( sourceDataUrl, { width : 180, selectFirs
               <td class="view-value"> {if $admin}{$form.source_contact_id.html}{/if}</td>
             </tr>
            <tr class="crm-case-activity-form-block-assignee_contact_id">
-              <td class="label">{ts}Assigned To{/ts}</td>
+              <td class="label">{ts}Assigned To {/ts}</td>
               <td>{$form.assignee_contact_id.html}                   
                   {edit}<span class="description">
                         {ts}You can optionally assign this activity to someone.{/ts}
@@ -188,15 +195,7 @@ cj( "#source_contact_id").autocomplete( sourceDataUrl, { width : 180, selectFirs
            </tr> 
            <tr class="crm-case-activity-form-block-activity_date_time">
               <td class="label">{$form.activity_date_time.label}</td>
-             {if $action eq 2 && $activityTypeFile eq 'OpenCase'}
-               <td class="view-value">{$current_activity_date_time|crmDate}
-               <div class="description">Use a <a href="{$changeStartURL}">Change Start Date</a> activity to change the date</div>
-               {* avoid errors about missing field *}
-               <div style="display: none;">{include file="CRM/common/jcalendar.tpl" elementName=activity_date_time}</div>
-               </td>
-             {else}
-               <td class="view-value">{include file="CRM/common/jcalendar.tpl" elementName=activity_date_time}</td>
-             {/if}
+              <td class="view-value">{include file="CRM/common/jcalendar.tpl" elementName=activity_date_time}</td>
            </tr>
            <tr>
               <td colspan="2"><div id="customData"></div></td>
@@ -239,11 +238,11 @@ cj( "#source_contact_id").autocomplete( sourceDataUrl, { width : 180, selectFirs
                        {/foreach}
                    </table>
                    {/strip}
-                  </div><!-- /.crm-accordion-body -->
-           </div><!-- /.crm-accordion-wrapper -->
                   </div>
                 </td>
             </tr>
+       </div><!-- /.crm-accordion-body -->
+</div><!-- /.crm-accordion-wrapper -->
 
             {/if}
            <tr>
@@ -263,7 +262,7 @@ cj( "#source_contact_id").autocomplete( sourceDataUrl, { width : 180, selectFirs
                         </tr>
                         <tr class="crm-case-activity-form-block-followup_activity_subject">
                            <td class="label">{$form.followup_activity_subject.label}</td>
-                           <td>{$form.followup_activity_subject.html|crmReplace:class:huge}</td>
+                           <td>{$form.followup_activity_subject.html}</td>
                         </tr>
                     </table>
  </div><!-- /.crm-accordion-body -->
@@ -302,10 +301,9 @@ cj( "#source_contact_id").autocomplete( sourceDataUrl, { width : 180, selectFirs
                 </td>
              </tr>
              {/if}
-                 <tr class="crm-case-activity-form-block-tag_set"><td colspan="2">{include file="CRM/common/Tag.tpl" tagsetType='activity'}</td></tr>
-             </table>
-
            {/if}
+           <tr class="crm-case-activity-form-block-tag_set"><td colspan="2">{include file="CRM/common/Tag.tpl"}</td></tr>
+       </table>
      
      <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
 
@@ -389,6 +387,7 @@ cj( "#source_contact_id").autocomplete( sourceDataUrl, { width : 180, selectFirs
     }	
     </script>
     {/literal}
-  </div>
+
 {/if} {* end of main if block*}
 </script>
+</div>

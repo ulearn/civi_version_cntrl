@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -247,21 +247,13 @@ abstract class CRM_Import_Parser {
      */
 
     public $_contactType;
-
     /**
      * on duplicate
      *
      * @var int
      */
     public $_onDuplicate;
-
-    /**
-     * dedupe rule group id to use if set
-     *
-     * @var int
-     */
-    public $_dedupeRuleGroupID = null;
-
+    
     function __construct() {
         $this->_maxLinesToProcess = 0;
         $this->_maxErrorCount = self::MAX_ERRORS;
@@ -280,13 +272,11 @@ abstract class CRM_Import_Parser {
                   $totalRowCount = null,
                   $doGeocodeAddress = false,
                   $timeout = CRM_Import_Parser::DEFAULT_TIMEOUT,
-                  $contactSubType = null,
-                  $dedupeRuleGroupID = null ) {
-
+                  $contactSubType = null ) {
+        
         // TODO: Make the timeout actually work
         $this->_onDuplicate = $onDuplicate;
-        $this->_dedupeRuleGroupID = $dedupeRuleGroupID;
-
+        
         switch ($contactType) {
         case CRM_Import_Parser::CONTACT_INDIVIDUAL :
             $this->_contactType = 'Individual';
@@ -341,9 +331,7 @@ abstract class CRM_Import_Parser {
             $status = "<div class='description'>&nbsp; " . ts('No processing status reported yet.') . "</div>";
             require_once 'Services/JSON.php';
             $json = new Services_JSON( ); 
-            
-            //do not force the browser to display the save dialog, CRM-7640 
-            $contents = $json->encodeUnsafe( array( 0, $status ) );
+            $contents = $json->encode( array( 0, $status ) );
 
             file_put_contents( $statusFile, $contents );
 
@@ -412,7 +400,7 @@ abstract class CRM_Import_Parser {
 ";
 
                     $json = new Services_JSON( ); 
-                    $contents = $json->encodeUnsafe( array( $processedPercent, $status ) );
+                    $contents = $json->encode( array( $processedPercent, $status ) );
 
                     file_put_contents( $statusFile, $contents );
 
@@ -613,12 +601,6 @@ abstract class CRM_Import_Parser {
         }
     }
 
-    function setActiveFieldWebsiteTypes( $elements ) {
-        for ($i = 0; $i < count( $elements ); $i++) {
-            $this->_activeFields[$i]->_websiteType = $elements[$i];
-        }
-    }
-
     /**
      * Function to set IM Service Provider type fields   
      *
@@ -660,12 +642,6 @@ abstract class CRM_Import_Parser {
     function setActiveFieldRelatedContactPhoneType( $elements ) {
         for ($i = 0; $i < count( $elements ); $i++) {
             $this->_activeFields[$i]->_relatedContactPhoneType = $elements[$i];
-        }        
-    }
-
-    function setActiveFieldRelatedContactWebsiteType( $elements ) {
-        for ($i = 0; $i < count( $elements ); $i++) {
-            $this->_activeFields[$i]->_relatedContactWebsiteType = $elements[$i];
         }        
     }
 
@@ -720,11 +696,6 @@ abstract class CRM_Import_Parser {
                     }
                     
                     $params[$this->_activeFields[$i]->_name][] = $value;
-                } else if ( isset( $this->_activeFields[$i]->_websiteType ) ) {
-                    $value = array( $this->_activeFields[$i]->_name => $this->_activeFields[$i]->_value,
-                                    'website_type_id'               => $this->_activeFields[$i]->_websiteType );
-                    
-                    $params[$this->_activeFields[$i]->_name][] = $value;
                 }
                 
                 if ( ! isset($params[$this->_activeFields[$i]->_name] ) ) {
@@ -761,15 +732,10 @@ abstract class CRM_Import_Parser {
                         }
                         
                         $params[$this->_activeFields[$i]->_related][$this->_activeFields[$i]->_relatedContactDetails][] = $value;
-                    } else if ( isset( $this->_activeFields[$i]->_relatedContactWebsiteType ) ) {
-                            $params[$this->_activeFields[$i]->_related][$this->_activeFields[$i]->_relatedContactDetails][] 
-                                = array( 'url'             => $this->_activeFields[$i]->_value,
-                                         'website_type_id' => $this->_activeFields[$i]->_relatedContactWebsiteType );
-                            
                     } else {
-                            $params[$this->_activeFields[$i]->_related][$this->_activeFields[$i]->_relatedContactDetails] = 
-                                $this->_activeFields[$i]->_value;
-                    }  
+                        $params[$this->_activeFields[$i]->_related][$this->_activeFields[$i]->_relatedContactDetails] = 
+                            $this->_activeFields[$i]->_value;                        
+                    }
                 }
             }
         }

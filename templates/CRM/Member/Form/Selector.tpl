@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -58,16 +58,15 @@
             <a href="{crmURL p='civicrm/contact/view' q="reset=1&cid=`$row.contact_id`"}" title="{ts}View contact record{/ts}">{$row.sort_name}</a>
         </td> 
     {/if}
-    <td class="crm-membership-type crm-membership-type_{$row.membership_type}">
-        {$row.membership_type}
+    <td class="crm-membership-type crm-membership-type_{$row.membership_type_id}">
+        {$row.membership_type_id}
         {if $row.owner_membership_id}<br />({ts}by relationship{/ts}){/if}
     </td>
     <td class="crm-membership-join_date">{$row.join_date|truncate:10:''|crmDate}</td>
     <td class="crm-membership-start_date">{$row.membership_start_date|truncate:10:''|crmDate}</td>
     <td class="crm-membership-end_date">{$row.membership_end_date|truncate:10:''|crmDate}</td>
     <td class="crm-membership-source">{$row.membership_source}</td>
-    <td class="crm-membership-status crm-membership-status_{$row.membership_status}">{$row.membership_status}</td>
-    <td class="crm-membership-auto_renew">{if $row.auto_renew}<img src="{$config->resourceBase}/i/check.gif" alt="{ts}Auto-renew{/ts}" /> {/if}</td>
+    <td class="crm-membership-status crm-membership-status_{$row.status_id}">{$row.status_id}</td>
     <td>
         {$row.action|replace:'xx':$row.membership_id}
         {if $row.owner_membership_id}

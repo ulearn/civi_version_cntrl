@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -137,13 +137,6 @@ class CRM_Profile_Selector_Listings extends CRM_Core_Selector_Base implements CR
     protected $_linkToUF;
 
     /**
-     * Store profile ids if multiple profile ids are passed using comma separated.
-     * Currently lets implement this functionality only for dialog mode
-     */
-    protected $_profileIds = array( );
-
-
-    /**
      * Class constructor
      *
      * @param string params the params for the where clause
@@ -151,27 +144,20 @@ class CRM_Profile_Selector_Listings extends CRM_Core_Selector_Base implements CR
      * @return CRM_Contact_Selector_Profile
      * @access public
      */
-    function __construct( &$params, &$customFields, $ufGroupIds = null, $map = false, 
+    function __construct( &$params, &$customFields, $ufGroupId = null, $map = false, 
                           $editLink = false, $linkToUF = false )
     {
         $this->_params   = $params;
-
-        if ( is_array( $ufGroupIds ) ) {
-            $this->_profileIds = $ufGroupIds;
-            $this->_gid        = $ufGroupIds[0];
-        } else {
-            $this->_profileIds = array( $ufGroupIds );
-            $this->_gid        = $ufGroupIds;
-        }
-
+        
+        $this->_gid      = $ufGroupId;
         $this->_map      = $map;
         $this->_editLink = $editLink;
         $this->_linkToUF = $linkToUF;
 
         //get the details of the uf group 
-        if ( $this->_gid ) {
+        if ( $ufGroupId ) {
             $groupId = CRM_Core_DAO::getFieldValue( 'CRM_Core_BAO_UFGroup', 
-                                                    $this->_gid, 'limit_listings_group_id' );
+                                                    $ufGroupId, 'limit_listings_group_id' );
         }
 
         // add group id to params if a uf group belong to a any group
@@ -186,14 +172,14 @@ class CRM_Profile_Selector_Listings extends CRM_Core_Selector_Base implements CR
         $this->_fields = CRM_Core_BAO_UFGroup::getListingFields( CRM_Core_Action::VIEW,
                                                                  CRM_Core_BAO_UFGroup::PUBLIC_VISIBILITY |
                                                                  CRM_Core_BAO_UFGroup::LISTINGS_VISIBILITY,
-                                                                 false, $this->_profileIds );
+                                                                 false, $this->_gid );
         $this->_customFields =& $customFields;
         
         $returnProperties =& CRM_Contact_BAO_Contact::makeHierReturnProperties( $this->_fields );        
         $returnProperties['contact_type']     = 1;
         $returnProperties['contact_sub_type'] = 1;
         $returnProperties['sort_name'   ]     = 1;
-
+            
         $queryParams =& CRM_Contact_BAO_Query::convertFormValues( $this->_params, 1 );            
         $this->_query   = new CRM_Contact_BAO_Query( $queryParams, $returnProperties, $this->_fields );
         $this->_options =& $this->_query->_options;
@@ -207,21 +193,14 @@ class CRM_Profile_Selector_Listings extends CRM_Core_Selector_Base implements CR
      * @access public
      *
      */
-    static function &links( $map = false, $editLink = false, $ufLink = false, $gids = null )
+    static function &links( $map = false, $editLink = false, $ufLink = false, $gid = null )
     {
         if ( ! self::$_links ) {
             self::$_links = array( );
             
             $viewPermission = true;
-            if ( $gids ) {
-                // check view permission for each profile id, in case multiple profile ids are rendered
-                // then view action is disabled if any profile returns false
-                foreach( $gids as $profileId ) {
-                    $viewPermission = CRM_Core_Permission::ufGroupValid( $profileId, CRM_Core_Permission::VIEW );
-                    if ( !$viewPermission ) {
-                        break;
-                    }
-                }
+            if ( $gid ) {
+                $viewPermission = CRM_Core_Permission::ufGroupValid( $gid, CRM_Core_Permission::VIEW );
             }
              
             if ( $viewPermission ) {
@@ -406,7 +385,7 @@ class CRM_Profile_Selector_Listings extends CRM_Core_Selector_Base implements CR
                 $fieldType = CRM_Utils_Array::value('2',$fieldArray);
                 if ( is_numeric(CRM_Utils_Array::value('1',$fieldArray) ) ) {
                     if ( !in_array( $fieldType, $multipleFields ) ) {
-                        $locationType = new CRM_Core_DAO_LocationType();
+                        $locationType = & new CRM_Core_DAO_LocationType();
                         $locationType->id = $fieldArray[1];
                         $locationType->find(true);
                         if ($fieldArray[0] == 'email' || $fieldArray[0] == 'im' || $fieldArray[0] == 'phone') {
@@ -442,7 +421,7 @@ class CRM_Profile_Selector_Listings extends CRM_Core_Selector_Base implements CR
                 $this->_editLink = true;
             }
         }
-        $links =& self::links( $this->_map, $this->_editLink, $this->_linkToUF, $this->_profileIds );
+        $links =& self::links( $this->_map, $this->_editLink, $this->_linkToUF, $this->_gid );
         
         require_once 'CRM/Core/PseudoConstant.php';
         $locationTypes = CRM_Core_PseudoConstant::locationType( );
@@ -502,16 +481,11 @@ class CRM_Profile_Selector_Listings extends CRM_Core_Selector_Base implements CR
         }
 
         if ( $this->_linkToUF ) {
-            require_once 'api/v2/UFGroup.php';
+            require_once 'api/UFGroup.php';
         }
-
-        // we need to determine of overlay profile should be shown
-        require_once 'CRM/Core/BAO/UFGroup.php';
-        $showProfileOverlay = CRM_Core_BAO_UFGroup::showOverlayProfile( );
-
+        
         $imProviders  = CRM_Core_PseudoConstant::IMProvider( );
         $websiteTypes = CRM_Core_PseudoConstant::websiteType( );
-        $languages    = CRM_Core_PseudoConstant::languages( );
         require_once 'CRM/Contact/BAO/Contact/Utils.php';
         while ($result->fetch()) {
             if (isset($result->country)) {
@@ -524,8 +498,7 @@ class CRM_Profile_Selector_Listings extends CRM_Core_Selector_Base implements CR
             $row[] = CRM_Contact_BAO_Contact_Utils::getImage( $result->contact_sub_type ? 
                                                               $result->contact_sub_type : $result->contact_type,
                                                               false,
-                                                              $result->contact_id,
-                                                              $showProfileOverlay );
+                                                              $result->contact_id );
             if ( $result->sort_name ) {
                 $row['sort_name'] = $result->sort_name;
                 $empty            = false;
@@ -546,11 +519,7 @@ class CRM_Profile_Selector_Listings extends CRM_Core_Selector_Base implements CR
                     $typeName = $websiteTypes[$result->$typeId];
                     if ( $typeName ) { 
                         $row[] = "<a href=\"$url\">{$result->$name} (${typeName})</a>";
-                    } else {
-                        $row[] = "<a href=\"$url\">{$result->$name}</a>";
                     }
-                } else if ( $name == 'preferred_language' ) {
-                    $row[] = $languages[$result->$name];
                 }  else if ( $multipleSelectFields &&
                              array_key_exists($name, $multipleSelectFields ) ) { 
                     //fix to display student checkboxes
@@ -592,10 +561,10 @@ class CRM_Profile_Selector_Listings extends CRM_Core_Selector_Base implements CR
 
             $newLinks = $links;
             $params   = array( 'id'  => $result->contact_id,
-                               'gid' => implode( ',', $this->_profileIds ) );
+                               'gid' => $this->_gid );
 
             if ( $this->_linkToUF ) {
-                $ufID = civicrm_uf_id_get( $result->contact_id );
+                $ufID = crm_uf_get_uf_id( $result->contact_id );
                 if ( ! $ufID ) {
                     unset( $newLinks[CRM_Core_Action::PROFILE] );
                 } else {

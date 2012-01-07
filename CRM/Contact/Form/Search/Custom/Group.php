@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -64,8 +64,6 @@ class CRM_Contact_Form_Search_Custom_Group
         $this->_allSearch = false; 
         $this->_groups    = false;
         $this->_tags      = false;
-        $this->_andOr      = $this->_formValues['andOr'];
-        
 
         //make easy to check conditions for groups and tags are
         //selected or it is empty search
@@ -115,10 +113,8 @@ class CRM_Contact_Form_Search_Custom_Group
                                    array('size'  => 5,
                                          'style' => 'width:240px',
                                          'class' => 'advmultiselect')
-                                   );
-        $andOr =& $form->addElement('checkbox', 'andOr', 'Combine With (AND, Uncheck For OR)', null, 
-                                    array('checked'=>'checked'));
-        
+                                   );  
+
         $int =& $form->addElement('advmultiselect', 'includeTags', 
                                   ts('Include Tag(s)') . ' ', $tags,
                                   array('size'  => 5,
@@ -149,10 +145,10 @@ class CRM_Contact_Form_Search_Custom_Group
          * if you are using the standard template, this array tells the template what elements
          * are part of the search criteria
          */
-        $form->assign( 'elements', array( 'includeGroups', 'excludeGroups', 'andOr', 'includeTags', 'excludeTags') );
+        $form->assign( 'elements', array( 'includeGroups', 'excludeGroups','includeTags', 'excludeTags' ) );
        
     }
-    
+
     function all( $offset = 0, $rowcount = 0, $sort = null,
                   $includeContactIDs = false, $justIDs = false ) {
         if ( $justIDs ) {
@@ -161,31 +157,29 @@ class CRM_Contact_Form_Search_Custom_Group
             $selectClause = "DISTINCT(contact_a.id)  as contact_id,
                          contact_a.contact_type as contact_type,
                          contact_a.sort_name    as sort_name";
-            
+
             //distinguish column according to user selection
-            if ( $this->_includeGroups && ( ! $this->_includeTags ) ) {
+            if ( $this->_groups && ! $this->_tags ) {
                 unset( $this->_columns['Tag Name'] );
                 $selectClause .= ", GROUP_CONCAT(DISTINCT group_names ORDER BY group_names ASC ) as gname";
-            } else if ( $this->_includeTags && ( ! $this->_includeGroups ) ) {
+            } else if ( ! $this->_groups && $this->_tags) {
                 unset( $this->_columns['Group Name'] );
                 $selectClause .= ", GROUP_CONCAT(DISTINCT tag_names  ORDER BY tag_names ASC ) as tname";
             } else {
-                if ( !empty($this->_includeTags ) && !empty( $this->_includeGroups ) ) {
-                    $selectClause .=", GROUP_CONCAT(DISTINCT group_names ORDER BY group_names ASC ) as gname , GROUP_CONCAT(DISTINCT tag_names ORDER BY tag_names ASC ) as tname";
-                } 
+                $selectClause .=", GROUP_CONCAT(DISTINCT group_names ORDER BY group_names ASC ) as gname , GROUP_CONCAT(DISTINCT tag_names ORDER BY tag_names ASC ) as tname";
             }
         }
-        
+
         $from  = $this->from( );
         
         $where = $this->where( $includeContactIDs );
         
         $sql = " SELECT $selectClause $from WHERE  $where ";
-        if ( ! $justIDs  && ! $this->_allSearch ) {
+        if ( ! $justIDs ) {
             $sql .= " GROUP BY contact_id ";  
         } 
-        
-        // Define ORDER BY for query in $sort, with default value
+
+       // Define ORDER BY for query in $sort, with default value
         if ( ! $justIDs ) {
             if ( ! empty( $sort ) ) {
                 if ( is_string( $sort ) ) {
@@ -197,17 +191,17 @@ class CRM_Contact_Form_Search_Custom_Group
                 $sql .= " ORDER BY contact_id ASC";
             }
         }
-        
+
         if ( $offset >= 0 && $rowcount > 0 ) {
             $sql .= " LIMIT $offset, $rowcount ";
         }
-        
+
         return $sql;
         
     }
     
     function from( ) {
-        
+
         //define table name
         $randomNum = md5( uniqid( ) );
         $this->_tableName = "civicrm_temp_custom_{$randomNum}";
@@ -239,14 +233,14 @@ class CRM_Contact_Form_Search_Custom_Group
             } else {
                 $xGroups = 0;
             }
-            
+                       
             $sql = "CREATE TEMPORARY TABLE Xg_{$this->_tableName} ( contact_id int primary key) ENGINE=HEAP";  
-            CRM_Core_DAO::executeQuery( $sql );
+            CRM_Core_DAO::executeQuery( $sql, CRM_Core_DAO::$_nullArray );
             
             //used only when exclude group is selected 
             if( $xGroups != 0 ) {
                 $excludeGroup = 
-                  "INSERT INTO  Xg_{$this->_tableName} ( contact_id )
+                 "INSERT INTO  Xg_{$this->_tableName} ( contact_id )
                   SELECT  DISTINCT civicrm_group_contact.contact_id
                   FROM civicrm_group_contact, civicrm_contact                    
                   WHERE 
@@ -254,8 +248,8 @@ class CRM_Contact_Form_Search_Custom_Group
                      civicrm_group_contact.status = 'Added' AND
                      civicrm_group_contact.group_id IN( {$xGroups})";
                 
-                CRM_Core_DAO::executeQuery( $excludeGroup );
-                
+                CRM_Core_DAO::executeQuery( $excludeGroup, CRM_Core_DAO::$_nullArray );
+
                 //search for smart group contacts
                 foreach( $this->_excludeGroups as $keys => $values ) {
                     if ( in_array( $values, $smartGroup ) ) {
@@ -269,7 +263,7 @@ class CRM_Contact_Form_Search_Custom_Group
                         
                         $smartGroupQuery = " INSERT IGNORE INTO Xg_{$this->_tableName}(contact_id) $smartSql";
                         
-                        CRM_Core_DAO::executeQuery( $smartGroupQuery );
+                        CRM_Core_DAO::executeQuery( $smartGroupQuery, CRM_Core_DAO::$_nullArray );
                     }
                 }
                 
@@ -279,7 +273,7 @@ class CRM_Contact_Form_Search_Custom_Group
                                                                    contact_id int,
                                                                    group_names varchar(64)) ENGINE=HEAP";
             
-            CRM_Core_DAO::executeQuery( $sql );
+            CRM_Core_DAO::executeQuery( $sql, CRM_Core_DAO::$_nullArray );
 
             if ( $iGroups ) {
                 $includeGroup = 
@@ -378,7 +372,7 @@ class CRM_Contact_Form_Search_Custom_Group
             $sql = "CREATE TEMPORARY TABLE Xt_{$this->_tableName} ( contact_id int primary key) ENGINE=HEAP";  
             CRM_Core_DAO::executeQuery( $sql );
             
-            //used only when exclude tag is selected
+            //used only when exclude group is selected 
             if( $xTags != 0 ) {
                 $excludeTag = 
                     "INSERT INTO  Xt_{$this->_tableName} ( contact_id )
@@ -432,211 +426,26 @@ class CRM_Contact_Form_Search_Custom_Group
             }
             
             CRM_Core_DAO::executeQuery( $includeTag );
+            
         }  
 
         $from = " FROM civicrm_contact contact_a";
 
-        /*
-         * check the situation and set booleans
-         */
-        if ($iGroups != 0) {
-            $iG = true;
+        //condition for group and tag
+        if ( $this->_groups && ! $this->_tags ) {
+            //use only when tag is not seleted and group is selected
+            $from .= " INNER JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
+            
+        } else if ( ! $this->_groups && $this->_tags ) {
+            //use only when group is not seleted nad tag is selected 
+            $from .= " INNER JOIN It_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
+
         } else {
-            $iG = false;
-        }
-        if ($iTags != 0) {
-            $iT = true;
-        } else {
-            $iT = false;
-        }
-        if ($xGroups != 0) {
-            $xG = true;
-        } else {
-            $xG = false;
-        }
-        if ($xTags != 0) {
-            $xT = true;
-        } else {
-            $xT = false;
-        }
-        if( !$this->_groups || !$this->_tags )  $this->_andOr = 1;
-        /*
-         * Set from statement depending on array sel
-         */
-        if ($iG && $iT && $xG && $xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " INNER JOIN It_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL )
-                    AND contact_a.id NOT IN(SELECT contact_id FROM Xg_{$this->_tableName})
-                    AND contact_a.id NOT IN(SELECT contact_id FROM Xt_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN It_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $from .= " LEFT JOIN Xg_{$this->_tableName} temptable3 ON (contact_a.id = temptable3.contact_id)";
-                $from .= " LEFT JOIN Xt_{$this->_tableName} temptable4 ON (contact_a.id = temptable4.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL OR
-                    temptable3.contact_id IS NOT NULL OR temptable4.contact_id IS NOT NULL)";
-            }
-        }
-        if ($iG && $iT && $xG && !$xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " INNER JOIN It_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL )
-                    AND contact_a.id NOT IN(SELECT contact_id FROM Xg_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN It_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $from .= " LEFT JOIN Xg_{$this->_tableName} temptable3 ON (contact_a.id = temptable3.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL OR
-                    temptable3.contact_id IS NOT NULL)";
-            }
-        }
-        if ($iG && $iT && !$xG && $xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " INNER JOIN It_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL )
-                    AND contact_a.id NOT IN(SELECT contact_id FROM Xt_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN It_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $from .= " LEFT JOIN Xt_{$this->_tableName} temptable3 ON (contact_a.id = temptable3.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL OR
-                    temptable3.contact_id IS NOT NULL)";
-            }
-        }
-        if ($iG && $iT && !$xG && !$xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " INNER JOIN It_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL )";
-            } else {
-                $from .= " LEFT JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN It_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL)";
-            }
-        }
-        if ($iG && !$iT && $xG && $xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL) AND contact_a.id NOT IN(
-                    SELECT contact_id FROM Xg_{$this->_tableName}) AND contact_a.id NOT IN(
-                    SELECT contact_id FROM Xt_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN Xg_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $from .= " LEFT JOIN Xt_{$this->_tableName} temptable3 ON (contact_a.id = temptable3.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL OR
-                    temptable3.contact_id IS NOT NULL)";
-            }
-        }
-        if ($iG && !$iT && $xG && !$xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL) AND contact_a.id NOT IN(
-                    SELECT contact_id FROM Xg_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN Xg_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL)";
-            }
-        }
-        if ($iG && !$iT && !$xG && $xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL) AND contact_a.id NOT IN(
-                    SELECT contact_id FROM Xt_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN Xt_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable2.contact_id IS NULL OR  temptable1.contact_id IS NOT NULL )";
-            }
-        }
-        if ($iG && !$iT && !$xG && !$xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL)";
-            } else {
-                $from .= " LEFT JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL)";
-            }
-        }
-        if (!$iG && $iT && $xG && $xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN It_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL) AND contact_a.id NOT IN(
-                    SELECT contact_id FROM Xg_{$this->_tableName}) AND contact_a.id NOT IN(
-                    SELECT contact_id FROM Xt_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN It_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN Xg_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $from .= " LEFT JOIN Xt_{$this->_tableName} temptable3 ON (contact_a.id = temptable3.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL OR
-                    temptable3.contact_id IS NOT NULL)";
-            }
-        }
-        if (!$iG && $iT && $xG && !$xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN It_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL) AND contact_a.id NOT IN(
-                    SELECT contact_id FROM Xg_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN It_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN Xg_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NULL)";
-            }
-        }
-        if (!$iG && $iT && !$xG && $xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN It_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL) AND contact_a.id NOT IN(
-                    SELECT contact_id FROM Xt_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN It_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN Xt_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL)";
-            }
-        }
-        if (!$iG && $iT && !$xG && !$xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN It_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL)";
-            } else {
-                $from .= " LEFT JOIN It_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL)";
-            }
-        }
-        if (!$iG && !$iT && $xG && $xT) {
-            if ($this->_andOr == 1) {
-                $this->_where = "contact_a.id NOT IN(SELECT contact_id FROM Xg_{$this->_tableName})
-                    AND contact_a.id NOT IN(SELECT contact_id FROM Xt_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN Xg_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN Xt_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NULL OR temptable2.contact_id IS NULL)";
-            }
-        }
-        if (!$iG && !$iT && !$xG && $xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN It_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "contact_a.id NOT IN(SELECT contact_id FROM Xt_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN Xt_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN It_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL)";
-            }
-        }
-        if (!$iG && !$iT && $xG && !$xT) {
-            if ($this->_andOr == 1) {
-                $from .= " INNER JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "contact_a.id NOT IN(SELECT contact_id FROM Xg_{$this->_tableName})";
-            } else {
-                $from .= " LEFT JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $from .= " LEFT JOIN Xg_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL)";
-            }
+            // use only when both are selected or it is blank search
+            $from .= " INNER JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
+            $from .= " INNER JOIN It_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
+
+            $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL )";
         }
 
         $from .= " LEFT JOIN civicrm_email ON ( contact_a.id = civicrm_email.contact_id AND ( civicrm_email.is_primary = 1 OR civicrm_email.is_bulkmail = 1 ) )";

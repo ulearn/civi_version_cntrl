@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -144,15 +144,6 @@ class CRM_Contribute_Form_Task_Batch extends CRM_Contribute_Form_Task {
         $this->assign( 'profileTitle', $this->_title );
         $this->assign( 'componentIds', $this->_contributionIds );
         $fileFieldExists = false;
- 
-        //load all campaigns.
-        if ( array_key_exists( 'contribution_campaign_id', $this->_fields ) ) {
-            $this->_componentCampaigns = array( );
-            CRM_Core_PseudoConstant::populate( $this->_componentCampaigns,
-                                               'CRM_Contribute_DAO_Contribution',
-                                               true, 'campaign_id', 'id', 
-                                               ' id IN ('. implode(' , ',array_values( $this->_contributionIds ) ) .' ) ');
-        }
         
         //fix for CRM-2752
         require_once "CRM/Core/BAO/CustomField.php";
@@ -162,13 +153,8 @@ class CRM_Contribute_Form_Task_Batch extends CRM_Contribute_Form_Task {
             foreach ( $this->_fields as $name => $field ) {
                 if ( $customFieldID = CRM_Core_BAO_CustomField::getKeyID( $name ) ) {
                     $customValue = CRM_Utils_Array::value( $customFieldID, $customFields );
-                    if ( CRM_Utils_Array::value( 'extends_entity_column_value', $customValue ) ) {
-                        $entityColumnValue = explode( CRM_Core_DAO::VALUE_SEPARATOR,
-                                                      $customValue['extends_entity_column_value'] );
-                    }
-
-                    if ( CRM_Utils_Array::value( $typeId, $entityColumnValue ) ||
-                         CRM_Utils_System::isNull( $entityColumnValue[$typeId] ) ) {
+                    if ( ( $typeId == $customValue['extends_entity_column_value'] ) ||
+                         CRM_Utils_System::isNull( $customValue['extends_entity_column_value'] ) ) {
                         CRM_Core_BAO_UFGroup::buildProfile( $this, $field, null, $contributionId );
                     }
                 } else {

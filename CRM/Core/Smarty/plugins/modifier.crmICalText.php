@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,8 +29,8 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
- * $Id: modifier.crmICalText.php 32994 2011-03-14 21:49:22Z kurund $
+ * @copyright CiviCRM LLC (c) 2004-2010
+ * $Id: modifier.crmICalText.php 26310 2010-02-18 15:10:24Z shot $
  *
  */
 

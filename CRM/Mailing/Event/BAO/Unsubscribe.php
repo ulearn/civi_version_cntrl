@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -110,9 +110,8 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
     public static function &unsub_from_mailing($job_id, $queue_id, $hash, $return = false) {
         /* First make sure there's a matching queue event */
         $q =& CRM_Mailing_Event_BAO_Queue::verify($job_id, $queue_id, $hash);
-        $success = null;
         if (! $q) {
-            return $success;
+            return null;
         }
         
         $contact_id = $q->contact_id;
@@ -126,41 +125,26 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
         $group      = CRM_Contact_BAO_Group::getTableName();
         $gc         = CRM_Contact_BAO_GroupContact::getTableName();
         
-        //We Need the mailing Id for the hook...
-        $do->query("SELECT $job.mailing_id as mailing_id 
-                     FROM   $job 
-                     WHERE $job.id = " . CRM_Utils_Type::escape($job_id, 'Integer'));
-        $do->fetch();
-        $mailing_id = $do->mailing_id;
-
         $do->query("
             SELECT      $mg.entity_table as entity_table,
-                        $mg.entity_id as entity_id,
-                        $mg.group_type as group_type
+                        $mg.entity_id as entity_id
             FROM        $mg
             INNER JOIN  $job
                 ON      $job.mailing_id = $mg.mailing_id
-            INNER JOIN  $group
-                ON      $mg.entity_id = $group.id
             WHERE       $job.id = " 
                 . CRM_Utils_Type::escape($job_id, 'Integer') . "
-                AND     $mg.group_type IN ('Include', 'Base') 
-                AND     $group.is_hidden = 0");
+                AND     $mg.group_type = 'Include'");
         
         /* Make a list of groups and a list of prior mailings that received 
          * this mailing */
          
         $groups = array();
-        $base_groups = array();
         $mailings = array();
         
         while ($do->fetch()) {
             if ($do->entity_table == $group) {
-                if($do->group_type == 'Base') {
-                    $base_groups[$do->entity_id] = null;
-                } else {
-                    $groups[$do->entity_id] = null;
-                }
+                //$groups[$do->entity_id] = true;
+                $groups[$do->entity_id] = null;
             } else if ($do->entity_table == $mailing) {
                 $mailings[] = $do->entity_id;
             }
@@ -187,19 +171,8 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
             }
         }
 
-        //Pass the groups to be unsubscribed from through a hook.
-        require_once 'CRM/Utils/Hook.php';
-        $group_ids = array_keys($groups);
-        $base_group_ids = array_keys($base_groups);
-        CRM_Utils_Hook::unsubscribeGroups('unsubscribe', $mailing_id, $contact_id, $group_ids, $base_group_ids);
-
         /* Now we have a complete list of recipient groups.  Filter out all
-         * those except smart groups, those that the contact belongs to and
-         * base groups from search based mailings */
-        $baseGroupClause = '';
-        if ( !empty($base_group_ids) ) {
-            $baseGroupClause = "OR  $group.id IN(".implode(', ', $base_group_ids).")";
-        }
+         * those except smart groups and those that the contact belongs to */
         $do->query("
             SELECT      $group.id as group_id,
                         $group.title as title,
@@ -207,12 +180,10 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
             FROM        $group
             LEFT JOIN   $gc
                 ON      $gc.group_id = $group.id
-            WHERE       $group.id IN (".implode(', ', array_merge($group_ids, $base_group_ids)) .")
-                AND     $group.is_hidden = 0
+            WHERE       $group.id IN (".implode(', ', array_keys($groups)).")
                 AND     ($group.saved_search_id is not null
                             OR  ($gc.contact_id = $contact_id
                                 AND $gc.status = 'Added')
-                            $baseGroupClause
                         )");
                         
         if ($return) {
@@ -226,16 +197,11 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
                 $groups[$do->group_id] = $do->title;
             }
         }
-
         $contacts = array($contact_id);
         foreach ($groups as $group_id => $group_name) {
             $notremoved = false;
             if ($group_name) {
-                if(in_array($group_id, $base_group_ids)) {
-                    list($total, $removed, $notremoved) = CRM_Contact_BAO_GroupContact::addContactsToGroup( $contacts, $group_id, 'Email', 'Removed');
-                } else {
-                    list($total, $removed, $notremoved) = CRM_Contact_BAO_GroupContact::removeContactsFromGroup( $contacts, $group_id, 'Email');
-                }
+                list($total, $removed, $notremoved) = CRM_Contact_BAO_GroupContact::removeContactsFromGroup( $contacts, $group_id, 'Email');
             }
             if ($notremoved) {
                 unset($groups[$group_id]);
@@ -481,16 +447,7 @@ class CRM_Mailing_Event_BAO_Unsubscribe extends CRM_Mailing_Event_DAO_Unsubscrib
             $query .= " GROUP BY $queue.id ";
         }
 
-        $orderBy = "sort_name ASC, {$unsub}.time_stamp DESC";
-        if ($sort) {
-            if ( is_string( $sort ) ) {
-                $orderBy = $sort;
-            } else {
-                $orderBy = trim( $sort->orderBy() );
-            }
-        }
-        
-        $query .= " ORDER BY {$orderBy} ";
+        $query .= " ORDER BY $contact.sort_name, $unsub.time_stamp DESC ";
 
         if ($offset||$rowCount) {//Added "||$rowCount" to avoid displaying all records on first page
             $query .= ' LIMIT ' 

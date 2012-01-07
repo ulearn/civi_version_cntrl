@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,13 +24,13 @@
  +--------------------------------------------------------------------+
 *}
 {if $showDirectly}
+  {assign var=defaultZoom value=14}  
   {assign var=height value="350px"}
   {assign var=width  value="425px"}
 {else}	
   {assign var=height value="600px"}
   {assign var=width  value="100%"}
 {/if}
-{assign var=defaultZoom value=12}  
 {literal}
 <script src="http://maps.google.com/maps?file=api&v=2&key={/literal}{$mapKey}{literal}" type="text/javascript"></script>
 <script type="text/javascript">
@@ -73,20 +73,15 @@
 	    {/literal}
 	    {if $location.lat}
 		var point  = new GLatLng({$location.lat},{$location.lng});
-		{if $location.image && ( $location.marker_class neq 'Event' ) }
- 		  var image = '{$location.image}';
-		{else}
-                 {if $location.marker_class eq 'Individual'}
- 		      var image = "{$config->resourceBase}i/contact_ind.gif";
- 		  {/if}
- 		  {if $location.marker_class eq 'Household'}
- 		      var image = "{$config->resourceBase}i/contact_house.png";
- 		  {/if}
- 		  {if $location.marker_class eq 'Organization' || $location.marker_class eq 'Event'}
-  		      var image = "{$config->resourceBase}i/contact_org.gif";
- 		  {/if}
-                {/if}
- 	
+		{if $location.marker_class eq 'Individual'}
+ 			var image = "{$config->resourceBase}i/contact_ind.gif";
+ 		{/if}
+ 		{if $location.marker_class eq 'Household'}
+ 			var image = "{$config->resourceBase}i/contact_house.png";
+ 		{/if}
+ 		{if $location.marker_class eq 'Organization' || $location.marker_class eq 'Event'}
+ 			var image = "{$config->resourceBase}i/contact_org.gif";
+ 		{/if}
                	var marker = createMarker(point, data, image);
 		map.addOverlay(marker);
 		bounds.extend(point);
@@ -98,7 +93,7 @@
  	    map.setZoom(map.getBoundsZoomLevel(bounds));
  	    map.setMapType(G_PHYSICAL_MAP);
  	{elseif $location.marker_class eq 'Event' || $location.marker_class eq 'Individual'|| $location.marker_class eq 'Household' || $location.marker_class eq 'Organization' }
- 	    map.setZoom({$defaultZoom});
+ 	    map.setZoom(map.getBoundsZoomLevel(bounds));
 	{else} 
 	    map.setZoom({$defaultZoom}); 
  	{/if}

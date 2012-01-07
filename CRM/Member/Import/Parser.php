@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -315,7 +315,7 @@ abstract class CRM_Member_Import_Parser {
             /* trim whitespace around the values */
             $empty = true;
             foreach ($values as $k => $v) {
-                $values[$k] = trim($v, " \t\r\n");
+                $values[$k] = trim($v, " .\t\r\n");
             }
             if ( CRM_Utils_System::isNull( $values ) ) {
                 continue;

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -149,13 +149,7 @@ class CRM_Contact_Form_Task_Map  extends CRM_Contact_Form_Task
         $page->assign( 'mapKey', $config->mapAPIKey );
         if( $type == 'Contact' ) {
             require_once 'CRM/Contact/BAO/Contact/Location.php';
-            $imageUrlOnly = false;
-            
-            // google needs image url, CRM-6564
-            if ( $config->mapProvider == 'Google' ) {
-                $imageUrlOnly = true;
-            }
-            $locations =& CRM_Contact_BAO_Contact_Location::getMapInfo( $ids, $locationId, $imageUrlOnly );
+            $locations =& CRM_Contact_BAO_Contact_Location::getMapInfo( $ids , $locationId );
         } else {
             require_once 'CRM/Event/BAO/Event.php';
             $locations =& CRM_Event_BAO_Event::getMapInfo( $ids );

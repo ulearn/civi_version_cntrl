@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.4                                                |
+| CiviCRM version 3.1                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,7 +79,7 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = true;
+    static $_log = false;
     /**
      * Contribution ID
      *
@@ -237,12 +237,6 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
      */
     public $check_number;
     /**
-     * The campaign for which this contribution has been triggered.
-     *
-     * @var int unsigned
-     */
-    public $campaign_id;
-    /**
      * class constructor
      *
      * @access public
@@ -268,7 +262,6 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
                 'contribution_recur_id' => 'civicrm_contribution_recur:id',
                 'honor_contact_id' => 'civicrm_contact:id',
                 'address_id' => 'civicrm_address:id',
-                'campaign_id' => 'civicrm_campaign:id',
             );
         }
         return self::$_links;
@@ -309,28 +302,16 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
                 'contribution_type_id' => array(
                     'name' => 'contribution_type_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Contribution Type') ,
-                    'export' => false,
-                    'where' => 'civicrm_contribution.contribution_type_id',
-                    'headerPattern' => '',
-                    'dataPattern' => '',
                     'FKClassName' => 'CRM_Contribute_DAO_ContributionType',
                 ) ,
                 'contribution_page_id' => array(
                     'name' => 'contribution_page_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Contribution Page') ,
-                    'import' => true,
-                    'where' => 'civicrm_contribution.contribution_page_id',
-                    'headerPattern' => '',
-                    'dataPattern' => '',
-                    'export' => true,
                     'FKClassName' => 'CRM_Contribute_DAO_ContributionPage',
                 ) ,
                 'payment_instrument_id' => array(
                     'name' => 'payment_instrument_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Payment Instrument') ,
                 ) ,
                 'receive_date' => array(
                     'name' => 'receive_date',
@@ -411,6 +392,7 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
                     'name' => 'currency',
                     'type' => CRM_Utils_Type::T_STRING,
                     'title' => ts('Currency') ,
+                    'required' => true,
                     'maxlength' => 3,
                     'size' => CRM_Utils_Type::FOUR,
                     'import' => true,
@@ -418,7 +400,6 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
                     'headerPattern' => '/cur(rency)?/i',
                     'dataPattern' => '/^[A-Z]{3}$/i',
                     'export' => true,
-                    'default' => 'UL',
                 ) ,
                 'cancel_date' => array(
                     'name' => 'cancel_date',
@@ -490,7 +471,6 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
                 'honor_contact_id' => array(
                     'name' => 'honor_contact_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Honor Contact') ,
                     'FKClassName' => 'CRM_Contact_DAO_Contact',
                 ) ,
                 'is_test' => array(
@@ -521,7 +501,7 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
                     'where' => 'civicrm_contribution.contribution_status_id',
                     'headerPattern' => '/status/i',
                     'dataPattern' => '',
-                    'export' => false,
+                    'export' => true,
                     'default' => '',
                 ) ,
                 'honor_type_id' => array(
@@ -545,17 +525,6 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
                     'headerPattern' => '/check(.?number)?/i',
                     'dataPattern' => '',
                     'export' => true,
-                ) ,
-                'contribution_campaign_id' => array(
-                    'name' => 'campaign_id',
-                    'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Campaign ID') ,
-                    'import' => true,
-                    'where' => 'civicrm_contribution.campaign_id',
-                    'headerPattern' => '',
-                    'dataPattern' => '',
-                    'export' => true,
-                    'FKClassName' => 'CRM_Campaign_DAO_Campaign',
                 ) ,
             );
         }

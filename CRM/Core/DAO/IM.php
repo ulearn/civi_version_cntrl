@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.4                                                |
+| CiviCRM version 3.1                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,7 +79,7 @@ class CRM_Core_DAO_IM extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = true;
+    static $_log = false;
     /**
      * Unique IM ID
      *
@@ -170,7 +170,6 @@ class CRM_Core_DAO_IM extends CRM_Core_DAO
                 'location_type_id' => array(
                     'name' => 'location_type_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('IM Location Type') ,
                 ) ,
                 'name' => array(
                     'name' => 'name',
@@ -187,12 +186,10 @@ class CRM_Core_DAO_IM extends CRM_Core_DAO
                 'provider_id' => array(
                     'name' => 'provider_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('IM Provider') ,
                 ) ,
                 'is_primary' => array(
                     'name' => 'is_primary',
                     'type' => CRM_Utils_Type::T_BOOLEAN,
-                    'title' => ts('Is IM Primary?') ,
                 ) ,
                 'is_billing' => array(
                     'name' => 'is_billing',

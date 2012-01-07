@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.4                                                |
+| CiviCRM version 3.1                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,7 +79,7 @@ class CRM_Core_DAO_FinancialTrxn extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = true;
+    static $_log = false;
     /**
      * Gift ID
      *
@@ -234,6 +234,7 @@ class CRM_Core_DAO_FinancialTrxn extends CRM_Core_DAO
                     'name' => 'currency',
                     'type' => CRM_Utils_Type::T_STRING,
                     'title' => ts('Currency') ,
+                    'required' => true,
                     'maxlength' => 3,
                     'size' => CRM_Utils_Type::FOUR,
                     'import' => true,
@@ -241,7 +242,6 @@ class CRM_Core_DAO_FinancialTrxn extends CRM_Core_DAO
                     'headerPattern' => '/cur(rency)?/i',
                     'dataPattern' => '/^[A-Z]{3}$/',
                     'export' => true,
-                    'default' => 'UL',
                 ) ,
                 'payment_processor' => array(
                     'name' => 'payment_processor',

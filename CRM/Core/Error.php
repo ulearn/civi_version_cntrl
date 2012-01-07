@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -26,32 +26,22 @@
  +--------------------------------------------------------------------+
 */
 
-
 /**
  * Start of the Error framework. We should check out and inherit from
  * PEAR_ErrorStack and use that framework
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
 
 require_once 'PEAR/ErrorStack.php';
-require_once 'PEAR/Exception.php';
 
 require_once 'CRM/Core/Config.php';
 require_once 'CRM/Core/Smarty.php';
 
 require_once 'Log.php';
-
-class CRM_Exception extends PEAR_Exception {
-    // Redefine the exception so message isn't optional
-    public function __construct($message = null, $code = 0, Exception $previous = null) {
-        parent::__construct($message, $code, $previous);
-    }
-}
-
 
 class CRM_Core_Error extends PEAR_ErrorStack {
 
@@ -80,12 +70,6 @@ class CRM_Core_Error extends PEAR_ErrorStack {
      * @static
      */
     private static $_log       = null;
-
-    /**
-     * If modeException == true, errors are raised as exception instead of returning civicrm_errors
-     * @static
-     */
-    public static $modeException = null;
     
     /**
      * singleton function used to manage this object. This function is not
@@ -198,14 +182,13 @@ class CRM_Core_Error extends PEAR_ErrorStack {
         }
 
         $template->assign_by_ref('error', $error);
-        $errorDetails = CRM_Core_Error::debug( '', $error, false );
-        $template->assign_by_ref('errorDetails', $errorDetails);
         
         CRM_Core_Error::debug_var( 'Fatal Error Details', $error );
         CRM_Core_Error::backtrace( 'backTrace', true );
 
         if ( $config->initialized ) {
             $content  = $template->fetch( 'CRM/common/fatal.tpl' );
+            $content .= CRM_Core_Error::debug( 'Error Details:', $error, false );
             echo CRM_Utils_System::theme( 'page', $content, true );
         } else {
             echo "Sorry. A non-recoverable error has occurred. The error trace below might help to resolve the issue<p>";
@@ -213,27 +196,6 @@ class CRM_Core_Error extends PEAR_ErrorStack {
         }
 
         self::abend(1);
-    }
-
-    // this function is used to trap and print errors
-    // during system initialization time. Hence the error
-    // message is quite ugly
-    public function simpleHandler( $pearError ) {
-
-        // create the error array
-        $error = array();
-        $error['callback']    = $pearError->getCallback();
-        $error['code']        = $pearError->getCode();
-        $error['message']     = $pearError->getMessage();
-        $error['mode']        = $pearError->getMode();
-        $error['debug_info']  = $pearError->getDebugInfo();
-        $error['type']        = $pearError->getType();
-        $error['user_info']   = $pearError->getUserInfo();
-        $error['to_string']   = $pearError->toString();
-
-        $errorDetails = CRM_Core_Error::debug( 'Initialization Error', $error );
-        CRM_Core_Error::backtrace( );
-        exit( 0 );
     }
 
     /**
@@ -271,11 +233,6 @@ class CRM_Core_Error extends PEAR_ErrorStack {
             $message = ts('We experienced an unexpected error. Please post a detailed description and the backtrace on the CiviCRM forums: %1', array(1 => 'http://forum.civicrm.org/')); 
         }
 
-        if ( php_sapi_name() == "cli" ) {
-          print ("Sorry. A non-recoverable error has occurred.\n$message \n$code\n$email\n\n");
-          debug_print_backtrace();
-          die ("\n");
-        }
         $vars = array( 'message' => $message,
                        'code'    => $code );
 
@@ -302,12 +259,8 @@ class CRM_Core_Error extends PEAR_ErrorStack {
         CRM_Core_Error::debug_var( 'Fatal Error Details', $vars );
         CRM_Core_Error::backtrace( 'backTrace', true );
         $content = $template->fetch( $config->fatalErrorTemplate );
-        if ( $config->userFramework == 'Joomla' ) {
-            JError::raiseError( 'CiviCRM-001', $content );
-        } else {
-            echo CRM_Utils_System::theme( 'page', $content );
-        }
-
+        echo CRM_Utils_System::theme( 'page', $content );
+        // print $content;
         self::abend( CRM_Core_Error::FATAL_ERROR );
     }
 
@@ -514,11 +467,6 @@ class CRM_Core_Error extends PEAR_ErrorStack {
         $error->_errorsByLevel = array( ) ;
     }
 
-    /* used for the API, rise the exception instead of catching/fatal it */
-    public static function setRaiseException( ) {
-        PEAR::setErrorHandling( PEAR_ERROR_CALLBACK,  array( 'CRM_Core_Error', 'exceptionHandler' ) );
-    }
-
     public static function ignoreException( $callback = null ) {
         if ( ! $callback ) {
             $callback = array( 'CRM_Core_Error', 'nullHandler' );
@@ -527,11 +475,6 @@ class CRM_Core_Error extends PEAR_ErrorStack {
         PEAR::setErrorHandling( PEAR_ERROR_CALLBACK,
                                 $callback );
     }
-    
-    public static function exceptionHandler ($pearError) {
-        throw new PEAR_Exception($pearError->getMessage(),$pearError);   
-    }
-    
     
     /**
      * Error handler to quietly catch otherwise fatal smtp transport errors.
@@ -563,16 +506,13 @@ class CRM_Core_Error extends PEAR_ErrorStack {
     }
 
     public static function &createAPIError( $msg, $data = null ) {
-        if (self::$modeException) {
-          throw CRM_Exception ($msg,$data);
-        }
-
         $values = array( );
         
         $values['is_error']      = 1;
         $values['error_message'] = $msg;
-        if (isset ($data))
-          $values = array_merge ($values,$data);
+        if ( $data ) {
+            $values['error_data']    = $data;
+        }
         return $values;
     }
 

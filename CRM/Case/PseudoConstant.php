@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -46,7 +46,7 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant
      * @var array
      * @static
      */
-    static $caseStatus = array( );
+    static $caseStatus;
 
     /**
      * redaction rules
@@ -61,14 +61,7 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant
      * @static
      */
     static $caseType = array( );
-    
-    /**
-     * Encounter Medium
-     * @var array
-     * @static
-     */
-    static $encounterMedium = array( );
-    
+
     /**
      * activity type
      * @var array
@@ -90,19 +83,18 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant
      * @return array - array reference of all case statues
      * @static
      */
-    public static function caseStatus( $column = 'label', $onlyActive = true )
+
+    public static function caseStatus( )
     {
-        $cacheKey = "{$column}_".(int)$onlyActive;
-        if ( !isset( self::$caseStatus[$cacheKey] ) ) {
-            require_once 'CRM/Core/OptionGroup.php';
-            self::$caseStatus[$cacheKey] = CRM_Core_OptionGroup::values( 'case_status', 
-                                                                         false, false, false, null, 
-                                                                         $column, $onlyActive );
-        }
+        if ( ! self::$caseStatus ) {
+            self::$caseStatus = array( );
         
-        return self::$caseStatus[$cacheKey];
+            require_once 'CRM/Core/OptionGroup.php';
+            self::$caseStatus = CRM_Core_OptionGroup::values('case_status');
+        }
+        return self::$caseStatus;
     }
-    
+
     /**
      * Get all the redaction rules
      *
@@ -138,39 +130,20 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant
      * @return array - array reference of all case type
      * @static
      */
-    public static function caseType( $column = 'label', $onlyActive = true )
+
+    public static function caseType( $column = 'label' )
     {
-        $cacheKey = "{$column}_".(int)$onlyActive;
-        if ( !isset( self::$caseType[$cacheKey] ) ) {
+        if ( ! array_key_exists($column, self::$caseType) ) {
+            self::$caseType[$column] = array( );
+            
             require_once 'CRM/Core/OptionGroup.php';
-            self::$caseType[$cacheKey] =  CRM_Core_OptionGroup::values( 'case_type', 
-                                                                        false, false, false, null, 
-                                                                        $column, $onlyActive );
+            self::$caseType[$column] = 
+                CRM_Core_OptionGroup::values( 'case_type', false, false, 
+                                              false, null, $column );
         }
-        
-        return self::$caseType[$cacheKey];
+        return self::$caseType[$column];
     }
-    
-    /**
-     * Get all the Encounter Medium 
-     *
-     * @access public
-     * @return array - array reference of all Encounter Medium.
-     * @static
-     */
-    public static function encounterMedium( $column = 'label', $onlyActive = true )
-    {
-        $cacheKey = "{$column}_".(int)$onlyActive;
-        if ( !isset( self::$encounterMedium[$cacheKey] ) ) {
-            require_once 'CRM/Core/OptionGroup.php';
-            self::$encounterMedium[$cacheKey] =  CRM_Core_OptionGroup::values( 'encounter_medium', 
-                                                                               false, false, false, null, 
-                                                                               $column, $onlyActive );
-        }
-        
-        return self::$encounterMedium[$cacheKey];
-    }
-    
+
     /**
      * Get all Activty types for the CiviCase component
      *
@@ -247,9 +220,9 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant
             $caseTypeIds = CRM_Core_DAO::getFieldValue( 'CRM_Case_DAO_Case',
                                                         $caseId,
                                                         'case_type_id' );
-            $caseTypeId  = explode( CRM_Core_DAO::VALUE_SEPARATOR,
+            $caseTypeId  = explode( CRM_Case_BAO_Case::VALUE_SEPERATOR, 
                                     trim($caseTypeIds, 
-                                         CRM_Core_DAO::VALUE_SEPARATOR ) );
+                                         CRM_Case_BAO_Case::VALUE_SEPERATOR) );
             $caseTypeId  = $caseTypeId[0];
             
             self::$caseTypePair[$caseId][$column] = array( 'id'   => $caseTypeId,

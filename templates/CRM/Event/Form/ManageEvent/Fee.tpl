@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -49,14 +49,6 @@
     </table>
 
     <div id="event-fees">
-        <table id="currency" class="form-layout">
-             <tr class='crm-event-manage-fee-form-block-currency'>
-                <td class="label">{$form.currency.label}</td>
-	        <td>{$form.currency.html}<br />
-	          <span class="description">{ts}Select the currency to be used for event registration.{/ts}</span>
-	        </td>
-             </tr>
-        </table>
       {if $paymentProcessor}
          <table id="paymentProcessor" class="form-layout">
              <tr class="crm-event-manage-fee-form-block-payment_processor_id">            
@@ -271,7 +263,7 @@
     
     function warnDiscountDel( ) {
         if ( ! document.getElementsByName('is_discount')[0].checked ) {
-            alert('{/literal}{ts escape="js"}If you uncheck "Discounts by Signup Date" and Save this form, any existing discount sets will be deleted.{/ts} {ts}This action cannot be undone.{/ts} {ts}If this is NOT what you want to do, you can check "Discounts by Signup Date" again.{/ts}{literal}');
+            alert('{/literal}{ts}If you uncheck "Discounts by Signup Date" and Save this form, any existing discount sets will be deleted.{/ts} {ts}This action cannot be undone.{/ts} {ts}If this is NOT what you want to do, you can check "Discounts by Signup Date" again.{/ts}{literal}');
         }
     }
     

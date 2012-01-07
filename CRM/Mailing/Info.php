@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -34,7 +34,7 @@ require_once 'CRM/Core/Component/Info.php';
  * abstract class.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -51,39 +51,18 @@ class CRM_Mailing_Info extends CRM_Core_Component_Info
         return array( 'name'                 => 'CiviMail',
                       'translatedName'       => ts('CiviMail'),
                       'title'                => 'CiviCRM Mailing Engine',
-                      'search'               => 1,
+                      'search'               => 0,
                       'showActivitiesInCore' => 1 
                       );
     }
 
 
-    static function workflowEnabled( ) {
-        $config =& CRM_Core_Config::singleton( );
-
-        $enableWorkflow = defined( 'CIVICRM_CIVIMAIL_WORKFLOW' ) ? (bool) CIVICRM_CIVIMAIL_WORKFLOW : false;
-
-        return ( $enableWorkflow &&
-                 $config->userFramework == 'Drupal' &&
-                 module_exists( 'rules' ) ) ?
-            true :
-            false;
-             
-    }
     // docs inherited from interface
     public function getPermissions()
     {
-        $permissions = array( 'access CiviMail', 
-                              'access CiviMail subscribe/unsubscribe pages',
-                              'delete in CiviMail',
-                              'view public CiviMail content');
-
-        if ( self::workflowEnabled( ) ) {
-            $permissions[] = 'create mailings';
-            $permissions[] = 'schedule mailings';
-            $permissions[] = 'approve mailings';
-        }
-
-        return $permissions;
+        return array( 'access CiviMail', 
+                      'access CiviMail subscribe/unsubscribe pages',
+                      'delete in CiviMail' );
     }
 
 
@@ -110,19 +89,14 @@ class CRM_Mailing_Info extends CRM_Core_Component_Info
     // docs inherited from interface  
     public function registerAdvancedSearchPane()
     {
-        return array( 'title'   => ts( 'Mailings' ),
-                      'weight'  => 20 );
+        // this component doesn't use advanced search
+        return null;
     }    
     
     // docs inherited from interface    
     public function getActivityTypes()
     {
         return null;
-    }
-
-    // add shortcut to Create New
-    public function creatNewShortcut( &$shortCuts ) {
-
     }
     
 }

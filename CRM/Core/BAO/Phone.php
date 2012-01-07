@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -83,7 +83,7 @@ class CRM_Core_BAO_Phone extends CRM_Core_DAO_Phone
      * @access public
      * @static
      */
-    static function allPhones( $id, $updateBlankLocInfo = false, $type = null ) 
+    static function allPhones( $id, $type = null ) 
     {
         if ( ! $id ) {
             return null;
@@ -100,32 +100,23 @@ class CRM_Core_BAO_Phone extends CRM_Core_DAO_Phone
 
         $query = "
    SELECT phone, civicrm_location_type.name as locationType, civicrm_phone.is_primary as is_primary,
-     civicrm_phone.id as phone_id, civicrm_phone.location_type_id as locationTypeId,
-     civicrm_phone.phone_type_id as phoneTypeId
+     civicrm_phone.id as phone_id, civicrm_phone.location_type_id as locationTypeId
      FROM civicrm_contact
 LEFT JOIN civicrm_phone ON ( civicrm_contact.id = civicrm_phone.contact_id )
 LEFT JOIN civicrm_location_type ON ( civicrm_phone.location_type_id = civicrm_location_type.id )
 WHERE     civicrm_contact.id = %1 $cond
-ORDER BY civicrm_phone.is_primary DESC,  phone_id ASC ";
+ORDER BY civicrm_phone.is_primary DESC, civicrm_phone.location_type_id DESC, phone_id ASC ";
 
         $params = array( 1 => array( $id, 'Integer' ) );
         
-        $numbers = $values = array( );
+        $numbers = array( );
         $dao =& CRM_Core_DAO::executeQuery( $query, $params );
-        $count = 1;
         while ( $dao->fetch( ) ) {
-            $values = array( 'locationType'   => $dao->locationType,
-                             'is_primary'     => $dao->is_primary,
-                             'id'             => $dao->phone_id,
-                             'phone'          => $dao->phone,
-                             'locationTypeId' => $dao->locationTypeId,
-                             'phoneTypeId'    => $dao->phoneTypeId );
-            
-            if ( $updateBlankLocInfo ) {
-                $numbers[$count++] = $values;
-            } else {
-                $numbers[$dao->phone_id] = $values;
-            }
+            $numbers[$dao->phone_id] = array( 'locationType'   => $dao->locationType,
+                                              'is_primary'     => $dao->is_primary,
+                                              'id'             => $dao->phone_id,
+                                              'phone'          => $dao->phone,
+                                              'locationTypeId' => $dao->locationTypeId);
         }
         return $numbers;
     }

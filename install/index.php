@@ -25,7 +25,7 @@ if ( stristr( PHP_OS, 'WIN' ) ) {
     define( 'CIVICRM_DIRECTORY_SEPARATOR', DIRECTORY_SEPARATOR );
 }
 
-// set installation type - drupal
+// set installation type - drupal / standalone
 session_start();
 
 // unset civicrm session if any
@@ -44,7 +44,7 @@ if ( isset($_GET['mode']) ) {
 global $installType;
 $installType = strtolower($_SESSION['install_type']);
 
-if ( ! in_array($installType, array('drupal')) ) {
+if ( ! in_array($installType, array('drupal', 'standalone')) ) {
     $errorTitle = "Oops! Unsupported installation mode";
     $errorMsg   = "";
     errorDisplayPage( $errorTitle, $errorMsg );
@@ -59,19 +59,12 @@ $docLink = CRM_Utils_System::docURL2( 'Installation and Upgrades', false, 'Insta
 if ( $installType == 'drupal' ) {
     // do not check 'sites/all/modules' only since it could be a multi-site
     // install. Rather check for existance of sites & modules in the url
-    
-    //old pattern where we do has to have civicrm in sites/.../modules/
-    //$pattern =  "/" . preg_quote('sites' . CIVICRM_DIRECTORY_SEPARATOR, CIVICRM_DIRECTORY_SEPARATOR) . 
-    //    "([a-zA-Z0-9_.]+)" . 
-    //    preg_quote(CIVICRM_DIRECTORY_SEPARATOR . 'modules', CIVICRM_DIRECTORY_SEPARATOR) . "/";
-    
-    //lets check only /modules/.
-    $pattern = '/' . preg_quote( CIVICRM_DIRECTORY_SEPARATOR . 'modules', CIVICRM_DIRECTORY_SEPARATOR ) . '/';
-    
-    if ( ! preg_match( $pattern,
+    if ( ! preg_match( "/" . preg_quote('sites' . CIVICRM_DIRECTORY_SEPARATOR, CIVICRM_DIRECTORY_SEPARATOR) . 
+                       "([a-zA-Z0-9_.]+)" . 
+                       preg_quote(CIVICRM_DIRECTORY_SEPARATOR . 'modules', CIVICRM_DIRECTORY_SEPARATOR) . "/",
                        str_replace( "\\","/",$_SERVER['SCRIPT_FILENAME'] ) ) ) {
         $errorTitle = "Oops! Please Correct Your Install Location";
-        $errorMsg = "Please untar (uncompress) your downloaded copy of CiviCRM in the <strong>" . implode(CIVICRM_DIRECTORY_SEPARATOR, array('sites', 'all', 'modules')) . "</strong> directory below your Drupal root directory. Refer to the online " . $docLink . " for more information.";
+        $errorMsg = "Please untar (uncompress) your downloaded copy of CiviCRM in the <strong>" . implode(CIVICRM_DIRECTORY_SEPARATOR, array('sites', 'all', 'modules')) . "</strong> directory below your Drupal root directory. Refer to the online " . $docLink . " for more information.<p>If you want to setup / install a <strong>Standalone CiviCRM</strong> version (i.e. not a Drupal or Joomla module), <a href=\"?mode=standalone\">click here</a>.</p>";
         errorDisplayPage( $errorTitle, $errorMsg );
     }
 }
@@ -107,7 +100,8 @@ if ( isset($_REQUEST['loadGenerated'] ) ) {
     $loadGenerated = 1;
 }
 
-require_once dirname(__FILE__) . CIVICRM_DIRECTORY_SEPARATOR . 'langs.php';
+require_once "$crmPath/CRM/Core/I18n/PseudoConstant.php";
+$langs =& CRM_Core_I18n_PseudoConstant::languages();
 foreach ($langs as $locale => $_) {
     if ($locale == 'en_US') continue;
     if (!file_exists(implode(CIVICRM_DIRECTORY_SEPARATOR, array($crmPath, 'sql', "civicrm_data.$locale.mysql")))) unset($langs[$locale]);
@@ -120,15 +114,15 @@ if (isset($_REQUEST['seedLanguage']) and isset($langs[$_REQUEST['seedLanguage']]
 
 if ( $installType == 'drupal' ) {
     global $cmsPath;
-    
-    //CRM-6840 -don't force to install in sites/all/modules/ 
-    require_once "$crmPath/CRM/Utils/System/Drupal.php";
-    $cmsPath = CRM_Utils_System_Drupal::cmsRootPath( );
-
+    $cmsPath = dirname( dirname( dirname( dirname( $crmPath ) ) ) );
     $siteDir = getSiteDir( $cmsPath, $_SERVER['SCRIPT_FILENAME'] );
     $alreadyInstalled = file_exists( $cmsPath  . CIVICRM_DIRECTORY_SEPARATOR .
                                      'sites'   . CIVICRM_DIRECTORY_SEPARATOR .
                                      $siteDir  . CIVICRM_DIRECTORY_SEPARATOR .
+                                     'civicrm.settings.php' );
+} elseif ( $installType == 'standalone' ) {
+    $alreadyInstalled = file_exists( $crmPath     . CIVICRM_DIRECTORY_SEPARATOR .
+                                     'standalone' . CIVICRM_DIRECTORY_SEPARATOR .
                                      'civicrm.settings.php' );
 }
 
@@ -138,23 +132,26 @@ if ($alreadyInstalled ) {
     if ( $installType == 'drupal' ) {
 
         $errorMsg = "CiviCRM has already been installed in this Drupal site. <ul><li>To <strong>start over</strong>, you must delete or rename the existing CiviCRM settings file - <strong>civicrm.settings.php</strong> - from <strong>" . implode(CIVICRM_DIRECTORY_SEPARATOR, array('[your Drupal root directory]', 'sites', $siteDir)) . "</strong>.</li><li>To <strong>upgrade an existing installation</strong>, refer to the online " . $docLink . ".</li></ul>";
+    } elseif ( $installType == 'standalone' ) {
+        $errorMsg = "Standalone CiviCRM has already been installed. <ul><li>To <strong>start over</strong>, you must delete or rename the existing CiviCRM settings file - <strong>civicrm.settings.php</strong> - from <strong>[your CiviCRM root directory]" . CIVICRM_DIRECTORY_SEPARATOR . "standalone</strong>.</li><li>To <strong>upgrade an existing installation</strong>, refer to the online " . $docLink . ".</li></ul>";
     }
     errorDisplayPage( $errorTitle, $errorMsg );
 }
 
-$versionFile = $crmPath . CIVICRM_DIRECTORY_SEPARATOR . 'civicrm-version.php';
+$versionFile = $crmPath . CIVICRM_DIRECTORY_SEPARATOR . 'civicrm-version.txt';
 if(file_exists($versionFile)) {
-    require_once( $versionFile );
-    $civicrm_version = civicrmVersion( );
+    $civicrm_version = file_get_contents($versionFile);
 } else {
     $civicrm_version = 'unknown';
 }
 
 if ( $installType == 'drupal' ) {
     // Ensure that they have downloaded the correct version of CiviCRM
-    if ( $civicrm_version['cms'] != 'Drupal' ) {
+    if ( ( strpos( $civicrm_version, 'PHP5'   ) === false) ||
+        ( ( strpos( $civicrm_version, 'Drupal' ) === false ) &&
+          ( strpos( $civicrm_version, 'Standalone' === false ) ) ) ) {
         $errorTitle = "Oops! Incorrect CiviCRM Version";
-        $errorMsg = "This installer can only be used for the Drupal version of CiviCRM. Refer to the online " . $docLink . " for information about installing CiviCRM on PHP4 servers OR installing CiviCRM for Joomla!";
+        $errorMsg = "This installer can only be used for the Drupal or Standalone PHP5 version of CiviCRM. Refer to the online " . $docLink . " for information about installing CiviCRM on PHP4 servers OR installing CiviCRM for Joomla!";
         errorDisplayPage( $errorTitle, $errorMsg );
     }
 
@@ -218,36 +215,21 @@ class InstallRequirements {
          * Just check that the database configuration is okay
          */
     function checkdatabase($databaseConfig, $dbName) {
-        if($this->requireFunction('mysql_connect',
-                                  array("PHP Configuration", 
-                                        "MySQL support",
-                                        "MySQL support not included in PHP."))) {
-            $this->requireMySQLServer($databaseConfig['server'],
-                                      array("MySQL $dbName Configuration",
-                                            "Does the server exist",
-                                            "Can't find the a MySQL server on '$databaseConfig[server]'",
-                                            $databaseConfig['server']));
-            if($this->requireMysqlConnection($databaseConfig['server'],
-                                             $databaseConfig['username'],
-                                             $databaseConfig['password'],
-                    array("MySQL $dbName Configuration",
-                          "Are the access credentials correct",
-                          "That username/password doesn't work"))) {
-                @$this->requireMySQLVersion("5.0",
-                                            array("MySQL $dbName Configuration",
-                                                  "MySQL version at least 5.0",
-                                                  "MySQL version 5.0 is required, you only have ",
-                                                  "MySQL " . mysql_get_server_info()));
+        if($this->requireFunction('mysql_connect', array("PHP Configuration", "MySQL support", "MySQL support not included in PHP."))) {
+            $this->requireMySQLServer($databaseConfig['server'], array("MySQL $dbName Configuration", "Does the server exist",
+                                                                       "Can't find the a MySQL server on '$databaseConfig[server]'", $databaseConfig['server']));
+            if($this->requireMysqlConnection($databaseConfig['server'], $databaseConfig['username'], $databaseConfig['password'],
+                    array("MySQL $dbName Configuration", "Are the access credentials correct", "That username/password doesn't work"))) {
+                @$this->requireMySQLVersion("5.0", array("MySQL $dbName Configuration", "MySQL version at least 5.0", "MySQL version 5.0 is required, you only have ", "MySQL " . mysql_get_server_info()));
             }
             $onlyRequire = ( $dbName == 'Drupal' ) ? true : false;
-            $this->requireDatabaseOrCreatePermissions(
-                $databaseConfig['server'],
+            $this->requireDatabaseOrCreatePermissions($databaseConfig['server'],
                 $databaseConfig['username'],
                 $databaseConfig['password'],
                 $databaseConfig['database'],
                 array("MySQL $dbName Configuration",
-                      "Can I access/create the database",
-                      "I can't create new databases and the database '$databaseConfig[database]' doesn't exist"),
+                                                            "Can I access/create the database",
+                                                            "I can't create new databases and the database '$databaseConfig[database]' doesn't exist"),
                 $onlyRequire );
             if ( $dbName != 'Drupal' ) {
                 $this->requireMySQLInnoDB($databaseConfig['server'],
@@ -295,22 +277,24 @@ class InstallRequirements {
             ),
             true );
 
-        // CRM-6485: make sure the path does not contain PATH_SEPARATOR, as we don’t know how to escape it
-        $this->requireNoPathSeparator(
-            array(
-                'File permissions',
-                'does the CiviCRM path contain PATH_SEPARATOR?',
-                'the ' . $this->getBaseDir() . ' path contains PATH_SEPARATOR (the ' . PATH_SEPARATOR . ' character)',
-                $this->getBaseDir(),
-            )
-        );
-
         $requiredDirectories = array( 'CRM', 'packages', 'templates', 'js', 'api', 'i', 'sql' );
         foreach ( $requiredDirectories as $dir ) {
             $this->requireFile( $crmPath . CIVICRM_DIRECTORY_SEPARATOR . $dir, array("File permissions", "$dir folder exists", "There is no $dir folder" ), true );
         }
 
         $configIDSiniDir = null;
+        if ( $installType == 'standalone' ) {
+            // make sure that we can write to standalone and standalone/files
+            $writableDirectories = array( 'standalone' );
+            foreach ( $writableDirectories as $dir ) {
+                $this->requireWriteable( $crmPath . CIVICRM_DIRECTORY_SEPARATOR . $dir,
+                    array("File permissions", "Is the $dir folder writeable?", null ),
+                    true );
+            }
+            //check for Config.IDS.ini, file may exist in re-install
+            $configIDSiniDir  = array( $crmPath ,'standalone', 'files', 'civicrm', 'upload' ,'Config.IDS.ini' );
+        }
+
         if ( $installType == 'drupal' ) {
             global $cmsPath;
             $siteDir = getSiteDir( $cmsPath, $_SERVER['SCRIPT_FILENAME'] );
@@ -475,15 +459,6 @@ class InstallRequirements {
             $this->error($testDetails);
         }
     }
-
-    function requireNoPathSeparator($testDetails)
-    {
-        $this->testing($testDetails);
-        if (substr_count($this->getBaseDir(), PATH_SEPARATOR)) {
-            $this->error($testDetails);
-        }
-    }
-
     function requireNoFile($filename, $testDetails) {
         $this->testing($testDetails);
         $filename = $this->getBaseDir() . $filename;
@@ -656,12 +631,7 @@ class InstallRequirements {
         
     }
 
-    function requireDatabaseOrCreatePermissions($server,
-                                                $username,
-                                                $password,
-                                                $database,
-                                                $testDetails,
-                                                $onlyRequire = false) {
+    function requireDatabaseOrCreatePermissions($server, $username, $password, $database, $testDetails, $onlyRequire = false) {
         $this->testing($testDetails);
         $conn = @mysql_connect($server, $username, $password);
 
@@ -669,7 +639,7 @@ class InstallRequirements {
         if(@mysql_select_db($database)) {
             $okay = "Database '$database' exists";
         } else if ( $onlyRequire ) {
-            $testDetails[2] = "The database: '$database' does not exist";
+            $testDetails[2] = 'The database does not exist';
             $this->error($testDetails);
             return;
         } else {
@@ -814,39 +784,35 @@ class Installer extends InstallRequirements {
                 $drupalURL     = civicrm_cms_base( );
                 $drupalPermissionsURL = "{$drupalURL}index.php?q=admin/user/permissions";
                 $drupalURL .= "index.php?q=civicrm/admin/configtask&reset=1";
-                $registerSiteURL = "http://civicrm.org/civicrm/profile/create?reset=1&gid=15";
                 
                 echo "<li>Drupal user permissions have been automatically set - giving anonymous and authenticated users access to public CiviCRM forms and features. We recommend that you <a target='_blank' href={$drupalPermissionsURL}>review these permissions</a> to ensure that they are appropriate for your requirements (<a target='_blank' href='http://wiki.civicrm.org/confluence/display/CRMDOC/Default+Permissions+and+Roles'>learn more...</a>)</li>
-                      <li>Use the <a target='_blank' href=\"$drupalURL\">Configuration Checklist</a> to review and configure settings for your new site</li>
-                      <li> Have you registered this site at CiviCRM.org? If not, please help strengthen the CiviCRM ecosystem by taking a few minutes to <a href='$registerSiteURL' target='_blank'>fill out the site registration form</a>. The information collected will help us prioritize improvements, target our communications and build the community. If you have a technical role for this site, be sure to check Keep in Touch to receive technical updates (a low volume  mailing list).</li>";
-                
+                      <li>Use the <a target='_blank' href=\"$drupalURL\">Configuration Checklist</a> to review and configure settings for your new site</li>";
+                      
                 // explicitly setting error reporting, since we cannot handle drupal related notices
                 error_reporting(1);
                 
                 // automatically enable CiviCRM module once it is installed successfully.
                 // so we need to Bootstrap Drupal, so that we can call drupal hooks.
                 global $cmsPath, $crmPath;
-
                 // relative / abosolute paths are not working for drupal, hence using chdir()
                 chdir( $cmsPath ); 
-
                 include_once "./includes/bootstrap.inc";
                 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-
                 // rebuild modules, so that civicrm is added
                 module_rebuild_cache( );
-
                 // now enable civicrm module.
                 module_enable( array('civicrm') );
-
                 // clear block and page cache, to make sure civicrm link is present in navigation block
                 cache_clear_all();
                 
                 //add basic drupal permissions
-                db_query( 'UPDATE {permission} SET perm = CONCAT( perm, \', access CiviMail subscribe/unsubscribe pages, access all custom data, access uploaded files, make online contributions, profile create, profile edit, profile view, register for events, view event info\') WHERE rid IN (1, 2)' );
+                db_query( 'UPDATE {permission} SET perm = CONCAT( perm, \', access CiviMail subscribe/unsubscribe pages, access all custom data, access uploaded files, make online contributions, profile listings and forms, register for events, view event info, view event participants\') WHERE rid IN (1, 2)' );
                 
+            } elseif ( $installType == 'standalone' ) {
+                $standaloneURL = civicrm_cms_base( ) . 'standalone/index.php';
+                $checkListURL  = $standaloneURL . "?q=civicrm/admin/configtask&reset=1";
+                echo "<li>Click <a target=\"_blank\" href=\"$standaloneURL\">here</a> to go to your CiviCRM Standalone home page.</li>";
             }
-
             echo '</ul>';
             echo '</div>';
             echo '</body>';

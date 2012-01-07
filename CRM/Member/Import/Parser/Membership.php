@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,13 +29,14 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
 
 
 require_once 'CRM/Member/Import/Parser.php';
+require_once 'api/v2/Membership.php';
 
 /**
  * class to parse membership csv files
@@ -78,9 +79,6 @@ class CRM_Member_Import_Parser_Membership extends CRM_Member_Import_Parser
         $fields =& CRM_Member_BAO_Membership::importableFields( $this->_contactType, false );
 
         foreach ($fields as $name => $field) {
-            $field['type']          = CRM_Utils_Array::value( 'type', $field, CRM_Utils_Type::T_INT );
-            $field['dataPattern']   = CRM_Utils_Array::value( 'dataPattern', $field, '//' );
-            $field['headerPattern'] = CRM_Utils_Array::value( 'headerPattern', $field, '//' );
             $this->addField( $name, $field['title'], $field['type'], $field['headerPattern'], $field['dataPattern']);
         }
 
@@ -170,7 +168,7 @@ class CRM_Member_Import_Parser_Membership extends CRM_Member_Import_Parser
 
         
         //To check whether start date or join date is provided
-        if ( !CRM_Utils_Array::value( 'membership_start_date', $params )  && !CRM_Utils_Array::value( 'join_date', $params ) ) {
+        if( !$params['membership_start_date'] && !$params['join_date']) {
             $errorMessage = "Membership Start Date is required to create a memberships.";
             CRM_Import_Parser_Contact::addToErrorMsg('Start Date', $errorMessage);
         } 
@@ -186,10 +184,10 @@ class CRM_Member_Import_Parser_Membership extends CRM_Member_Import_Parser
                 case  'join_date': 
                     if( CRM_Utils_Date::convertToDefaultDate( $params, $dateType, $key )) {
                         if (! CRM_Utils_Rule::date($params[$key])) {
-                            CRM_Import_Parser_Contact::addToErrorMsg('Member Since', $errorMessage);
+                            CRM_Import_Parser_Contact::addToErrorMsg('Join Date', $errorMessage);
                         }
                     } else {
-                        CRM_Import_Parser_Contact::addToErrorMsg('Member Since', $errorMessage);
+                        CRM_Import_Parser_Contact::addToErrorMsg('Join Date', $errorMessage);
                     } 
                     break;
                 case  'membership_start_date': 
@@ -255,8 +253,6 @@ class CRM_Member_Import_Parser_Membership extends CRM_Member_Import_Parser
      */
     function import( $onDuplicate, &$values) 
     {
-        civicrm_api_include('membership', false, 2);
-    
         // first make sure this is a valid line
         $response = $this->summary( $values );
         if ( $response != CRM_Member_Import_Parser::VALID ) {
@@ -284,10 +280,10 @@ class CRM_Member_Import_Parser_Membership extends CRM_Member_Import_Parser
                 case  'join_date': 
                     if( CRM_Utils_Date::convertToDefaultDate( $params, $dateType, $key )) {
                         if (! CRM_Utils_Rule::date($params[$key])) {
-                            CRM_Import_Parser_Contact::addToErrorMsg('Member Since', $errorMessage);
+                            CRM_Import_Parser_Contact::addToErrorMsg('Join Date', $errorMessage);
                         }
                     } else {
-                        CRM_Import_Parser_Contact::addToErrorMsg('Member Since', $errorMessage);
+                        CRM_Import_Parser_Contact::addToErrorMsg('Join Date', $errorMessage);
                     } 
                     break;
                 case  'membership_start_date': 

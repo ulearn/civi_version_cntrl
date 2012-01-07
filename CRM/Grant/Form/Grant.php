@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -243,9 +243,8 @@ class CRM_Grant_Form_Grant extends CRM_Core_Form
     static function formRule( $fields, $files, $self ) {  
         $errors = array( ); 
         
-        //check if contact is selected in standalone mode
-        if ( isset( $fields['contact_select_id'][1] ) && !$fields['contact_select_id'][1] ) {
-            $errors['contact[1]'] = ts('Please select a contact or create new contact');
+        if ( isset( $fields['contact_select_id'] ) && !$fields['contact_select_id'] ) {
+            $errors['contact'] = ts('Please select a contact or create new contact');
         }
         
         return $errors;
@@ -276,15 +275,21 @@ class CRM_Grant_Form_Grant extends CRM_Core_Form
         if (!$params['grant_report_received']) {
             $params['grant_report_received'] = "null";
         } 
-        
         // set the contact, when contact is selected
         if ( CRM_Utils_Array::value('contact_select_id', $params ) ) {
-            $this->_contactID = $params['contact_select_id'][1];
+            $this->_contactID = CRM_Utils_Array::value('contact_select_id', $params);
         }
         
         $params['contact_id'] = $this->_contactID;
 
+        $dates = array( 'application_received_date',
+                        'decision_date',
+                        'money_transfer_date',
+                        'grant_due_date' );
         
+        foreach ( $dates as $d ) {
+            $params[$d] = CRM_Utils_Date::processDate( $params[$d], null, true );
+        }
      
         $ids['note'] = array( );
         if ( $this->_noteId ) {

@@ -37,24 +37,20 @@
  *      Blake Ross <BlakeR1234@aol.com>
  *
  * The latest version of DOMPDF might be available at:
- * http://www.dompdf.com/
+ * http://www.digitaljunkies.ca/dompdf
  *
- * @link http://www.dompdf.com/
+ * @link http://www.digitaljunkies.ca/dompdf
  * @copyright 2004 Benj Carson
  * @author Benj Carson <benjcarson@digitaljunkies.ca>
  * @package dompdf
  * @version 0.3
  */
 
-/* $Id: html.css,v 1.4 2006-04-05 20:09:00 benjcarson Exp $ */
+/* $Id: html.css,v 1.4 2006/04/05 20:09:00 benjcarson Exp $ */
 
-@page {
-  margin: 1.2cm;
-}
 
 html { 
   display: -dompdf-page;
-  counter-increment: page;
 }
 
 /* blocks */
@@ -66,6 +62,7 @@ div, map, dt, isindex {
 body {
   page-break-before: avoid;
   display: block;
+  margin: 8px;
 }
 
 p, dl, multicol {
@@ -102,37 +99,44 @@ blockquote[type=cite] {
   border-width: thin;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  display: block;
-  font-weight: bold;
-}
-
 h1 {
+  display: block;
   font-size: 2em;
+  font-weight: bold;
   margin: .67em 0;
 }
 
 h2 {
+  display: block;
   font-size: 1.5em;
+  font-weight: bold;
   margin: .83em 0;
 }
 
 h3 {
+  display: block;
   font-size: 1.17em;
+  font-weight: bold;
   margin: 1em 0;
 }
 
 h4 {
+  display: block;
+  font-weight: bold;
   margin: 1.33em 0;
 }
 
 h5 {
+  display: block;
   font-size: 0.83em;
+  font-weight: bold;
   margin: 1.67em 0;
 }
 
 h6 {
+  display: block;
   font-size: 0.67em;
+  font-weight: bold;
   margin: 2.33em 0;
 }
 
@@ -160,20 +164,7 @@ table {
   margin-top: 0;
   margin-bottom: 0;
   text-indent: 0;
-  text-align: left; /* quirk */
 }
-
-table[border] {
-  border-style: outset;
-  border-color: gray;
-}
-
-/* This won't work (???) */
-/*
-table[border] td,
-table[border] th {
-  border: 1pt solid grey;
-}*/
 
 /* make sure backgrounds are inherited in tables  -- see bug 4510 */
 td, th, tr {
@@ -214,11 +205,6 @@ tfoot {
   vertical-align: middle;
 }
 
-/* To simulate tbody auto-insertion */
-table > tr {
-  vertical-align: middle;
-}
-
 td { 
   display: table-cell;
   vertical-align: inherit;
@@ -235,9 +221,6 @@ th {
 }
 
 /* inlines */
-q {
-  quotes: '"' '"' "'" "'"; /* FIXME only the first level is used */
-}
 
 q:before {
   content: open-quote;
@@ -353,43 +336,6 @@ dir ol dir,   dir ul dir,   dir menu dir,   dir dir dir {
   list-style-type: square;
 }
 
-/* forms */
-
-/*
-input[type=text] {
-	border: 1pt solid black;
-	background-color: white;
-}
-
-input[type=text]:before {
-  content: attr(value);
-}*/
-
-fieldset {
-  display: block;
-  margin-left: 2px;
-  margin-right: 2px;
-  padding: 0.35em 0.625em 0.75em;
-  border: 1pt groove #666;
-}
-
-fieldset > legend {
-  padding-left: 2px;
-  padding-right: 2px;
-  min-width: 1em;
-  max-width: none;
-  height: auto;
-  min-height: 0;
-  max-height: none;
-  white-space: nowrap;
-  margin-top: -1.0em;
-  background: white;
-}
-
-legend {
-  display: inline-block;
-}
-
 
 /* leafs */
 
@@ -412,16 +358,13 @@ br {
   display: -dompdf-br;
 }
 
-img, img_generated {
+img_inner {
   display: -dompdf-image;
-}
-
-dompdf_generated {
-  display: inline;
 }
 
 /* hidden elements */
 area, base, basefont, head, meta, script, style, title,
 noembed, noscript, param {
-  display: none;
+   display: none;
 }
+

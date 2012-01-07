@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -103,9 +103,7 @@ class CRM_Event_Form_ManageEvent extends CRM_Core_Form
         
         if ( $this->_id ) {
             $this->assign( 'eventId', $this->_id );
-            if ( empty($this->_addProfileBottom) && empty($this->_addProfileBottomAdd) ) {
-                $this->add( 'hidden', 'id', $this->_id );
-            }
+            $this->add( 'hidden', 'id', $this->_id );
             $this->_single = true;
             
             $params = array( 'id' => $this->_id );
@@ -162,8 +160,8 @@ class CRM_Event_Form_ManageEvent extends CRM_Core_Form
         }
         
         require_once 'CRM/Event/PseudoConstant.php';
-        $statusTypes        = CRM_Event_PseudoConstant::participantStatus(null, 'is_counted = 1', 'label' );
-        $statusTypesPending = CRM_Event_PseudoConstant::participantStatus(null, 'is_counted = 0', 'label' );
+        $statusTypes        = CRM_Event_PseudoConstant::participantStatus(null, 'is_counted = 1');
+        $statusTypesPending = CRM_Event_PseudoConstant::participantStatus(null, 'is_counted = 0');
         $findParticipants['statusCounted'] = implode( ', ', array_values( $statusTypes ) );
         $findParticipants['statusNotCounted'] = implode( ', ', array_values( $statusTypesPending ) );
         $this->assign('findParticipants', $findParticipants);
@@ -304,7 +302,11 @@ class CRM_Event_Form_ManageEvent extends CRM_Core_Form
             
             CRM_Core_Session::setStatus( ts("'%1' information has been saved.", array(1 => ( $subPage == 'friend' )?'Friend':$className ) ) );
             
-            $this->postProcessHook( );
+            // we need to call the hook manually here since we redirect and never 
+            // go back to CRM/Core/Form.php
+            // A better way might have been to setUserContext so the framework does the rediret
+            CRM_Utils_Hook::postProcess( get_class( $this ),
+                                         $this );
             
             if ( $this->controller->getButtonName('submit') == "_qf_{$className}_upload_done" ) {
                 if ( $this->_isTemplate ) {

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -55,24 +55,11 @@ class CRM_Report_Page_Report extends CRM_Core_Page
         
         $optionVal    = CRM_Report_Utils_Report::getValueFromUrl( );
 
-
-
         require_once 'CRM/Core/OptionGroup.php';
         $templateInfo = CRM_Core_OptionGroup::getRowValues( 'report_template', "{$optionVal}", 'value',
                                                             'String', false );
 
-        $extKey = strpos($templateInfo['name'], '.');
-
-        $reportClass = null;
-
-        if( $extKey !== FALSE ) {
-            require_once( 'CRM/Core/Extensions.php' );
-            $ext = new CRM_Core_Extensions();
-            $reportClass = $ext->keyToClass( $templateInfo['name'], 'report' );
-            $templateInfo['name'] = $reportClass;
-        }
-
-        if ( strstr(CRM_Utils_Array::value( 'name', $templateInfo ), '_Form') || ! is_null( $reportClass ) ) {
+        if ( strstr(CRM_Utils_Array::value( 'name', $templateInfo ), '_Form') ) {
             CRM_Utils_System::setTitle( $templateInfo['label'] . ' - Template' );
             $this->assign( 'reportTitle', $templateInfo['label'] );
 
@@ -80,7 +67,6 @@ class CRM_Report_Page_Report extends CRM_Core_Page
             $session->set( 'reportDescription', $templateInfo['description'] );
 
             $wrapper = new CRM_Utils_Wrapper( );
-            
             return $wrapper->run( $templateInfo['name'], null, null );
         }
 

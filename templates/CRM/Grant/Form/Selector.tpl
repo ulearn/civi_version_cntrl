@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,6 @@
 
 {strip}
 <table class="selector">
-  <thead class="sticky">
   <tr class="columnheader">
   {if ! $single and $context eq 'Search' }
      <th scope="col" title="Select Rows">{$form.toggleSelect.html}</th> 
@@ -45,12 +44,10 @@
     </th>
   {/foreach}
   </tr>
-  </thead>
 
   {counter start=0 skip=1 print=false}
-  {foreach from=$rows item=row}  
-  <tr id='crm-grant_{$row.grant_id}' class="{cycle values="odd-row,even-row"} crm-grant crm-grant_status-{$row.grant_status_id}">
-
+  {foreach from=$rows item=row}
+  <tr id='crm-grant_{$row.grant_id}' class="{cycle values="odd-row,even-row"} crm-grant crm-grant_status-{$row.grant_status}">
   {if !$single }  
      {if $context eq 'Search' }       
         {assign var=cbName value=$row.checkbox}

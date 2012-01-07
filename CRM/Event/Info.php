@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -34,7 +34,7 @@ require_once 'CRM/Core/Component/Info.php';
  * abstract class.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -102,15 +102,8 @@ class CRM_Event_Info extends CRM_Core_Component_Info
         return $types;
     }
 
-    // add shortcut to Create New
-    public function creatNewShortcut( &$shortCuts ) {
-        if ( CRM_Core_Permission::check('access CiviEvent') &&
-             CRM_Core_Permission::check('edit event participants') ) {
-            $shortCuts = 
-                array_merge($shortCuts, array( array( 'path'  => 'civicrm/participant/add',
-                                                      'query' => "reset=1&action=add&context=standalone",
-                                                      'ref'   => 'new-participant',
-                                                      'title' => ts('Event Registration') ) ));
-        }
-    }
+
+
+                                              
+
 }

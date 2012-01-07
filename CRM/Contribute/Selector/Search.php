@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -82,7 +82,6 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
                                  'receive_date',
                                  'thankyou_date',
                                  'contribution_status_id',
-                                 'contribution_status',
                                  'cancel_date',
                                  'product_name',
                                  'is_test',
@@ -90,7 +89,6 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
                                  'receipt_date',
                                  'membership_id',
                                  'currency',
-                                 'contribution_campaign_id'
                                  );
 
     /** 
@@ -116,14 +114,6 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
      * @var string
      */     
     protected $_context = null;
-
-    /**
-     * what component context are we being invoked from
-     *   
-     * @access protected     
-     * @var string
-     */     
-    protected $_compContext = null;
 
     /**
      * queryParams is the array returned by exportValues called on
@@ -173,8 +163,7 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
                          $contributionClause = null,
                          $single = false,
                          $limit = null,
-                         $context = 'search',
-                         $compContext = null ) 
+                         $context = 'search' ) 
     {
         // submitted form values
         $this->_queryParams =& $queryParams;
@@ -182,7 +171,6 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
         $this->_single  = $single;
         $this->_limit   = $limit;
         $this->_context = $context;
-        $this->_compContext = $compContext;
 
         $this->_contributionClause = $contributionClause;
 
@@ -190,8 +178,7 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
         $this->_action = $action;
 
         $this->_query = new CRM_Contact_BAO_Query( $this->_queryParams, null, null, false, false,
-                                                   CRM_Contact_BAO_Query::MODE_CONTRIBUTE );
-        $this->_query->_distinctComponentClause = " DISTINCT(civicrm_contribution.id)";
+                                                    CRM_Contact_BAO_Query::MODE_CONTRIBUTE );
     }//end of constructor
 
     /**
@@ -205,19 +192,17 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
      * @access public
      *
      */
-    static function &links( $componentId = null, $componentAction = null, $key = null, $compContext = null  )
+    static function &links( $componentId = null, $componentAction = null, $key = null )
     {
         $extraParams = null;
         if ( $componentId ) {
             $extraParams = "&compId={$componentId}&compAction={$componentAction}";
         }
-        if ( $compContext ) {
-            $extraParams .= "&compContext={$compContext}";
-        }
+
         if ( $key ) {
-            $extraParams .= "&key={$key}";
+            $extraParams = "&key={$key}";
         }
-       
+        
         if (!(self::$_links)) {
             self::$_links = array(
                                   CRM_Core_Action::VIEW   => array(
@@ -242,6 +227,7 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
         }
         return self::$_links;
     } //end of function
+
 
     /**
      * getter for array of the parameters required for creating pager.
@@ -279,6 +265,7 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
                                            $this->_contributionClause );
     }
 
+
     /**
      * returns all the rows in the given offset and rowCount
      *
@@ -310,30 +297,8 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
             $permissions[] = CRM_Core_Permission::DELETE;
         }
         $mask = CRM_Core_Action::mask( $permissions );
-        
-        $qfKey = $this->_key;
-        $componentId = $componentContext = null;
-        if ( $this->_context != 'contribute' ) {
-            $qfKey            = CRM_Utils_Request::retrieve( 'key',         'String',   CRM_Core_DAO::$_nullObject ); 
-            $componentId      = CRM_Utils_Request::retrieve( 'id',          'Positive', CRM_Core_DAO::$_nullObject );
-            $componentAction  = CRM_Utils_Request::retrieve( 'action',      'String',   CRM_Core_DAO::$_nullObject );
-            $componentContext = CRM_Utils_Request::retrieve( 'compContext', 'String',   CRM_Core_DAO::$_nullObject );
 
-            if ( ! $componentContext &&
-                 $this->_compContext ) {
-                $componentContext = $this->_compContext;
-                $qfKey = CRM_Utils_Request::retrieve( 'qfKey', 'String', CRM_Core_DAO::$_nullObject, null, false, 'REQUEST' );
-            }
-        }
-
-        // get all contribution status
-        $contributionStatuses = CRM_Core_OptionGroup::values( 'contribution_status', 
-                                                              false, false, false, null, 'name', false );
-        
-        //get all campaigns.
-        require_once 'CRM/Campaign/BAO/Campaign.php';
-        $allCampaigns = CRM_Campaign_BAO_Campaign::getCampaigns( null, null, false, false, false, true );
-        
+        $componentId = null;
         While ($result->fetch()) {
             $row = array();
             // the columns we are interested in
@@ -343,19 +308,11 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
                 }         
             }
 
-            //carry campaign on selectors.
-            $row['campaign'] = CRM_Utils_Array::value( $result->contribution_campaign_id, $allCampaigns );
-            $row['campaign_id'] = $result->contribution_campaign_id;
-            
-            // add contribution status name
-            $row['contribution_status_name'] = CRM_Utils_Array::value( $row['contribution_status_id'],
-                                                                       $contributionStatuses );
-
-            if ( $result->is_pay_later && CRM_Utils_Array::value( 'contribution_status_name', $row ) == 'Pending' ) {
-                $row['contribution_status'] .= ' (Pay Later)';
+            if ( $result->is_pay_later && $row['contribution_status_id'] == 'Pending' ) {
+                $row['contribution_status_id'] .= ' (Pay Later)';
                 
-            } else if ( CRM_Utils_Array::value( 'contribution_status_name', $row ) == 'Pending' ) {
-                $row['contribution_status'] .= ' (Incomplete Transaction)';
+            } else if ( $row['contribution_status_id'] == 'Pending' ) {
+                $row['contribution_status_id'] .= ' (Incomplete Transaction)';
             }
 
             if ( $row['is_test'] ) {
@@ -364,19 +321,19 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
             
             $row['checkbox'] = CRM_Core_Form::CB_PREFIX . $result->contribution_id;
             
-            
-            
+            if ( $this->_context != 'contribute' ) {
+                $componentId     =  CRM_Utils_Request::retrieve( 'id', 'Positive', CRM_Core_DAO::$_nullArray );
+                $componentAction =  CRM_Utils_Request::retrieve( 'action', 'String', CRM_Core_DAO::$_nullArray );
+            }
+
             $actions =  array( 'id'               => $result->contribution_id,
                                'cid'              => $result->contact_id,
                                'cxt'              => $this->_context
                                );
-            
-            $row['action']       = CRM_Core_Action::formLink( self::links( $componentId, 
-                                                                           $componentAction, 
-                                                                           $qfKey,
-                                                                           $componentContext ),
+
+            $row['action']       = CRM_Core_Action::formLink( self::links( $componentId, $componentAction, $this->_key ),
                                                               $mask, $actions );
-            
+
             $row['contact_type'] = 
                 CRM_Contact_BAO_Contact_Utils::getImage( $result->contact_sub_type ? 
                                                          $result->contact_sub_type : $result->contact_type,false,$result->contact_id );
@@ -387,12 +344,13 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
             
             $rows[] = $row;
         }
-        
+
         return $rows;
-    }    
+    }
+    
     
     /**
-     * @return array   $qill         which contains an array of strings
+     * @return array              $qill         which contains an array of strings
      * @access public
      */
   
@@ -470,12 +428,7 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
         return self::$_columnHeaders;
     }
     
-    function alphabetQuery( ) {
-        return $this->_query->searchQuery( null, null, null, false, false, true );
-    }
-
-    function &getQuery( )
-    {
+    function &getQuery( ) {
         return $this->_query;
     }
 
@@ -485,14 +438,12 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
      * @param string $output type of output 
      * @return string name of the file 
      */ 
-    function getExportFileName( $output = 'csv')
-    { 
+    function getExportFileName( $output = 'csv') { 
         return ts('CiviCRM Contribution Search'); 
     }
 
-    function getSummary( )
-    {
-        return $this->_query->summaryContribution( $this->_context );
+    function getSummary( ) {
+        return $this->_query->summaryContribution( );
     }
 
 }//end of class

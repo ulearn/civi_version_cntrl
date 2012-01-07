@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,35 +30,30 @@
 {/if}
 
 {if $as_select} {* on 3.2, the activities can be either a drop down select (on the activity tab) or a list (on the action menu) *}
-<select onchange="if (this.value) window.location=''+ this.value; else return false" name="other_activity" id="other_activity" class="form-select">
+<select onchange="if (this.value) window.location='{$url}'+ this.value; else return false" name="other_activity" id="other_activity" class="form-select">
   <option value="">{ts}- new activity -{/ts}</option>
 {foreach from=$activityTypes key=k item=link}
-  <option value="{$urls.$k}">{$link}</option>
+  <option value="{$k}">{$link}</option>
 {/foreach}
 </select>
 
 {else}
 <ul>
 {foreach from=$activityTypes key=k item=link}
-<li class="crm-activity-type_{$k}"><a href="{$urls.$k}">{$link}</a></li>
-{/foreach}
+<li class="crm-activity-type_{$k}"><a href="{$url}{$k}">{if $k NEQ 3}{ts}Record {/ts}{/if}{$link}</a></li>
+{/foreach}</ul>
+
+{/if}
+
 
 {* add hook links if any *}
 {if $hookLinks}
    {foreach from=$hookLinks item=link}
-    <li>
-        <a href="{$link.url}">
-          {if $link.img}
-                <img src="{$link.img}" alt="{$link.title}" />&nbsp;
-          {/if}
-          {$link.title}
-        </a>
-    </li>
-   {/foreach}
+{if $link.img}
+      <a href="{$link.url}"><img src="{$link.img}" alt="{$link.title}" /></a>&nbsp;
 {/if}
-
-</ul>
-
+      <a href="{$link.url}">{$link.title}</a>&nbsp;&nbsp;
+   {/foreach}
 {/if}
 
 {/if}

@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,6 +24,14 @@
  +--------------------------------------------------------------------+
 *}
 {*common template for compose mail*}
+{if !$emailTask}
+<table class="form-layout-compressed">
+    <tr>
+	    <td class="label">{$form.template.label}</td>
+	    <td>{$form.template.html}</td>
+    </tr>
+</table>
+{/if}
 
 <div class="crm-accordion-wrapper crm-html_email-accordion crm-accordion-open">
 <div class="crm-accordion-header">

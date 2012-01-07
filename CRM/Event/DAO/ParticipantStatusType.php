@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.4                                                |
+| CiviCRM version 3.1                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,7 +79,7 @@ class CRM_Event_DAO_ParticipantStatusType extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = true;
+    static $_log = false;
     /**
      * unique participant status type id
      *
@@ -159,17 +159,12 @@ class CRM_Event_DAO_ParticipantStatusType extends CRM_Core_DAO
                     'type' => CRM_Utils_Type::T_INT,
                     'required' => true,
                 ) ,
-                'participant_status' => array(
+                'name' => array(
                     'name' => 'name',
                     'type' => CRM_Utils_Type::T_STRING,
-                    'title' => ts('Participant Status') ,
+                    'title' => ts('Name') ,
                     'maxlength' => 64,
                     'size' => CRM_Utils_Type::BIG,
-                    'import' => true,
-                    'where' => 'civicrm_participant_status_type.name',
-                    'headerPattern' => '',
-                    'dataPattern' => '',
-                    'export' => true,
                 ) ,
                 'label' => array(
                     'name' => 'label',

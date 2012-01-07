@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.4                                                |
+| CiviCRM version 3.1                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,7 +79,7 @@ class CRM_Member_DAO_MembershipType extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = true;
+    static $_log = false;
     /**
      * Membership Id
      *
@@ -155,7 +155,7 @@ class CRM_Member_DAO_MembershipType extends CRM_Core_DAO
     /**
      * FK to Relationship Type ID
      *
-     * @var string
+     * @var int unsigned
      */
     public $relationship_type_id;
     /**
@@ -198,18 +198,6 @@ class CRM_Member_DAO_MembershipType extends CRM_Core_DAO
      */
     public $receipt_text_renewal;
     /**
-     * FK to civicrm_msg_template.id
-     *
-     * @var int unsigned
-     */
-    public $autorenewal_msg_id;
-    /**
-     * 0 = No auto-renew option; 1 = Give option, but not required; 2 = Auto-renew required;
-     *
-     * @var boolean
-     */
-    public $auto_renew;
-    /**
      * Is this membership_type enabled
      *
      * @var boolean
@@ -238,6 +226,7 @@ class CRM_Member_DAO_MembershipType extends CRM_Core_DAO
                 'domain_id' => 'civicrm_domain:id',
                 'member_of_contact_id' => 'civicrm_contact:id',
                 'contribution_type_id' => 'civicrm_contribution_type:id',
+                'relationship_type_id' => 'civicrm_relationship_type:id',
                 'renewal_msg_id' => 'civicrm_msg_template:id',
             );
         }
@@ -264,17 +253,12 @@ class CRM_Member_DAO_MembershipType extends CRM_Core_DAO
                     'required' => true,
                     'FKClassName' => 'CRM_Core_DAO_Domain',
                 ) ,
-                'membership_type' => array(
+                'name' => array(
                     'name' => 'name',
                     'type' => CRM_Utils_Type::T_STRING,
-                    'title' => ts('Membership Type') ,
+                    'title' => ts('Name') ,
                     'maxlength' => 128,
                     'size' => CRM_Utils_Type::HUGE,
-                    'import' => true,
-                    'where' => 'civicrm_membership_type.name',
-                    'headerPattern' => '',
-                    'dataPattern' => '',
-                    'export' => true,
                 ) ,
                 'description' => array(
                     'name' => 'description',
@@ -329,16 +313,15 @@ class CRM_Member_DAO_MembershipType extends CRM_Core_DAO
                 ) ,
                 'relationship_type_id' => array(
                     'name' => 'relationship_type_id',
-                    'type' => CRM_Utils_Type::T_STRING,
-                    'maxlength' => 64,
-                    'size' => CRM_Utils_Type::BIG,
+                    'type' => CRM_Utils_Type::T_INT,
+                    'FKClassName' => 'CRM_Contact_DAO_RelationshipType',
                 ) ,
                 'relationship_direction' => array(
                     'name' => 'relationship_direction',
                     'type' => CRM_Utils_Type::T_STRING,
                     'title' => ts('Relationship Direction') ,
-                    'maxlength' => 128,
-                    'size' => CRM_Utils_Type::HUGE,
+                    'maxlength' => 6,
+                    'size' => CRM_Utils_Type::EIGHT,
                 ) ,
                 'visibility' => array(
                     'name' => 'visibility',
@@ -375,15 +358,6 @@ class CRM_Member_DAO_MembershipType extends CRM_Core_DAO
                     'title' => ts('Receipt Text Renewal') ,
                     'maxlength' => 255,
                     'size' => CRM_Utils_Type::HUGE,
-                ) ,
-                'autorenewal_msg_id' => array(
-                    'name' => 'autorenewal_msg_id',
-                    'type' => CRM_Utils_Type::T_INT,
-                ) ,
-                'auto_renew' => array(
-                    'name' => 'auto_renew',
-                    'type' => CRM_Utils_Type::T_BOOLEAN,
-                    'title' => ts('Auto Renew') ,
                 ) ,
                 'is_active' => array(
                     'name' => 'is_active',

@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,9 +30,6 @@
     {if $action eq 4}
         <div class="crm-block crm-content-block crm-activity-view-block">
     {else}
-        {if $context NEQ 'standalone'}
-            <h3>{if $action eq 1 or $action eq 1024}{ts 1=$activityTypeName}New %1{/ts}{elseif $action eq 8}{ts 1=$activityTypeName}Delete %1{/ts}{else}{ts 1=$activityTypeName}Edit %1{/ts}{/if}</h3> 
-        {/if}
         <div class="crm-block crm-form-block crm-activity-form-block">
     {/if}
     {* added onload javascript for source contact*}
@@ -41,15 +38,19 @@
     var target_contact = assignee_contact = '';
 
     {/literal}
-    {if $target_contact}
-        var target_contact = {$target_contact};
+    {foreach from=$target_contact key=id item=name}
+         {literal} target_contact += '{"name":"'+{/literal}"{$name}"{literal}+'","id":"'+{/literal}"{$id}"{literal}+'"},';{/literal}
+    {/foreach}
+    {literal} eval( 'target_contact = [' + target_contact + ']'); {/literal}
+
+    {if $assigneeContactCount}
+    {foreach from=$assignee_contact key=id item=name}
+         {literal} assignee_contact += '{"name":"'+{/literal}"{$name}"{literal}+'","id":"'+{/literal}"{$id}"{literal}+'"},';{/literal}
+    {/foreach}
+    {literal} eval( 'assignee_contact = [' + assignee_contact + ']'); {/literal}
     {/if}
-    
-    {if $assignee_contact}
-        var assignee_contact = {$assignee_contact};
-    {/if}
-    
     {literal}
+
     var target_contact_id = assignee_contact_id = null;
     //loop to set the value of cc and bcc if form rule.
     var toDataUrl = "{/literal}{crmURL p='civicrm/ajax/checkemail' q='id=1&noemail=1' h=0 }{literal}"; {/literal}
@@ -73,11 +74,13 @@
     {/if}
     {literal}
 
+    eval( 'tokenClass = { tokenList: "token-input-list-facebook", token: "token-input-token-facebook", tokenDelete: "token-input-delete-token-facebook", selectedToken: "token-input-selected-token-facebook", highlightedToken: "token-input-highlighted-token-facebook", dropdown: "token-input-dropdown-facebook", dropdownItem: "token-input-dropdown-item-facebook", dropdownItem2: "token-input-dropdown-item2-facebook", selectedDropdownItem: "token-input-selected-dropdown-item-facebook", inputToken: "token-input-input-token-facebook" } ');
+
     var sourceDataUrl = "{/literal}{$dataUrl}{literal}";
     var tokenDataUrl  = "{/literal}{$tokenUrl}{literal}";
     var hintText = "{/literal}{ts}Type in a partial or complete name of an existing contact.{/ts}{literal}";
-    cj( "#target_contact_id"  ).tokenInput( tokenDataUrl, { prePopulate: target_contact,   theme: 'facebook', hintText: hintText });
-    cj( "#assignee_contact_id").tokenInput( tokenDataUrl, { prePopulate: assignee_contact, theme: 'facebook', hintText: hintText });
+    cj( "#target_contact_id"  ).tokenInput( tokenDataUrl, { prePopulate: target_contact,   classes: tokenClass, hintText: hintText });
+    cj( "#assignee_contact_id").tokenInput( tokenDataUrl, { prePopulate: assignee_contact, classes: tokenClass, hintText: hintText });
     cj( 'ul.token-input-list-facebook, div.token-input-dropdown-facebook' ).css( 'width', '450px' );
     cj('#source_contact_id').autocomplete( sourceDataUrl, { width : 180, selectFirst : false, hintText: hintText, matchContains: true, minChars: 1
                                 }).result( function(event, data, formatted) { cj( "#source_contact_qid" ).val( data[1] );
@@ -86,7 +89,7 @@
     </script>
     {/literal}
     {if !$action or ( $action eq 1 ) or ( $action eq 2 ) }
-        <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"}</div>
+        <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl"}</div>
     {/if}
       
         {if $action eq 8} {* Delete action. *}
@@ -104,22 +107,14 @@
 
             <table class="{if $action eq 4}crm-info-panel{else}form-layout{/if}">
 
-	     {if $action eq 4}
-            <h3>{$activityTypeName}</h3>
-	     {else}	   
+	     {* don't show in activity view mode, since act type is present as a part if title. *}	     	    
+	     {if $action neq 4}	   
              {if $context eq 'standalone' or $context eq 'search' or $context eq 'smog'}
                 <tr class="crm-activity-form-block-activity_type_id">
                    <td class="label">{$form.activity_type_id.label}</td><td class="view-value">{$form.activity_type_id.html}</td>
                 </tr>
              {/if}
 	     {/if}
-	     
-	     {if $surveyActivity} 
-               <tr class="crm-activity-form-block-survey">
-                 <td class="label">{ts}Survey Title{/ts}</td><td class="view-value">{$surveyTitle}</td>
-               </tr>
-	     {/if}
-	     
              <tr class="crm-activity-form-block-source_contact_id">
                 <td class="label">{$form.source_contact_id.label}</td>
                 <td class="view-value">
@@ -146,13 +141,13 @@
              
              <tr class="crm-activity-form-block-assignee_contact_id">
              {if $action eq 4}
-                <td class="label">{ts}Assigned To{/ts}</td><td class="view-value">
+                <td class="label">{ts}Assigned To {/ts}</td><td class="view-value">
 			    {foreach from=$assignee_contact key=id item=name}
 			        <a href="{crmURL p='civicrm/contact/view' q="reset=1&cid=$id"}">{$name}</a>;&nbsp;
 			    {/foreach}
                 </td>
              {else}
-                <td class="label">{ts}Assigned To{/ts}</td>
+                <td class="label">{ts}Assigned To {/ts}</td>
                 <td>{$form.assignee_contact_id.html}
                    {edit}<span class="description">{ts}You can optionally assign this activity to someone. Assigned activities will appear in their Activities listing at CiviCRM Home.{/ts}
                            {if $config->activityAssigneeNotification}
@@ -171,19 +166,6 @@
              <tr class="crm-activity-form-block-subject">
                 <td class="label">{$form.subject.label}</td><td class="view-value">{$form.subject.html|crmReplace:class:huge}</td>
              </tr>
-	     
-    	     {* CRM-7362 --add campaign to activities *}
-    	     {include file="CRM/Campaign/Form/addCampaignToComponent.tpl" 
-    	     campaignTrClass="crm-activity-form-block-campaign_id"}
-
-    	     {* build engagement level CRM-7775 *}
-    	     {if $buildEngagementLevel}
-        	     <tr class="crm-activity-form-block-engagement_level">
-                         <td class="label">{$form.engagement_level.label}</td>
-        		 <td class="view-value">{$form.engagement_level.html}</td>
-                     </tr>
-    	     {/if}
-	     
              <tr class="crm-activity-form-block-location">
                 <td class="label">{$form.location.label}</td><td class="view-value">{$form.location.html|crmReplace:class:huge}</td>
              </tr> 
@@ -222,11 +204,7 @@
              <tr class="crm-activity-form-block-priority_id">
                 <td class="label">{$form.priority_id.label}</td><td class="view-value">{$form.priority_id.html}</td>
              </tr>
-	     {if $surveyActivity } 
-               <tr class="crm-activity-form-block-result">
-                 <td class="label">{$form.result.label}</td><td class="view-value">{$form.result.html}</td>
-               </tr>
-	     {/if}
+             
              {if $form.tag.html}
                  <tr class="crm-activity-form-block-tag">
                     <td class="label">{$form.tag.label}</td>
@@ -246,8 +224,8 @@
                  </tr>
              {/if}
              
-             {if $tagsetInfo_activity}
-                <tr class="crm-activity-form-block-tag_set"><td colspan="2">{include file="CRM/common/Tag.tpl" tagsetType='activity'}</td></tr>
+             {if $tagset}
+                <tr class="crm-activity-form-block-tag_set"><td colspan="2">{include file="CRM/common/Tag.tpl"}</td></tr>
              {/if}
              
              {if $action neq 4 OR $viewCustomData} 
@@ -264,7 +242,7 @@
              
              {if $action eq 4 AND $currentAttachmentURL}
                 {include file="CRM/Form/attachment.tpl"}{* For view action the include provides the row and cells. *}
-             {elseif $action eq 1 OR $action eq 2}
+             {else if $action eq 1 OR $action eq 2}
                  <tr class="crm-activity-form-block-attachment">
                     <td colspan="2">
                         {include file="CRM/Form/attachment.tpl"}
@@ -315,7 +293,7 @@
 		            {if ($context eq 'fulltext' || $context eq 'search') && $searchKey}
 		                {assign var='urlParams' value="reset=1&atype=$atype&action=update&reset=1&id=$entityID&cid=$contactId&context=$context&key=$searchKey"}
 		            {/if}
-                    <a href="{crmURL p='civicrm/activity/add' q=$urlParams}" class="edit button" title="{ts}Edit{/ts}"><span><div class="icon edit-icon"></div>{ts}Edit{/ts}</span></a>
+                    <a href="{crmURL p='civicrm/contact/view/activity' q=$urlParams}" class="edit button" title="{ts}Edit{/ts}"><span><div class="icon edit-icon"></div>{ts}Edit{/ts}</span></a>
                  {/if}
                  
                  {if call_user_func(array('CRM_Core_Permission','check'), 'delete activities')}
@@ -338,11 +316,16 @@
         <script type="text/javascript">
        	cj(document).ready(function() {
     		{/literal}
-                {if $customDataSubType}
-                    buildCustomData( '{$customDataType}', {$customDataSubType} );
-                {else}
-                    buildCustomData( '{$customDataType}' );
-                {/if}
+    		buildCustomData( '{$customDataType}' );
+    		{if $customDataSubType}
+    			buildCustomData( '{$customDataType}', {$customDataSubType} );
+    		{else}
+    		    {literal}
+    		    if ( cj("#activity_type_id").val( ) ) {
+    		        buildCustomData( '{/literal}{$customDataType}{literal}', cj("#activity_type_id").val( ) );
+    	        }
+    	        {/literal}
+    		{/if}
     		{literal}
     	});
 

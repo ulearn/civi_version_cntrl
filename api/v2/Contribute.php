@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,10 +29,5 @@
  * CRM-6241
  * Creating this file to maintain backward compatibility
  * We should plan on deprecating this in 4.0
- *
- * @package CiviCRM_APIv2
- * @subpackage API_Contact
- * @copyright CiviCRM LLC (c) 2004-2011
- * $Id: Contact.php 30415 2010-10-29 12:02:47Z shot $
  */
 require_once 'api/v2/Contribution.php';

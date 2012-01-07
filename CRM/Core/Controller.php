@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -39,7 +39,7 @@
  * for other useful tips and suggestions
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -167,13 +167,9 @@ class CRM_Core_Controller extends HTML_QuickForm_Controller {
         }
         $this->_scope = $this->_scope . '_' . $this->_key;
 
-        // only use the civicrm cache if we have a valid key
-        // else we clash with other users CRM-7059
-        if ( ! empty( $this->_key ) ) {
-            require_once 'CRM/Core/BAO/Cache.php';
-            CRM_Core_Session::registerAndRetrieveSessionObjects( array( "_{$name}_container",
-                                                                        array( 'CiviCRM', $this->_scope ) ) );
-        }
+        require_once 'CRM/Core/BAO/Cache.php';
+        CRM_Core_Session::registerAndRetrieveSessionObjects( array( "_{$name}_container",
+                                                                    array( 'CiviCRM', $this->_scope ) ) );
         
         $this->HTML_QuickForm_Controller( $name, $modal );
 
@@ -211,12 +207,11 @@ class CRM_Core_Controller extends HTML_QuickForm_Controller {
         require_once 'CRM/Utils/Request.php';
 
         // also retrieve and store destination in session
-        $this->_destination = CRM_Utils_Request::retrieve( 'civicrmDestination', 'String', $this,
+        $this->_destination = CRM_Utils_Request::retrieve( 'destination', 'String', $this,
                                                            false, null, $_REQUEST );
     }
 
     function fini( ) {
-        require_once 'CRM/Core/BAO/Cache.php';
         CRM_Core_BAO_Cache::storeSessionToCache( array( "_{$this->_name}_container",
                                                         array( 'CiviCRM', $this->_scope ) ),
                                                  true );
@@ -384,14 +379,7 @@ class CRM_Core_Controller extends HTML_QuickForm_Controller {
             } else {
                 $formName = CRM_Utils_String::getClassName( $name );
             }
-            
-            require_once 'CRM/Core/Extensions.php';
-            $ext = new CRM_Core_Extensions( );
-            if ( $ext->isExtensionClass( $className) ) {
-                require_once( $ext->classToPath( $className ) );
-            } else {
-                require_once(str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php');
-            }
+            require_once(str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php');
             $$stateName = new $className( $stateMachine->find( $className ), $action, 'post', $formName );
             if ( $title ) {
                 $$stateName->setTitle( $title );
@@ -669,7 +657,7 @@ class CRM_Core_Controller extends HTML_QuickForm_Controller {
         }
 
         require_once 'CRM/Core/QuickForm/Action/Upload.php';
-        $action = new CRM_Core_QuickForm_Action_Upload ( $this->_stateMachine,
+        $action =& new CRM_Core_QuickForm_Action_Upload ( $this->_stateMachine,
                                                           $uploadDir,
                                                           $uploadNames );
         $this->addAction('upload' , $action );
@@ -698,7 +686,7 @@ class CRM_Core_Controller extends HTML_QuickForm_Controller {
         }
         
         $this->_destination = $url;
-        $this->set( 'civicrmDestination', $this->_destination );
+        $this->set( 'destination', $this->_destination );
     }
 
 

@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.4                                                |
+| CiviCRM version 3.1                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,7 +79,7 @@ class CRM_Price_DAO_Field extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = true;
+    static $_log = false;
     /**
      * Price Field
      *
@@ -181,6 +181,12 @@ class CRM_Price_DAO_Field extends CRM_Core_DAO
      * @var int unsigned
      */
     public $visibility_id;
+    /**
+     * Number of Participants Per field
+     *
+     * @var int unsigned
+     */
+    public $count;
     /**
      * class constructor
      *
@@ -318,6 +324,12 @@ class CRM_Price_DAO_Field extends CRM_Core_DAO
                     'name' => 'visibility_id',
                     'type' => CRM_Utils_Type::T_INT,
                     'default' => '',
+                ) ,
+                'count' => array(
+                    'name' => 'count',
+                    'type' => CRM_Utils_Type::T_INT,
+                    'title' => ts('Count') ,
+                    'default' => 'UL',
                 ) ,
             );
         }

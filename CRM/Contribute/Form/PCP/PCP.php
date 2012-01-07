@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -54,64 +54,46 @@ class CRM_Contribute_Form_PCP_PCP extends CRM_Core_Form
         if ( $this->_action & CRM_Core_Action::DELETE ) {
             //check permission for action.
             if ( !CRM_Core_Permission::checkActionPermission( 'CiviContribute', $this->_action ) ) {
-                CRM_Core_Error::fatal( ts( 'You do not have permission to access this page' ) );
+                CRM_Core_Error::fatal( ts( 'You do not have permission to access this page' ) );  
             }
             
             $this->_id    = CRM_Utils_Request::retrieve( 'id', 'Positive', $this );
             $this->_title = CRM_Core_DAO::getFieldValue( 'CRM_Contribute_DAO_PCP', $this->_id, 'title' );
-            $this->assign( 'title', $this->_title );
+            $this->assign('title', $this->_title);
             parent::preProcess( );
         }
         
         if ( ! $this->_action ) {
-            $this->_action  = CRM_Utils_Array::value( 'action', $_GET );
-            $this->_id      = CRM_Utils_Array::value( 'id', $_GET );
-        } else {
-            $this->_id = CRM_Utils_Request::retrieve( 'id', 'Positive', $this );
-        }
-
-        $session = CRM_Core_Session::singleton( );
-        $context = $session->popUserContext();
-        $userID  = $session->get('userID');
-
-        //do not allow destructive actions without permissions
-        $permission = false;
-        if ( CRM_Core_Permission::check( 'administer CiviCRM' ) ||
-             ( $userID && ( CRM_Core_DAO::getFieldValue( 'CRM_Contribute_DAO_PCP', 
-                                                         $this->_id , 
-                                                         'contact_id') == $userID ) ) ) {
-            $permission = true;
-        }
-        if ( $permission && $this->_id ) {
-
-            require_once 'CRM/Contribute/BAO/PCP.php';
-            $this->_title = CRM_Core_DAO::getFieldValue( 'CRM_Contribute_DAO_PCP', $this->_id, 'title' );
-            switch ( $this->_action ) {
-
-            case CRM_Core_Action::DELETE :
-            case 'delete' :
-                CRM_Contribute_BAO_PCP::delete( $this->_id );
-                CRM_Core_Session::setStatus( ts("The Campaign Page '%1' has been deleted.", array( 1 => $this->_title ) ) );
-                break;
-                
-            case CRM_Core_Action::DISABLE :
-            case 'disable' :
-                CRM_Contribute_BAO_PCP::setDisable( $this->_id, '0' );
-                CRM_Core_Session::setStatus( ts("The Campaign Page '%1' has been disabled.", array( 1 => $this->_title ) ) );
-                break;
-                
-            case CRM_Core_Action::ENABLE :
-            case 'enable' :
-                CRM_Contribute_BAO_PCP::setDisable( $this->_id, '1' );
-                CRM_Core_Session::setStatus( ts("The Campaign Page '%1' has been enabled.", array( 1 => $this->_title ) ) );
-                break;
+            $action  = CRM_Utils_Array::value( 'action', $_GET );
+            $id      = CRM_Utils_Array::value( 'id', $_GET );
+            $session = CRM_Core_Session::singleton( );
+            $userID  = $session->get('userID');
+            //do not allow destructive actions without permissions
+            $permission = false;
+            if ( CRM_Core_Permission::check( 'administer CiviCRM' ) ||
+                 ( $userID && (CRM_Core_DAO::getFieldValue('CRM_Contribute_DAO_PCP', $id , 'contact_id') == $userID ) ) ) {
+                $permission = true;
             }
-            
-            if ( $context ) {
-                CRM_Utils_System::redirect( $context );
+            if ( $permission ) {
+                require_once 'CRM/Contribute/BAO/PCP.php';
+                switch ( $action ) {
+                case 'delete':
+                    $title = CRM_Core_DAO::getFieldValue( 'CRM_Contribute_DAO_PCP', $id, 'title' );
+                    CRM_Contribute_BAO_PCP::delete( $id );
+                    CRM_Core_Session::setStatus( ts("The Campaign Page '%1' has been deleted.", array(1 => $title)) );
+                    break;
+                    
+                case 'disable':
+                    CRM_Contribute_BAO_PCP::setDisable( $id, '0' );
+                    break;
+                    
+                case 'enable':
+                    CRM_Contribute_BAO_PCP::setDisable( $id, '1' );
+                    break;
+                }
             }
+            CRM_Utils_System::redirect( $session->popUserContext() );
         }
-        
     }
     
     /**
@@ -139,7 +121,7 @@ class CRM_Contribute_Form_PCP_PCP extends CRM_Core_Form
      */
     public function buildQuickForm()
     {
-        if ( $this->_action & CRM_Core_Action::DELETE ) {
+        if ($this->_action & CRM_Core_Action::DELETE ) {
             $this->addButtons( array(
                                      array ( 'type'      => 'next',
                                              'name'      => ts('Delete Campaign'),
@@ -151,11 +133,15 @@ class CRM_Contribute_Form_PCP_PCP extends CRM_Core_Form
             
         } else {      
             require_once 'CRM/Contribute/PseudoConstant.php';
-            $status       = array( '' => ts('- select -') ) + CRM_Contribute_PseudoConstant::pcpstatus( );            
-            $contribPages = array( '' => ts('- select -') ) + CRM_Contribute_PseudoConstant::contributionPage( );
+            $status            = array_merge( 
+                                             array( ts('- select -') ), 
+                                             CRM_Contribute_PseudoConstant::pcpstatus( ));
+            $contribution_page = array_merge(
+                                             array( ts('- select -') ),
+                                             CRM_Contribute_PseudoConstant::contributionPage( ));
             
-            $this->addElement( 'select', 'status_id', ts('Status'), $status );
-            $this->addElement( 'select', 'contibution_page_id', ts('Contribution Page'), $contribPages );
+            $this->addElement('select', 'status_id', ts('Status'), $status );
+            $this->addElement('select', 'contibution_page_id', ts('Contribution Page'), $contribution_page );
             $this->addButtons( array( 
                                      array ( 'type'      => 'refresh',
                                              'name'      => ts('Search'), 
@@ -176,8 +162,7 @@ class CRM_Contribute_Form_PCP_PCP extends CRM_Core_Form
      * @static
      * @access public
      */
-    static function formRule( $fields, $files, $form )
-    {
+    static function formRule( $fields, $files, $form ) {
     }
 
     /**

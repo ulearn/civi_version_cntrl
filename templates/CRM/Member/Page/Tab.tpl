@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -49,7 +49,7 @@
         <div class="action-link">
             <a accesskey="N" href="{$newURL}" class="button"><span><div class="icon add-icon"></div>{ts}Add Membership{/ts}</span></a>
             {if $accessContribution and $newCredit}
-                <a accesskey="N" href="{$newCreditURL}" class="button"><span><div class="icon add-icon"></div>{ts}Submit Credit Card Membership{/ts}</span></a><br /><br />
+                <a accesskey="N" href="{$newCreditURL}" class="button"><span>{ts}Submit Credit Card Membership{/ts}</span></a><br /><br />
             {else}
                 <br/ ><br/ >
             {/if}
@@ -74,7 +74,6 @@
                 <th>{ts}End Date{/ts}</th>
                 <th>{ts}Status{/ts}</th>
                 <th>{ts}Source{/ts}</th>
-                <th>{ts}Auto-renew{/ts}</th>
                 <th></th>
             </tr>
             </thead>
@@ -88,8 +87,7 @@
                 <td class="crm-membership-end_date">{$activeMember.end_date|crmDate}</td>
                 <td class="crm-membership-status">{$activeMember.status}</td>
                 <td class="crm-membership-source">{$activeMember.source}</td>
-                <td class="crm-membership-auto_renew">{if $activeMember.auto_renew}<img src="{$config->resourceBase}/i/check.gif" alt="{ts}Auto-renew{/ts}" /> {/if}</td>
-		<td>
+                <td>
                     {$activeMember.action|replace:'xx':$activeMember.id}
                     {if $activeMember.owner_membership_id}
                         &nbsp;|&nbsp;<a href="{crmURL p='civicrm/membership/view' q="reset=1&id=`$activeMember.owner_membership_id`&action=view&context=membership&selectedChild=member"}" title="{ts}View Primary member record{/ts}">{ts}View Primary{/ts}</a>
@@ -115,27 +113,17 @@
                 <th>{ts}End Date{/ts}</th>
                 <th>{ts}Status{/ts}</th>
                 <th>{ts}Source{/ts}</th>
-                <th>{ts}Auto-renew{/ts}</th>
-		<th></th>
+                <th></th>
             </tr>
             </thead>
             {foreach from=$inActiveMembers item=inActiveMember}
             <tr id="crm-membership_{$inActiveMember.id}" class="{cycle values="odd-row,even-row"} {$inActiveMember.class} crm-membership">
-                <td class="crm-membership-membership_type">{$inActiveMember.membership_type}
-		    {if $inActiveMember.owner_membership_id}<br />({ts}by relationship{/ts}){/if}
-		</td>
+                <td class="crm-membership-membership_type">{$inActiveMember.membership_type}</td>
                 <td class="crm-membership-start_date">{$inActiveMember.start_date|crmDate}</td>
                 <td class="crm-membership-end_date">{$inActiveMember.end_date|crmDate}</td>
                 <td class="crm-membership-status">{$inActiveMember.status}</td>
                 <td class="crm-membership-source">{$inActiveMember.source}</td>
-                <td class="crm-membership-auto_renew">{if $inActiveMember.auto_renew}<img src="{$config->resourceBase}/i/check.gif" alt="{ts}Auto-renew{/ts}" /> {/if}</td>
-		<td>{$inActiveMember.action|replace:'xx':$inActiveMember.id}
-		    {if $inActiveMember.owner_membership_id}
-                        &nbsp;|&nbsp;
-			<a href="{crmURL p='civicrm/membership/view' q="reset=1&id=`$inActiveMember.owner_membership_id`&action=view&context=membership&selectedChild=member"}" title="{ts}View Primary member record{/ts}">{ts}View Primary{/ts}
-			</a>
-                    {/if}
-		</td>
+                <td>{$inActiveMember.action|replace:'xx':$inActiveMember.id}</td>
             </tr>
             {/foreach}
         </table>

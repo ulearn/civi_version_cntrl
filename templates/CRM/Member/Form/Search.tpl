@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -65,7 +65,7 @@
 	           </div>
 	
 	       {* This section displays the rows along and includes the paging controls *}
-	           <div id ="memberSearch" class="crm-search-results">
+	           <div class="crm-search-results">
 	       		{include file="CRM/Member/Form/Selector.tpl" context="Search"}
 	       		</div>
 	    {* END Actions/Results section *}

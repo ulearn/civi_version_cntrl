@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -167,6 +167,16 @@ ORDER BY title";
     }
     
     static function formRule( $fields ) {
+        $groups = CRM_Mailing_Event_BAO_Subscribe::getContactGroups($fields['email']);
+        foreach ( $fields as $name => $dontCare ) {
+            if ( substr( $name, 0, CRM_Core_Form::CB_PREFIX_LEN ) == CRM_Core_Form::CB_PREFIX ) {
+                $gid = substr( $name, CRM_Core_Form::CB_PREFIX_LEN );
+                if ( array_key_exists( $gid, $groups ) ) {
+                    $errors[$name] = ts('You are already subscribed in %1, your subscription is %2.', array(1 => $groups[$gid]['title'], 2 => $groups[$gid]['status']));
+                }
+            }
+        }
+            
         if ( $errors ) {
             return $errors;
         } else {

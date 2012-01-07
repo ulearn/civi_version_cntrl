@@ -557,14 +557,13 @@ class DB_DataObject extends DB_DataObject_Overload
             $_DB_DATAOBJECT['RESULTFIELDS'][$this->_DB_resultid]= array_flip(array_keys($array));
         }
         
-        $keys = str_replace(array("."," "), "_", array_keys($array));
-        $i = 0; 
-        foreach($array as $val) {
-            $key = $keys[$i++]; 
+        foreach($array as $k=>$v) {
+            $kk = str_replace(".", "_", $k);
+            $kk = str_replace(" ", "_", $kk);
             if (!empty($_DB_DATAOBJECT['CONFIG']['debug'])) {
-                $this->debug("$key = ". $val, "fetchrow LINE", 3);
+                $this->debug("$kk = ". $array[$k], "fetchrow LINE", 3);
             }
-            $this->$key = $val;
+            $this->$kk = $array[$k];
         }
         
         // set link flag
@@ -658,16 +657,6 @@ class DB_DataObject extends DB_DataObject_Overload
         $this->_query['order_by'] .= " , {$order}";
     }
 
-    /*
-     * Return affected rows for current connection.
-     * Override the mysql affectedRows w/ db object. 
-     */
-    function affectedRows( ) {
-        global $_DB_DATAOBJECT;
-        $DB = &$_DB_DATAOBJECT['CONNECTIONS'][$this->_database_dsn_md5];
-        return $DB->affectedRows( );
-    }
-    
     /**
      * Adds a group by condition
      *
@@ -1254,7 +1243,7 @@ class DB_DataObject extends DB_DataObject_Overload
             }
             
             // special values ... at least null is handled...
-            if (!isset($options['disable_null_strings']) && is_string($this->$k) && (strtolower($this->$k) === 'null') && !($v & DB_DATAOBJECT_NOTNULL)) {
+            if (!isset($options['disable_null_strings']) && (strtolower($this->$k) === 'null') && !($v & DB_DATAOBJECT_NOTNULL)) {
                 $settings .= "$kSql = NULL ";
                 continue;
             }
@@ -1491,14 +1480,12 @@ class DB_DataObject extends DB_DataObject_Overload
             return false;
         }
 
-        $keys = str_replace(array("."," "), "_", array_keys($array));
-        $i = 0; 
-        foreach($array as $val) {
-            $key = $keys[$i++]; 
+        foreach($array as $k => $v) {
+            $kk = str_replace(".", "_", $k);
             if (!empty($_DB_DATAOBJECT['CONFIG']['debug'])) {
-                $this->debug("$key = ". $val, "fetchrow LINE", 3);
+                $this->debug("$kk = ". $array[$k], "fetchrow LINE", 3);
             }
-            $this->$key = $val;
+            $this->$kk = $array[$k];
         }
 
         if (!empty($_DB_DATAOBJECT['CONFIG']['debug'])) {
@@ -2488,10 +2475,7 @@ class DB_DataObject extends DB_DataObject_Overload
         }
         if (is_object($result)) {
             // lets hope that copying the result object is OK!
-            // fix notices in unit test.
-            if ( !CRM_Utils_Array::value( 'RESULTSEQ', $GLOBALS['_DB_DATAOBJECT'] ) ) {
-                $GLOBALS['_DB_DATAOBJECT']['RESULTSEQ'] = 1;
-            }
+            
             $_DB_resultid  = $GLOBALS['_DB_DATAOBJECT']['RESULTSEQ']++;
             $_DB_DATAOBJECT['RESULTS'][$_DB_resultid] = $result; 
             $this->_DB_resultid = $_DB_resultid;
@@ -2578,14 +2562,13 @@ class DB_DataObject extends DB_DataObject_Overload
                 continue;
             }
             
-            if (!isset($options['disable_null_strings']) && is_string($this->$k) && (strtolower($this->$k) === 'null') && !($v & DB_DATAOBJECT_NOTNULL)) {
+            if (!isset($options['disable_null_strings']) &&  (strtolower($this->$k) === 'null') && !($v & DB_DATAOBJECT_NOTNULL)) {
                 $this->whereAdd(" $kSql  IS NULL");
                 continue;
             }
             
 
-            if ($v & DB_DATAOBJECT_STR ||
-                $v & DB_DATAOBJECT_TXT) {
+            if ($v & DB_DATAOBJECT_STR) {
                 $this->whereAdd(" $kSql  = " . $this->_quote((string) (
                         ($v & DB_DATAOBJECT_BOOL) ? 
                             // this is thanks to the braindead idea of postgres to 

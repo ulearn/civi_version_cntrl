@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -44,18 +44,11 @@ class CRM_Bridge_OG_Utils {
         return self::aclEnabled;
     }
 
-    /**
-     * Switch to stop synchronization from CiviCRM
-     * This was always false before, and is always true
-     * now.  Most likely, this needs to be a setting.
-     */
     static function syncFromCiviCRM( ) {
         // make sure that acls are not enabled
-        //RMT -- the following makes no f**king sense...
-        //return ! self::aclEnabled & self::syncFromCiviCRM;
-        return TRUE;
+        return ! self::aclEnabled & self::syncFromCiviCRM;
     }
-
+    
     static function ogSyncName( $ogID ) {
         return "OG Sync Group :{$ogID}:";
     }
@@ -82,21 +75,19 @@ class CRM_Bridge_OG_Utils {
     }
 
     static function contactID( $ufID ) {
-        require_once 'api/v2/UFGroup.php';
-        $contactID = civicrm_uf_match_id_get( $ufID );
+        require_once 'api/UFGroup.php';
+        $contactID = crm_uf_get_match_id( $ufID );
         if ( $contactID ) {
             return $contactID;
         }
 
         // else create a contact for this user
         $user = user_load( array( 'uid' => $ufID ) );
-        $params = array(
-            'contact_type' => 'Individual',
-            'email'        => $user->mail,
-            'version'      => 3,
-        );
+        $params = array( 'contact_type' => 'Individual',
+                         'email'        => $user->mail, );
 
-        $values = civicrm_api('contact', 'create', $params );
+        require_once 'api/v2/Contact.php';
+        $values = civicrm_contact_add( $params );
         if ( $values['is_error'] ) {
             CRM_Core_Error::fatal( );
         }
@@ -114,7 +105,7 @@ SELECT id
             $query .= " OR title = %2";
             $params[2] = array( $title, 'String' );
         }
-
+                         
         $groupID = CRM_Core_DAO::singleValueQuery( $query, $params );
         if ( $abort &&
              ! $groupID ) {
@@ -126,3 +117,5 @@ SELECT id
 
 
 }
+
+

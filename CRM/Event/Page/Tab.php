@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -99,12 +99,9 @@ class CRM_Event_Page_Tab extends CRM_Core_Page
         if ( $mode == 'test' || $mode == 'live' ) {
             CRM_Utils_System::redirectToSSL( );
         }
-        
-        if( $this->_action != CRM_Core_Action::ADD ) {
-            // get associated contributions only on edit/delete
-            $this->associatedContribution( );
-        }
-        
+
+        // build associated contributions
+        $this->associatedContribution( );
         $controller = new CRM_Core_Controller_Simple( 'CRM_Event_Form_Participant', 
                                                        'Create Participation', 
                                                        $this->_action );
@@ -183,19 +180,14 @@ class CRM_Event_Page_Tab extends CRM_Core_Page
     }
     
     function setContext( ) 
-    { 
+    {
         $context      = CRM_Utils_Request::retrieve( 'context'     ,
                                                      'String', $this, false, 'search' );
-        $compContext  = CRM_Utils_Request::retrieve( 'compContext'     ,
-                                                     'String', $this );
-       
+        
         $qfKey = CRM_Utils_Request::retrieve( 'key', 'String', $this );
-
         //validate the qfKey
         require_once 'CRM/Utils/Rule.php';
-        if ( !CRM_Utils_Rule::qfKey( $qfKey ) ) {
-            $qfKey = null;
-        }
+        if ( !CRM_Utils_Rule::qfKey( $qfKey ) ) $qfKey = null;
         
         switch ( $context ) {
             
@@ -205,16 +197,10 @@ class CRM_Event_Page_Tab extends CRM_Core_Page
             
         case 'search':
             $urlParams = 'force=1';
-            if ( $qfKey ) {
-                $urlParams .= "&qfKey=$qfKey";
-            }
+            if ( $qfKey ) $urlParams .= "&qfKey=$qfKey";
             $this->assign( 'searchKey',  $qfKey );
-
-            if ( $compContext == 'advanced' ) {
-                $url = CRM_Utils_System::url( 'civicrm/contact/search/advanced', $urlParams );
-            } else {
-                $url = CRM_Utils_System::url( 'civicrm/event/search', $urlParams );
-            }
+            
+            $url = CRM_Utils_System::url( 'civicrm/event/search', $urlParams );
             break;
             
         case 'user':

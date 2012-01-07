@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -94,7 +94,7 @@ class CRM_Contribute_Form_Task extends CRM_Core_Form
     {
         $form->_contributionIds = array();
 
-        $values = $form->controller->exportValues( $form->get( 'searchFormName' ) );
+        $values = $form->controller->exportValues( 'Search' );
 
         $form->_task = $values['task'];
         $contributeTasks = CRM_Contribute_Task::tasks();
@@ -111,7 +111,6 @@ class CRM_Contribute_Form_Task extends CRM_Core_Form
             $queryParams =  $form->get( 'queryParams' );
             $query       = new CRM_Contact_BAO_Query( $queryParams, null, null, false, false, 
                                                        CRM_Contact_BAO_Query::MODE_CONTRIBUTE);
-            $query->_distinctComponentClause = " DISTINCT(civicrm_contribution.id)";
             $result = $query->searchQuery(0, 0, null);
             while ($result->fetch()) {
                 $ids[] = $result->contribution_id;
@@ -136,14 +135,8 @@ class CRM_Contribute_Form_Task extends CRM_Core_Form
         require_once 'CRM/Utils/Rule.php';
         $urlParams = 'force=1';
         if ( CRM_Utils_Rule::qfKey( $qfKey ) ) $urlParams .= "&qfKey=$qfKey";
-
-        $searchFormName = strtolower( $form->get( 'searchFormName' ) );
-        if ( $searchFormName == 'search' ) {
-            $session->replaceUserContext( CRM_Utils_System::url( 'civicrm/contribute/search', $urlParams ) );
-        } else {
-            $session->replaceUserContext( CRM_Utils_System::url( "civicrm/contact/search/$searchFormName",
-                                                                 $urlParams ) );
-        }
+        
+        $session->replaceUserContext( CRM_Utils_System::url( 'civicrm/contribute/search', $urlParams ) );
     }
 
     /**

@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -60,18 +60,16 @@
         {/strip}
 
         {if $action ne 1 and $action ne 2}
-        <div class="action-link">
-          <a href="{crmURL q="action=add&reset=1&pp=PayPal"}" id="newPaymentProcessor" class="button"><span><div class="icon add-icon"></div>{ts}Add Payment Processor{/ts}</span></a>
+	    <div class="action-link">
+    	<a href="{crmURL q="action=add&reset=1&pp=PayPal"}" id="newPaymentProcessor" class="button"><span><div class="icon add-icon"></div>{ts}Add Payment Processor{/ts}</span></a>
         </div>
         {/if}
 </div>
 {elseif $action ne 1}
     <div class="messages status">
       <div class="icon inform-icon"></div>
-        {ts}There are no Payment Processors entered.{/ts}
+        {capture assign=crmURL}{crmURL p='civicrm/admin/paymentProcessor' q="action=add&reset=1&pp=PayPal"}{/capture}
+      {ts 1=$crmURL}There are no Payment Processors entered. You can <a href='%1'>add one</a>.{/ts}
      </div>    
-     <div class="action-link">
-       <a href="{crmURL p='civicrm/admin/paymentProcessor' q="action=add&reset=1&pp=PayPal"}" id="newPaymentProcessor" class="button"><span><div class="icon add-icon"></div>{ts}Add Payment Processor{/ts}</span></a>
-     </div>
 {/if}
 {/if}

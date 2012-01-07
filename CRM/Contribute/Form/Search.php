@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -145,8 +145,6 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form
      */ 
     function preProcess( ) 
     {
-        $this->set( 'searchFormName', 'Search' );
-
         /** 
          * set the button names 
          */ 
@@ -201,11 +199,11 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form
         require_once 'CRM/Contact/BAO/Query.php';
         $this->_queryParams =& CRM_Contact_BAO_Query::convertFormValues( $this->_formValues );
         $selector = new CRM_Contribute_Selector_Search( $this->_queryParams,
-                                                        $this->_action,
-                                                        null,
-                                                        $this->_single,
-                                                        $this->_limit,
-                                                        $this->_context ); 
+                                                         $this->_action,
+                                                         null,
+                                                         $this->_single,
+                                                         $this->_limit,
+                                                         $this->_context ); 
         $prefix = null;
         if ( $this->_context == 'user' ) {
             $prefix = $this->_prefix;
@@ -263,7 +261,7 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form
                 foreach ($rows as $row) { 
                     $this->addElement( 'checkbox', $row['checkbox'], 
                                        null, null, 
-                                       array( 'onclick' => "toggleTaskAction( true ); return checkSelectedBox('" . $row['checkbox'] . "');" )
+                                       array( 'onclick' => "toggleTaskAction( true ); return checkSelectedBox('" . $row['checkbox'] . "', '" . $this->getName() . "');" )
                                        ); 
                 }
             }
@@ -399,7 +397,7 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form
         if ( $this->_context == 'user' ) {
             $query->setSkipPermission( true );
         }
-        $summary =& $query->summaryContribution( $this->_context );
+        $summary =& $query->summaryContribution( );
         $this->set( 'summary', $summary );
         $this->assign( 'contributionSummary', $summary );
         $controller->run(); 
@@ -468,13 +466,6 @@ class CRM_Contribute_Form_Search extends CRM_Core_Form
             $this->_formValues['contribution_recur_id']  = $recur;
             $this->_formValues['contribution_recurring'] = 1;
         }
-        
-        //check for contribution page id.
-        $contribPageId = CRM_Utils_Request::retrieve( 'pid', 'Positive', $this );
-        if ( $contribPageId ) $this->_formValues['contribution_page_id'] = $contribPageId;
-    
-        //give values to default.
-        $this->_defaults = $this->_formValues;
     }
     
     /**

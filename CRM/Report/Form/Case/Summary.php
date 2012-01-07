@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -55,9 +55,8 @@ class CRM_Report_Form_Case_Summary extends CRM_Report_Form {
             array( 'civicrm_c2' =>
                    array( 'dao'       => 'CRM_Contact_DAO_Contact',
                           'fields'    =>
-                          array( 'client_name'           => 
-                                 array( 'name'      => 'sort_name',
-                                        'title'     => ts('Client'),
+                          array( 'display_name'           => 
+                                 array( 'title' => ts('Client'),
                                         'required'  => true, ),
                                 ),
                         ),
@@ -78,11 +77,9 @@ class CRM_Report_Form_Case_Summary extends CRM_Report_Form {
                           'filters'   =>  
                           array( 'start_date' => array( 'title' => ts( 'Start Date' ),
                                                         'operatorType' => CRM_Report_Form::OP_DATE,
-                                                        'type'         => CRM_Utils_Type::T_DATE
                                                       ),
                                  'end_date' => array( 'title' => ts( 'End Date' ),
-                                                      'operatorType' => CRM_Report_Form::OP_DATE,
-                                                      'type'         => CRM_Utils_Type::T_DATE
+                                                        'operatorType' => CRM_Report_Form::OP_DATE,
                                                       ),
                                  'status_id' => array( 'title' => ts( 'Status' ),
                                                         'operatorType' => CRM_Report_Form::OP_MULTISELECT,
@@ -219,8 +216,7 @@ inner join civicrm_contact $c2 on ${c2}.id=${ccc}.contact_id
                         $from     = CRM_Utils_Array::value( "{$fieldName}_from"    , $this->_params );
                         $to       = CRM_Utils_Array::value( "{$fieldName}_to"      , $this->_params );
                         
-                        $clause = $this->dateClause( $field['dbAlias'], $relative, $from, $to ,
-                                                     CRM_Utils_Array::value( 'type',  $field ));
+                        $clause = $this->dateClause( $field['dbAlias'], $relative, $from, $to );
                     } else {
 
                       $op = CRM_Utils_Array::value( "{$fieldName}_op", $this->_params );

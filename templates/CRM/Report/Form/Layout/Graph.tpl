@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,10 +23,10 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-{assign var=uploadURL value=$config->imageUploadURL|replace:'/persist/contribute/':'/persist/'|cat:'openFlashChart/'}
+{assign var=chartId value=$chartType|cat:"_$instanceId"}
+{assign var=uploadURL value=$config->imageUploadURL|replace:'persist/contribute':'upload/openFlashChart'}
 {* Display weekly,Quarterly,monthly and yearly contributions using pChart (Bar and Pie) *}
 {if $chartEnabled and $chartSupported}
-<div class='crm-flashchart'>
 <table class="chart">
         <tr>
             <td>
@@ -38,11 +38,9 @@
             </td>
         </tr>
 </table>
-</div>
 
-{if !$printOnly} {* NO print section starts *}
 {if !$section}
-        {include file="CRM/common/openFlashChart.tpl" divId="open_flash_chart_$uniqueId"}
+        {include file="CRM/common/openFlashChart.tpl"}
 {/if}
 
 {literal}
@@ -52,7 +50,7 @@
       
       var resourceURL = "{/literal}{$config->userFrameworkResourceURL}{literal}";
       var uploadURL   = "{/literal}{$uploadURL|cat:$chartId}{literal}.png";
-      var uploadDir   = "{/literal}{$config->imageUploadDir|replace:'/persist/contribute/':'/persist/'|cat:'openFlashChart/'}{literal}"; 
+      var uploadDir   = "{/literal}{$config->uploadDir}openFlashChart/{literal}"; 
 
       cj("input[id$='submit_print'],input[id$='submit_pdf']").bind('click', function(){ 
         var url = resourceURL +'packages/OpenFlashChart/php-ofc-library/ofc_upload_image.php';  // image creator php file path
@@ -83,5 +81,4 @@
   }  
 </script>
 {/literal}
-{/if}
 {/if}

@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -26,7 +26,7 @@
 {* CiviCase -  build activity to a case*}
 <div id="fileOnCaseDialog"></div>
 
-{if !empty($buildCaseActivityForm)}
+{if $buildCaseActivityForm}
 <div class="crm-block crm-form-block crm-case-activitytocase-form-block">
 <table class="form-layout">
      <tr class="crm-case-activitytocase-form-block-unclosed_cases">
@@ -49,10 +49,7 @@
 </div>
 {literal}
 <script type="text/javascript">
-var target_contact = '';
-var target_contact_id = '';
-var selectedCaseId = '';
-var contactId = '';
+var target_contact = target_contact_id = selectedCaseId = contactId = '';
 
 var unclosedCaseUrl = {/literal}"{crmURL p='civicrm/case/ajax/unclosed' h=0 q='excludeCaseIds='}{$currentCaseId}"{literal};
 cj( "#unclosed_cases" ).autocomplete( unclosedCaseUrl, { width : 250, selectFirst : false, matchContains:true
@@ -87,9 +84,11 @@ if ( target_contact_id ) {
   eval( 'target_contact = ' + target_contact_id );
 }
 
+eval( 'tokenClass = { tokenList: "token-input-list-facebook", token: "token-input-token-facebook", tokenDelete: "token-input-delete-token-facebook", selectedToken: "token-input-selected-token-facebook", highlightedToken: "token-input-highlighted-token-facebook", dropdown: "token-input-dropdown-facebook", dropdownItem: "token-input-dropdown-item-facebook", dropdownItem2: "token-input-dropdown-item2-facebook", selectedDropdownItem: "token-input-selected-dropdown-item-facebook", inputToken: "token-input-input-token-facebook" } ');
+
 var tokenDataUrl  = "{/literal}{$tokenUrl}{literal}";
 var hintText = "{/literal}{ts}Type in a partial or complete name or email address of an existing contact.{/ts}{literal}";
-cj( "#target_contact_id" ).tokenInput(tokenDataUrl,{prePopulate: target_contact, theme: 'facebook', hintText: hintText });
+cj( "#target_contact_id" ).tokenInput(tokenDataUrl,{prePopulate: target_contact, classes: tokenClass, hintText: hintText });
 cj( 'ul.token-input-list-facebook, div.token-input-dropdown-facebook' ).css( 'width', '450px' );
 
 cj( "#fileOnCaseDialog" ).hide( );
@@ -119,10 +118,9 @@ function fileOnCase( action, activityID, currentCaseId ) {
     	             cj("#fileOnCaseDialog").show( ).html( content ).dialog({
 		             title       : dialogTitle,
 		             modal       : true,
-			     bgiframe    : true,
-	    	             width       : 600,
+			         bgiframe    : true,
+	    	         width       : 600,
 		             height      : 270,
-			     close       : function( event, ui ) { cj( "#unclosed_cases" ).unautocomplete( ); },
 		             overlay     : { opacity: 0.5, background: "black" },
 		             beforeclose : function( event, ui ) {
                                      cj(this).dialog("destroy");
@@ -135,22 +133,23 @@ function fileOnCase( action, activityID, currentCaseId ) {
 				var targetContactId = cj("#target_contact_id").val( );
 				
 			    if ( !cj("#unclosed_cases").val( )  ) {
-			       alert('{/literal}{ts escape="js"}Please select a case from the list{/ts}{literal}.');
+			       alert('{/literal}{ts}Please select a case from the list{/ts}{literal}.');
 				   return false;
 				}
 						
+				cj(this).dialog("close"); 
 				cj(this).dialog("destroy");
 									
 				var postUrl = {/literal}"{crmURL p='civicrm/ajax/activity/convert' h=0 }"{literal};
 			        cj.post( postUrl, { activityID: activityID, caseID: selectedCaseId, contactID: contactId, newSubject: subject, targetContactIds: targetContactId, mode: action, key: {/literal}"{crmKey name='civicrm/ajax/activity/convert'}"{literal} },
 					 function( values ) {
 					      if ( values.error_msg ) {
-                             alert( "{/literal}{ts escape='js'}Unable to file on case{/ts}{literal}.\n\n" + values.error_msg );
+                             alert( "{/literal}{ts}Unable to file on case{/ts}{literal}.\n\n" + values.error_msg );
 						     return false;
                           } else {
 					          var destUrl = {/literal}"{crmURL p='civicrm/contact/view/case' q='reset=1&action=view&id=' h=0 }"{literal}; 
 						      var context = '';
-						      {/literal}{if !empty($fulltext)}{literal}
+						      {/literal}{if $fulltext}{literal}
     						    context = '&context={/literal}{$fulltext}{literal}';
     						  {/literal}{/if}{literal}											     	 	                     
 						      var caseUrl = destUrl + selectedCaseId + '&cid=' + contactId + context;
@@ -160,35 +159,30 @@ function fileOnCase( action, activityID, currentCaseId ) {
 						      if ( action == 'file' ) {
 						      	 var curPath = document.location.href;
 						       	 if ( curPath.indexOf( 'civicrm/contact/view' ) != -1 ) { 
-                                    //hide current activity row.
-                                    cj( "#crm-activity_" + activityID ).hide( );
-							        var visibleRowCount = 0;
-							        cj('[id^="'+ 'crm-activity' +'"]::visible').each(function() {
-  							            visibleRowCount++;
-							        } );
-							        if ( visibleRowCount < 1 ) {
-							     	    reloadWindow = true;
-							        }  
-                                 } 
-                                 if ( ( curPath.indexOf( 'civicrm/contact/view/activity' ) != -1 ) ||
-                                      ( curPath.indexOf( 'civicrm/activity' ) != -1 ) ) {
-                                     redirectToCase = true; 
-                                 }
-                              }  
+							     //hide current activity row.
+ 							     cj( "#crm-activity_" + activityID ).hide( );
+							     var visibleRowCount = 0;
+							     cj('[id^="'+ 'crm-activity' +'"]::visible').each(function() {
+  							        visibleRowCount++;
+							     } );
+							     if ( visibleRowCount < 1 ) {
+							     	reloadWindow = true;
+							     }  
+							 } 
+							 if ( curPath.indexOf( 'civicrm/contact/view/activity' ) != -1 ) {
+							    redirectToCase = true; 
+							 }
+						      }  
 						     
 						      if ( redirectToCase ) {
-                                 window.location.href = caseUrl;
+						          window.location.href = caseUrl + selectedCaseId + '&cid=' + contactId + context;
 						      } else if ( reloadWindow ) { 
 						      	  window.location.reload( ); 
 						      } else {
 						          var activitySubject = cj("#case_activity_subject").val( );
-						          var statusMsg = '<a id="closeFileOnCaseStatusMsg" href="#"><div class="ui-icon ui-icon-close" style="float:left"></div></a> "' + activitySubject + '" has been filed to selected case: ' + cj("#unclosed_cases").val( ) + '. Click <a href="' + caseUrl + '">here</a> to view that case.';
-						          var context = {/literal}"{$context}"{literal};
-                                  if ( context ) {
-                                    context = '-' + context;
-                                  }
-                                  cj('#fileOnCaseStatusMsg' + context ).addClass('msgok').html( statusMsg ).show( );
-                                  cj("#closeFileOnCaseStatusMsg").click(function(){ cj('#fileOnCaseStatusMsg' + context ).fadeOut("slow");return false;}).focus( );
+						          var statusMsg = '<a id="closeFileOnCaseStatusMsg" href="#"><div class="icon close-icon"></div></a> "' + activitySubject + '" has been filed to selected case: ' + cj("#unclosed_cases").val( ) + '. Click <a href="' + caseUrl + '">here</a> to view that case.';
+						          cj('#fileOnCaseStatusMsg').addClass('msgok').html( statusMsg ).show( );
+                                  cj("#closeFileOnCaseStatusMsg").click(function(){ cj('#fileOnCaseStatusMsg').fadeOut("slow");return false;}).focus( );
                              }
    					      }
                     }

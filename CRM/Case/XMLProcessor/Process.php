@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -162,7 +162,7 @@ class CRM_Case_XMLProcessor_Process extends CRM_Case_XMLProcessor {
                 if ( $relationshipTypeID === false ) {
                     continue;
                 }
-                
+              
                 if ( !$isCaseManager ) {    
                     $result[$relationshipTypeID] = $relationshipTypeName;
                 } else if ( $relationshipTypeXML->manager ) {
@@ -176,12 +176,12 @@ class CRM_Case_XMLProcessor_Process extends CRM_Case_XMLProcessor {
     function createRelationships( $relationshipTypeName,
                                   &$params ) {
         $relationshipTypes =& $this->allRelationshipTypes( );
+
         // get the relationship id
         $relationshipTypeID = array_search( $relationshipTypeName,
                                             $relationshipTypes );
         if ( $relationshipTypeID === false ) {
-            CRM_Core_Error::fatal(ts('Relationship type %1, found in case configuration file, is not present in the database %2',
-                                  array(1 => $relationshipTypeName, 2 => $docLink)));
+            CRM_Core_Error::fatal( );
             return false;
         }
         
@@ -263,7 +263,6 @@ FROM   civicrm_activity a
 INNER JOIN civicrm_activity_target t ON t.activity_id = a.id
 WHERE  t.target_contact_id = %1
 AND    a.is_auto = 1
-AND    a.is_current_revision = 1
 ";
         $sqlParams = array( 1 => array( $params['clientID'], 'Integer' ) );
         CRM_Core_DAO::executeQuery( $query, $sqlParams );
@@ -273,19 +272,30 @@ AND    a.is_current_revision = 1
         $query = "
 SELECT     count(a.id)
 FROM       civicrm_activity a
+INNER JOIN civicrm_activity_target t ON t.activity_id = a.id
 INNER JOIN civicrm_case_activity ca on ca.activity_id = a.id
-WHERE      a.activity_type_id  = %1
-AND        ca.case_id = %2
+WHERE      t.target_contact_id = %1
+AND        a.activity_type_id  = %2
+AND       ca.case_id = %3
 AND        a.is_deleted = 0
 ";
 
-        $sqlParams   = array( 1 => array( $params['activityTypeID'], 'Integer' ),
-                              2 => array( $params['caseID']        , 'Integer' ) );
+        if( $this->_isMultiClient ) {
+            $client = $params['clientID'][0];
+        } else {
+            $client = $params['clientID'];
+        }
+
+
+
+        $sqlParams   = array( 1 => array( $client                  , 'Integer' ),
+                              2 => array( $params['activityTypeID'], 'Integer' ),
+                              3 => array( $params['caseID']        , 'Integer' ) );
         $count       = CRM_Core_DAO::singleValueQuery( $query, $sqlParams );
         
         // check for max instance
-        $caseType    = CRM_Case_BAO_Case::getCaseType( $params['caseID'], 'name' );
-        $maxInstance = self::getMaxInstance( $caseType, $params['activityTypeName'] );
+        $caseType    = CRM_Case_PseudoConstant::caseTypeName( $params['caseID'] );
+        $maxInstance = self::getMaxInstance( $caseType['name'], $params['activityTypeName'] );
 
         return $maxInstance ? ($count < $maxInstance ? false : true) : false;  
     }
@@ -471,17 +481,5 @@ AND        a.is_deleted = 0
     function getAllowMultipleCaseClients(  ) {
         $xml = $this->retrieve( "Settings" );
         return ( string ) $xml->AllowMultipleCaseClients ? 1 : 0;
-    }
-    
-
-    /**
-     * Retrieves NaturalActivityTypeSort setting
-     * 
-     * @return string 1 if natural, 0 if alphabetic
-     */      
-    function getNaturalActivityTypeSort(  ) {
-        $xml = $this->retrieve( "Settings" );
-        return ( string ) $xml->NaturalActivityTypeSort ? 1 : 0;
     }    
-    
 }

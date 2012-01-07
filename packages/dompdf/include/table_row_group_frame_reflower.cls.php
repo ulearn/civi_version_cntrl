@@ -28,16 +28,16 @@
  * the case, you can obtain a copy at http://www.php.net/license/3_0.txt.
  *
  * The latest version of DOMPDF might be available at:
- * http://www.dompdf.com/
+ * http://www.digitaljunkies.ca/dompdf
  *
- * @link http://www.dompdf.com/
+ * @link http://www.digitaljunkies.ca/dompdf
  * @copyright 2004 Benj Carson
  * @author Benj Carson <benjcarson@digitaljunkies.ca>
  * @package dompdf
-
+ * @version 0.5.1
  */
 
-/* $Id: table_row_group_frame_reflower.cls.php 357 2011-01-30 20:56:46Z fabien.menager $ */
+/* $Id: table_row_group_frame_reflower.cls.php,v 1.3 2006/07/07 21:31:04 benjcarson Exp $ */
 
 /**
  * Reflows table row groups (e.g. tbody tags)
@@ -51,7 +51,7 @@ class Table_Row_Group_Frame_Reflower extends Frame_Reflower {
     parent::__construct($frame);
   }
 
-  function reflow(Frame_Decorator $block = null) {
+  function reflow() {
     $page = $this->_frame->get_root();
 
     $style = $this->_frame->get_style();
@@ -64,18 +64,15 @@ class Table_Row_Group_Frame_Reflower extends Frame_Reflower {
     foreach ( $this->_frame->get_children() as $child) {
       // Bail if the page is full
       if ( $page->is_full() )
-        return;
+        break;
 
       $child->set_containing_block($cb["x"], $cb["y"], $cb["w"], $cb["h"]);
       $child->reflow();
 
       // Check if a split has occured
       $page->check_page_break($child);
-
+      
     }
-
-    if ( $page->is_full() )
-      return;
 
     $cellmap = $table->get_cellmap();
     $style->width = $cellmap->get_frame_width($this->_frame);
@@ -90,3 +87,4 @@ class Table_Row_Group_Frame_Reflower extends Frame_Reflower {
   }
 
 }
+?>

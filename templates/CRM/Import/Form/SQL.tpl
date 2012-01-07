@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,12 +24,13 @@
  +--------------------------------------------------------------------+
 *}
 <div class="crm-block crm-form-block crm-import_sql-form-block">
-  <h3>{ts}SQL Import{/ts}</h3>
+  <fieldset><legend>{ts}SQL Import{/ts}</legend>
     <table class="form-layout-compressed">
       <tr class ="crm-import_sql-form-block-sqlQuery">
          <td class="label">{$form.sqlQuery.label}</td>
          <td>{$form.sqlQuery.html}<br />
          <span class="description">{ts}SQL Query must be a SELECT query that returns one or more rows of data to be imported. Specify the database name(s) AND table name(s) in the query (e.g. "SELECT * FROM my_database.my_table WHERE date_entered BETWEEN '1999-01-01' AND '2000-07-31'").{/ts}</span></td>
     </tr>
-   </table>
+   <tabble>
+  </fieldset>
  </div>

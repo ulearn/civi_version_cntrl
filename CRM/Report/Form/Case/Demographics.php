@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -50,7 +50,7 @@ class CRM_Report_Form_Case_Demographics extends CRM_Report_Form {
             array( 'civicrm_contact' =>
                    array( 'dao'       => 'CRM_Contact_DAO_Contact',
                           'fields'    =>
-                          array( 'sort_name' => 
+                          array( 'display_name' => 
                                  array( 'title'     => ts( 'Contact Name' ),
                                         'required'  => true,
                                         'no_repeat' => true ),
@@ -264,7 +264,7 @@ where (cg.extends='Contact' OR cg.extends='Individual' OR cg.extends_entity_colu
         ";
             
 		foreach($this->_columns as $t => $c) {
-			if (substr($t, 0, 13) == 'civicrm_value' || substr($t, 0, 12) == 'custom_value') {
+			if (substr($t, 0, 13) == 'civicrm_value') {
                 $this->_from .= " LEFT JOIN $t {$this->_aliases[$t]} ON {$this->_aliases[$t]}.entity_id = ";
                 $this->_from .= ($c['ext'] == 'Activity') ? "{$this->_aliases['civicrm_activity']}.id" : "{$this->_aliases['civicrm_contact']}.id";
 			}
@@ -327,11 +327,12 @@ where (cg.extends='Contact' OR cg.extends='Individual' OR cg.extends_entity_colu
             }
         }
         
-        $clauses[] = "(({$this->_aliases['civicrm_case']}.is_deleted = 0) OR ({$this->_aliases['civicrm_case']}.is_deleted Is Null))";
-        $clauses[] = "(({$this->_aliases['civicrm_activity']}.is_deleted = 0) OR ({$this->_aliases['civicrm_activity']}.is_deleted Is Null))";
-        $clauses[] = "(({$this->_aliases['civicrm_activity']}.is_current_revision = 1) OR ({$this->_aliases['civicrm_activity']}.is_deleted Is Null))";
-	
-        $this->_where = "WHERE " . implode( ' AND ', $clauses );
+        if ( empty( $clauses ) ) {
+            $this->_where = "WHERE ( 1 ) ";
+        } else {
+             
+            $this->_where = "WHERE " . implode( ' AND ', $clauses );
+        }
         
     }
 
@@ -339,10 +340,6 @@ where (cg.extends='Contact' OR cg.extends='Individual' OR cg.extends_entity_colu
         $this->_groupBy = "GROUP BY {$this->_aliases['civicrm_contact']}.id, {$this->_aliases['civicrm_case']}.id";
     }
     
-    function orderBy( ) {
-        $this->_orderBy = "ORDER BY {$this->_aliases['civicrm_contact']}.sort_name, {$this->_aliases['civicrm_contact']}.id, {$this->_aliases['civicrm_case']}.id";
-    }
-
     function postProcess( ) {
 
         $this->beginPostProcess( );
@@ -363,13 +360,13 @@ where (cg.extends='Contact' OR cg.extends='Individual' OR cg.extends_entity_colu
         foreach ( $rows as $rowNum => $row ) {
             // make count columns point to detail report
             // convert display name to links
-            if ( array_key_exists('civicrm_contact_sort_name', $row) && 
+            if ( array_key_exists('civicrm_contact_display_name', $row) && 
                  array_key_exists('civicrm_contact_id', $row) ) {
                 $url = CRM_Utils_System::url( 'civicrm/contact/view', 
                                               'reset=1&cid=' . $row['civicrm_contact_id'],
                                               $this->_absoluteUrl );
-                $rows[$rowNum]['civicrm_contact_sort_name_link' ] = $url;
-                $rows[$rowNum]['civicrm_contact_sort_name_hover'] = ts("View Contact details for this contact.");
+                $rows[$rowNum]['civicrm_contact_display_name_link' ] = $url;
+                $rows[$rowNum]['civicrm_contact_display_name_hover'] = ts("View Contact details for this contact.");
                 $entryFound = true;
             }
 
@@ -397,7 +394,7 @@ where (cg.extends='Contact' OR cg.extends='Individual' OR cg.extends_entity_colu
 
 			// handle custom fields
 			foreach($row as $k => $r) {
-				if (substr($k, 0, 13) == 'civicrm_value' || substr($k, 0, 12) == 'custom_value') {
+				if (substr($k, 0, 13) == 'civicrm_value') {
 					if ( $r || $r=='0' ) {
 						if ($newval = $this->getCustomFieldLabel( $k, $r )) {
 							$rows[$rowNum][$k] = $newval;

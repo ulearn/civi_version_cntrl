@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -66,10 +66,17 @@ class CRM_Contact_Form_Task_Label extends CRM_Contact_Form_Task
         CRM_Utils_System::setTitle( ts('Make Mailing Labels') );
 
         //add select for label
-        require_once "CRM/Core/BAO/LabelFormat.php";
-        $label = CRM_Core_BAO_LabelFormat::getList( true );
+        $label = array("5160" => "5160",
+                       "5161" => "5161",
+                       "5162" => "5162", 
+                       "5163" => "5163", 
+                       "5164" => "5164", 
+                       "8600" => "8600",
+                       "L7160" => "L7160",
+                       "L7161" => "L7161",
+                       "L7163" => "L7163");
         
-        $this->add('select', 'label_name', ts('Select Label'), array( '' => ts('- select label -')) + $label, true);
+        $this->add('select', 'label_id', ts('Select Label'), array( '' => ts('- select label -')) + $label, true);
 
         
         // add select for Location Type
@@ -97,9 +104,6 @@ class CRM_Contact_Form_Task_Label extends CRM_Contact_Form_Task
     function setDefaultValues()
     {
         $defaults = array();
-        require_once "CRM/Core/BAO/LabelFormat.php";
-        $format = CRM_Core_BAO_LabelFormat::getDefaultValues();
-        $defaults['label_name'] = $format['name'];
         $defaults['do_not_mail'] = 1;
         
         return $defaults;
@@ -349,7 +353,7 @@ class CRM_Contact_Form_Task_Label extends CRM_Contact_Form_Task
         }
 
         //call function to create labels
-        self::createLabel($rows, $fv['label_name']);
+        self::createLabel($rows, $fv['label_id']);
         CRM_Utils_System::civiExit( 1 );
     }
     
@@ -370,6 +374,8 @@ class CRM_Contact_Form_Task_Label extends CRM_Contact_Form_Task
         $pdf = new CRM_Utils_PDF_Label($format,'mm');
         $pdf->Open();
         $pdf->AddPage();
+        $pdf->AddFont('DejaVu Sans', '', 'DejaVuSans.php');
+        $pdf->SetFont('DejaVu Sans');
         
         //build contact string that needs to be printed
         $val = null;
@@ -442,14 +448,12 @@ class CRM_Contact_Form_Task_Label extends CRM_Contact_Form_Task
                 }
                 $family = trim (implode(" & ", $first_names) . " " . $last_name );		// collapse the tree to summarize
                 if ($count) {
-                    $processedNames .=  "\n" . $family;
+                    $rows[$data['ID']]['addressee_display'] .=  "\n" . trim( $family );
                 } else {
-                    $processedNames  = $family;	                            	// build display_name string
+                    $rows[$data['ID']]['addressee_display']  = trim( $family ); 		// build display_name string
                 }
                 $count++;
             }
-            $rows[$data['ID']]['addressee'] = $rows[$data['ID']]['addressee_display'] = 
-                $rows[$data['ID']]['display_name'] = $processedNames;
         }
     }
 
@@ -468,7 +472,7 @@ class CRM_Contact_Form_Task_Label extends CRM_Contact_Form_Task
         # exclude individuals belonging to selected households
         require_once 'CRM/Contact/DAO/Relationship.php';
         foreach ( $households as $household_id => $row ) {
-            $dao = new CRM_Contact_DAO_Relationship();
+            $dao =& new CRM_Contact_DAO_Relationship();
             $dao->contact_id_b = $household_id;
             $dao->find( );
             while ( $dao->fetch( ) ) {

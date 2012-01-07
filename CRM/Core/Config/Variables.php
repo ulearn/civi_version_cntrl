@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,7 +32,7 @@
  * it need to be defined here first.
  * 
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -238,7 +238,7 @@ class CRM_Core_Config_Variables extends CRM_Core_Config_Defaults
      * Default user framework
      */
     public $userFramework               = 'Drupal';
-    public $userFrameworkVersion        = 'Unknown';
+    public $userFrameworkVersion        = 6.3;
     public $userFrameworkUsersTableName = 'users';
     public $userFrameworkClass          = 'CRM_Utils_System_Drupal';
     public $userHookClass               = 'CRM_Utils_Hook_Drupal';
@@ -257,6 +257,7 @@ class CRM_Core_Config_Variables extends CRM_Core_Config_Defaults
     public $maxImportFileSize = 1048576;
     public $maxAttachments    = 3;
     public $maxFileSize       = 2;
+    public $civiHRD           = 0;
 
     /**
      * The custom locale strings. Note that these locale strings are stored
@@ -298,12 +299,6 @@ class CRM_Core_Config_Variables extends CRM_Core_Config_Defaults
      * @var boolean
      */
     public $contactUndelete = true;
-
-    /**
-     * Whether database-level logging should be performed
-     * @var boolean
-     */
-    public $logging = false;
 
     /**
      * Whether CiviCRM should check for newer versions
@@ -421,10 +416,6 @@ class CRM_Core_Config_Variables extends CRM_Core_Config_Defaults
      */
     public $componentRegistry  = null;
 
-    /**
-     * PDF reciept as attachment is disabled by default (CRM-8350) 
-     */
-    public $doNotAttachPDFReceipt = false;
 
     /**
      * Provide addressSequence
@@ -469,12 +460,9 @@ class CRM_Core_Config_Variables extends CRM_Core_Config_Defaults
      */
     public function defaultContactCountry( ) {
         static $cachedContactCountry = null;
-        
-        if ( ! empty ($this->defaultContactCountry) &&
-             ! $cachedContactCountry ) {
+        if ( ! $cachedContactCountry ) {
             $countryIsoCodes = CRM_Core_PseudoConstant::countryIsoCode( );
-            $cachedContactCountry = CRM_Utils_Array::value( $this->defaultContactCountry,
-                                                            $countryIsoCodes );
+            $cachedContactCountry = $countryIsoCodes[$this->defaultContactCountry];
         }
         return $cachedContactCountry;
     }

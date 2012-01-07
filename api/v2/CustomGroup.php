@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,8 +32,8 @@
  * @package CiviCRM_APIv2
  * @subpackage API_CustomGroup
  *
- * @copyright CiviCRM LLC (c) 2004-2011
- * @version $Id: CustomGroup.php 32998 2011-03-14 22:00:35Z kurund $
+ * @copyright CiviCRM LLC (c) 2004-2010
+ * @version $Id: CustomGroup.php 26310 2010-02-18 15:10:24Z shot $
  */
 
 /**
@@ -171,11 +171,11 @@ function civicrm_custom_field_create( $params )
         return civicrm_create_error("params is not an array ");
     }
     
-    if ( ! CRM_Utils_Array::value( 'custom_group_id', $params ) ) {                        
+    if ( !( CRM_Utils_Array::value('custom_group_id', $params ) ) ) {                        
         return civicrm_create_error("Missing Required field :custom_group_id");
     }
     
-    if ( !( CRM_Utils_Array::value( 'label', $params ) ) ) {                                     
+    if (!($params['label']) ) {                                     
         return civicrm_create_error("Missing Required field :label");
     }
     
@@ -229,13 +229,13 @@ function civicrm_custom_field_delete( $params )
         return civicrm_create_error( 'Params is not an array' );
     }
     
-    if ( ! CRM_Utils_Array::value( 'id', $params ) ) {
+    if ( ! CRM_Utils_Array::value( 'customFieldId', $params['result'] ) ) {
         return civicrm_create_error( 'Invalid or no value for Custom Field ID' );
     }
 
     require_once 'CRM/Core/DAO/CustomField.php';
     $field = new CRM_Core_DAO_CustomField( );
-    $field->id = $params['id'];
+    $field->id = $params['result']['customFieldId'];
     $field->find(true);
     
     require_once 'CRM/Core/BAO/CustomField.php';

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -86,10 +86,7 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
                                  'participant_role_id',
                                  'participant_register_date',
                                  'participant_fee_amount',
-                                 'participant_fee_currency',
-                                 'participant_status',
-                                 'participant_role',
-                                 'participant_campaign_id'
+                                 'participant_fee_currency'
                                  );
 
     /** 
@@ -115,14 +112,6 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
      * @var string
      */     
     protected $_context = null;
-
-    /**
-     * what component context are we being invoked from
-     *   
-     * @access protected     
-     * @var string
-     */     
-    protected $_compContext = null;
 
     /**
      * queryParams is the array returned by exportValues called on
@@ -172,8 +161,7 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
                          $eventClause = null,
                          $single = false,
                          $limit = null,
-                         $context = 'search',
-                         $compContext = null ) 
+                         $context = 'search' ) 
     {
         // submitted form values
         $this->_queryParams =& $queryParams;
@@ -181,7 +169,6 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
         $this->_single  = $single;
         $this->_limit   = $limit;
         $this->_context = $context;
-        $this->_compContext = $compContext;
 
         $this->_eventClause = $eventClause;
 
@@ -190,18 +177,8 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
 
         $this->_query = new CRM_Contact_BAO_Query( $this->_queryParams, null, null, false, false,
                                                     CRM_Contact_BAO_Query::MODE_EVENT );
-        $this->_query->_distinctComponentClause = " DISTINCT(civicrm_participant.id)";
     }//end of constructor
 
-    /**
-     * Can be used to alter the number of participation returned from a buildForm hook
-     * @param int     $limit  how many participations do we want returned
-     * @access public
-     *
-     */
-    function setLimit ($limit) {
-        $this->_limit   = $limit;
-    }
 
     /**
      * This method returns the links that are given for each search row.
@@ -214,19 +191,9 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
      * @access public
      *
      */
-    static function &links( $qfKey = null, $context = null, $compContext = null )
+    static function &links( $key = null )
     {
-        $extraParams = null;
-        if ( $compContext ) {
-            $extraParams .= "&compContext={$compContext}";
-        } else if ( $context == 'search' ) {
-            $extraParams .= '&compContext=participant';
-        }
-
-        if ( $qfKey ) {
-            $extraParams .= "&key={$qfKey}";
-        }
-
+        $extraParams = ($key ) ? "&key={$key}" : null;
         
         if (!(self::$_links)) {
             self::$_links = array(
@@ -323,14 +290,9 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
          
          require_once 'CRM/Event/BAO/Event.php';
          require_once 'CRM/Event/PseudoConstant.php';
-         $statusTypes      = CRM_Event_PseudoConstant::participantStatus();
-         $statusClasses    = CRM_Event_PseudoConstant::participantStatusClass();
-         $participantRoles = CRM_Event_PseudoConstant::participantRole( ) ;
-         $sep              = CRM_Core_DAO::VALUE_SEPARATOR;
+         $statusTypes   = CRM_Event_PseudoConstant::participantStatus();
+         $statusClasses = CRM_Event_PseudoConstant::participantStatusClass();
 
-         //get all campaigns.
-         require_once 'CRM/Campaign/BAO/Campaign.php';
-         $allCampaigns = CRM_Campaign_BAO_Campaign::getCampaigns( null, null, false, false, false, true );
          
          while ( $result->fetch( ) ) {
              $row = array();
@@ -341,27 +303,24 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
                  }
              }
              
-             //carry campaign on selectors.
-             $row['campaign'] = CRM_Utils_Array::value( $result->participant_campaign_id, $allCampaigns );
-             $row['campaign_id'] = $result->participant_campaign_id; 
-                 
              // gross hack to show extra information for pending status
              $statusClass = null;
-             if ( ( isset( $row['participant_status_id'] ) ) &&
-                  ( $statusId = array_search( $row['participant_status_id'], $statusTypes ) ) ) {
+             if( $statusId   = array_search( $row['participant_status_id'], $statusTypes ) ) {
                 $statusClass = $statusClasses[$statusId];
              }
 
-             $row['showConfirmUrl'] = ( $statusClass == 'Pending' ) ? true : false;
+             $extraInfo = array();
+             $row['showConfirmUrl'] = false;
+             if ($statusClass == 'Pending') {
+                 $row['showConfirmUrl'] = true;
+             }             
+             if (CRM_Utils_Array::value('participant_is_test', $row)) $extraInfo[] = ts('test');
 
-             if ( CRM_Utils_Array::value('participant_is_test', $row) ) {
-                 $row['participant_status'] .= ' (' . ts('test') . ')';
-             }
+             if ($extraInfo) $row['participant_status_id'] .= ' (' . implode(', ', $extraInfo) . ')';
 
              $row['checkbox'] = CRM_Core_Form::CB_PREFIX . $result->participant_id;
              
-             $row['action']   = CRM_Core_Action::formLink( self::links( $this->_key, $this->_context, $this->_compContext ),
-                                                           $mask,
+             $row['action']   = CRM_Core_Action::formLink( self::links( $this->_key ), $mask,
                                                            array( 'id'  => $result->participant_id,
                                                                   'cid' => $result->contact_id,
                                                                   'cxt' => $this->_context ) );
@@ -382,14 +341,6 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
                  // add line item details if applicable
                  require_once 'CRM/Price/BAO/LineItem.php';
                  $lineItems[$row['participant_id']] = CRM_Price_BAO_LineItem::getLineItems( $row['participant_id'] );
-             }
-
-             if (!empty($row['participant_role_id'])) {
-                 $viewRoles = array();
-                 foreach ( explode( $sep, $row['participant_role_id'] ) as $k => $v ) {
-                     $viewRoles[] = $participantRoles[$v];
-                 }
-                 $row['participant_role_id'] = implode( ', ', $viewRoles );
              }
              $rows[] = $row;
          }
@@ -439,18 +390,18 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
                                                 'direction' => CRM_Utils_Sort::DONTCARE,
                                                 ),
                                           array(
-                                                'name'      => ts('Registered'),
-                                                'sort'      => 'participant_register_date',
-                                                'direction' => CRM_Utils_Sort::DESCENDING, 
-                                                ),
-                                          array(
                                                 'name'      => ts('Event Date(s)'),
                                                 'sort'      => 'event_start_date',
                                                 'direction' => CRM_Utils_Sort::DESCENDING, 
                                                 ),
                                           array(
+                                                'name'      => ts('Registered'),
+                                                'sort'      => 'participant_register_date',
+                                                'direction' => CRM_Utils_Sort::DESCENDING, 
+                                                ),
+                                          array(
                                                 'name'      => ts('Status'),
-                                                'sort'      => 'participant_status',
+                                                'sort'      => 'participant_status_id',
                                                 'direction' => CRM_Utils_Sort::DONTCARE,
                                                 ),
                                           array(
@@ -476,10 +427,6 @@ class CRM_Event_Selector_Search extends CRM_Core_Selector_Base implements CRM_Co
         return self::$_columnHeaders;
     }
     
-    function alphabetQuery( ) {
-        return $this->_query->searchQuery( null, null, null, false, false, true );
-    }
-
     function &getQuery( )
     {
         return $this->_query;

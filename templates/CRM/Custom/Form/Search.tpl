@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -25,13 +25,18 @@
 *}
 {if $groupTree}
 {foreach from=$groupTree item=cd_edit key=group_id}
-  <div class="crm-accordion-wrapper crm-contactDetails-accordion crm-accordion-open" id="{$cd_edit.name}" >
-    <div class="crm-accordion-header">
-    <div class="icon crm-accordion-pointer"></div> 
-        {$cd_edit.title}	
-    </div><!-- /.crm-accordion-header -->
+{if $showHideLinks or $form.formName eq 'Advanced'}
+  <div id="{$cd_edit.name}_show" class="section-hidden section-hidden-border">
+    <a href="#" onclick="hide('{$cd_edit.name}_show'); show('{$cd_edit.name}'); return false;"><img src="{$config->resourceBase}i/TreePlus.gif" class="action-icon" alt="{ts}open section{/ts}" /></a><label>{$cd_edit.title}</label><br />
+  </div>
+{/if}
 
-    <div class="crm-accordion-body">
+  <div id="{$cd_edit.name}" class="form-item">
+  <fieldset id="{$cd_edit.extends_entity_column_value}"><legend>
+{if $showHideLinks or $form.formName eq 'Advanced'}
+<a href="#" onclick="hide('{$cd_edit.name}'); show('{$cd_edit.name}_show'); return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}close section{/ts}" /></a>
+{/if}
+{$cd_edit.title}</legend>
     <table class="form-layout-compressed">
     {foreach from=$cd_edit.fields item=element key=field_id}
       {assign var="element_name" value='custom_'|cat:$field_id}
@@ -110,13 +115,15 @@
 	    {/if}
 	    {/foreach}
 	   </table>
-    </div><!-- /.crm-accordion-body -->
-  </div><!-- /.crm-accordion-wrapper -->
-
+	 </fieldset>
+    </div>
+ 
 {if  $form.formName eq 'Advanced'}
 <script type="text/javascript">
-{if $cd_edit.collapse_adv_display eq 1}
-	cj("#{$cd_edit.name}").removeClass('crm-accordion-open').addClass('crm-accordion-closed');
+{if $cd_edit.collapse_adv_display eq 0}
+	hide("{$cd_edit.name}_show"); show("{$cd_edit.name}");
+{else}
+	show("{$cd_edit.name}_show"); hide("{$cd_edit.name}");
 {/if}
 </script>
 {/if}

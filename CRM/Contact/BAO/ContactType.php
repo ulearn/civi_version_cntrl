@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -160,7 +160,7 @@ WHERE  parent_id IS NULL
 
         $argString = $all ? 'CRM_CT_STI_1_' : 'CRM_CT_STI_0_';
         if ( ! empty( $contactType ) ) {
-            $argString .= implode( '_' , $contactType );
+            $argString .= implode( "_" , $contactType );
         }
 
         if ( (!array_key_exists( $argString, $_cache )) || $ignoreCache ) {
@@ -431,7 +431,7 @@ AND   ( p.is_active = 1 OR p.id IS NULL )
             $subType = array( $subType );
             $isArray = false;
         }
-        $argString = implode( '_' , $subType );
+        $argString = implode( "_" , $subType );
 
         if ( ! array_key_exists( $argString, $_cache ) ) {
             $_cache[$argString] = array( );
@@ -496,12 +496,12 @@ WHERE  subtype.name IN ('".implode("','",$subType)."' )";
         foreach( $contactTypes as $key => $value ) {
             if( $key ) {
                 $typeValue = explode( CRM_Core_DAO::VALUE_SEPARATOR, $key );
-                $typeUrl   = 'ct=' . CRM_Utils_Array::value( '0', $typeValue );
+                $typeUrl   = "ct=" . CRM_Utils_Array::value( '0', $typeValue );
                 if( $csType = CRM_Utils_Array::value( '1', $typeValue ) ) { 
                     $typeUrl .= "&cst=$csType";
                 }
                 $shortCuts[]  = array(
-                                      'path'  => 'civicrm/contact/add',
+                                      'path'  => "civicrm/contact/add",
                                       'query' => "$typeUrl&reset=1",
                                       'ref'   => "new-$value",
                                       'title' => $value,
@@ -572,22 +572,15 @@ WHERE name = %1";
      * @static
      */
     static function add( $params ) {
-
-        // label or name
-        if ( !CRM_Utils_Array::value( 'label', $params ) ) {
-            return;
-        }
-        if ( CRM_Utils_Array::value( 'parent_id', $params ) &&
-             !CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_ContactType', $params['parent_id'] ) ) {
-            return;
-        }  
-        
         $contactType = new CRM_Contact_DAO_ContactType( );
         $contactType->copyValues( $params );
         $contactType->id        = CRM_Utils_Array::value( 'id', $params );
         $contactType->is_active = CRM_Utils_Array::value( 'is_active', $params, 0 );
 
-
+        if ( CRM_Utils_Array::value( 'parent_id', $params ) &&
+             !CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_ContactType', $params['parent_id'] ) ) {
+            return;
+        }
         
         $contactType->save( );
         if( $contactType->find( true ) ) {
@@ -601,16 +594,15 @@ WHERE name = %1";
             $newParams = array ( 'label' => "New $contact",
                                  'is_active'=> $active );
             CRM_Core_BAO_Navigation::processUpdate( $params ,$newParams );
-        } else {
+        } else if( CRM_Utils_Array::value( 'parent_id', $params ) ) {
             $name = self::getBasicType( $contactName );    
-            if( !$name ) return;
             $value = array( 'name' => "New $name" );
             CRM_Core_BAO_Navigation::retrieve( $value ,$navinfo );
             $navigation = array(
                                 'label'   => "New $contact",
                                 'name'    => "New $contactName",
                                 'url'     => "civicrm/contact/add&ct=$name&cst=$contactName&reset=1",
-                                'permission' => 'add contacts',
+                                'permission' => "add contacts",
                                 'parent_id'  => $navinfo['id'],
                                 'is_active'  => $active
                                 ); 

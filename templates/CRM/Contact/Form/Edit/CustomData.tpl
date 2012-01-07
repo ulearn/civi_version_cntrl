@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -27,7 +27,7 @@
 <script type="text/javascript">var showTab = Array( );</script>
 
 {foreach from=$groupTree item=cd_edit key=group_id}    
-	<div class="crm-accordion-wrapper crm-address-accordion {if $cd_edit.collapse_display}crm-accordion-closed{else}crm-accordion-open{/if}">
+	<div class="crm-accordion-wrapper crm-address-accordion crm-accordion-closed">
 		<div class="crm-accordion-header">
 			<div id="custom{$group_id}" class="icon crm-accordion-pointer"></div> 
 			{$cd_edit.title}
@@ -49,10 +49,3 @@
 {/foreach}
 
 {include file="CRM/common/customData.tpl"}
- <script type="text/javascript">
-  {literal}
-       cj(function() {
-           cj().crmaccordions(); 
-        });        
-  {/literal}
- </script>

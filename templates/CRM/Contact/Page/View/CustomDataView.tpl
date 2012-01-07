@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -33,7 +33,7 @@
                 <table id="{$cd_edit.name}_{$count}" >
                   <tr class="columnheader">
                     <td colspan="2" class="grouplabel">
-                        <a href="#" class="show-block {if $cd_edit.collapse_display eq 0 } expanded collapsed {else} collapsed {/if}" >
+                        <a href="#" class="show-block {if $cd_edit.collapse_display eq 0 } expanded collapsed {else} collapsed {/if}" onclick='cj("table#{$cd_edit.name}_{$count} tr:not(\".columnheader\")" ).toggle(); cj(this).toggleClass("expanded"); return false;'>
                             {$cd_edit.title}
                         </a>
                     </td>

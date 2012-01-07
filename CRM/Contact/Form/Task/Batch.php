@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -68,10 +68,6 @@ class CRM_Contact_Form_Task_Batch extends CRM_Contact_Form_Task
      */
     protected $_userContext;
 
-    /**
-     * when not to reset sort_name
-     */
-    protected $_preserveDefault = true;
 
     /**
      * build all the data structures needed to build the form
@@ -133,23 +129,10 @@ class CRM_Contact_Form_Task_Batch extends CRM_Contact_Form_Task
         
         $this->assign( 'profileTitle', $this->_title );
         $this->assign( 'componentIds', $this->_contactIds );
-
-        // if below fields are missing we should not reset sort name / display name
-        // CRM-6794
-        $preserveDefaultsArray = array( 'first_name', 'last_name', 'middle_name',
-                                        'organization_name',
-                                        'household_name');
-
-        require_once 'CRM/Core/BAO/Address.php';
-        foreach ( $this->_contactIds as $contactId ) {
-            $profileFields = $this->_fields;
-            CRM_Core_BAO_Address::checkContactSharedAddressFields( $profileFields, $contactId );
-            foreach ( $profileFields as $name => $field ) {
+        
+        foreach ($this->_contactIds as $contactId) {
+            foreach ($this->_fields as $name => $field ) {
                 CRM_Core_BAO_UFGroup::buildProfile($this, $field, null, $contactId );
-
-                if ( in_array($field['name'], $preserveDefaultsArray ) ) {
-                    $this->_preserveDefault = false;
-                }
             }
         }
         
@@ -245,11 +228,6 @@ class CRM_Contact_Form_Task_Batch extends CRM_Contact_Form_Task
                 unset($value['contact_sub_type']);
                 $inValidSubtypeCnt++;
             }
-
-            $value['preserveDBName'] = $this->_preserveDefault;
-            
-            //parse street address, CRM-7768
-            $this->parseStreetAddress( $value );
             
             CRM_Contact_BAO_Contact::createProfileContact($value, $this->_fields, $key, null, $ufGroupId );
             if ( $notify ) {
@@ -265,62 +243,5 @@ class CRM_Contact_Form_Task_Batch extends CRM_Contact_Form_Task
         }
         CRM_Core_Session::setStatus("{$statusMsg}");
     }//end of function
-    
-    
-    function parseStreetAddress( &$contactValues ) {
-        if ( !is_array( $contactValues ) ||
-             !is_array( $this->_fields ) ) {
-            return;
-        }
-        
-        static $parseAddress;
-        $addressFldKey = 'street_address';
-        if ( !isset( $parseAddress ) ) {
-            $parseAddress = false;
-            foreach ( $this->_fields as $key => $fld ) {
-                if ( strpos( $key, $addressFldKey ) !== false ) {
-                    require_once 'CRM/Core/BAO/Preferences.php';
-                    $parseAddress = CRM_Utils_Array::value('street_address_parsing', 
-                                                           CRM_Core_BAO_Preferences::valueOptions('address_options'), 
-                                                           false );
-                    break;
-                }
-            }
-        }
-        
-        if ( !$parseAddress ) {
-            return;
-        }
-        
-        $allParseValues = array( );
-        require_once 'CRM/Core/BAO/Address.php';
-        foreach ( $contactValues as $key => $value ) {
-            if ( strpos( $key, $addressFldKey ) !== false ) {
-                $locTypeId = substr( $key, strlen( $addressFldKey ) + 1 );
-                
-                // parse address field.
-                $parsedFields = CRM_Core_BAO_Address::parseStreetAddress( $value );
-                
-                //street address consider to be parsed properly, 
-                //If we get street_name and street_number.                     
-                if ( !CRM_Utils_Array::value( 'street_name', $parsedFields ) || 
-                     !CRM_Utils_Array::value( 'street_number', $parsedFields ) ) {
-                    $parsedFields = array_fill_keys( array_keys($parsedFields), '' );
-                }
-                
-                //merge parse values.
-                foreach ( $parsedFields as $fldKey => $parseVal ) {
-                    if ( $locTypeId ) $fldKey .= "-{$locTypeId}";
-                    $allParseValues[$fldKey] = $parseVal;
-                }
-            }
-        }
-        
-        //finally merge all parse values 
-        if ( !empty( $allParseValues ) ) {
-            $contactValues += $allParseValues;
-        }
-    }
-    
 }
 

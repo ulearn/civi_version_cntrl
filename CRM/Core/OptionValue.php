@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -111,13 +111,6 @@ class CRM_Core_OptionValue
             $dao->find();
         }
         
-        require_once 'CRM/Case/BAO/Case.php';
-        if ( $groupName == 'case_type' ) {
-            $caseTypeIds = CRM_Case_BAO_Case::getUsedCaseType( );
-        } else if ( $groupName == 'case_status' ) {
-            $caseStatusIds = CRM_Case_BAO_Case::getUsedCaseStatuses( );
-        }
-
         require_once 'CRM/Core/Component.php';
         $componentNames = CRM_Core_Component::getNames();
         $visibilityLabels = CRM_Core_PseudoConstant::visibility( );
@@ -136,12 +129,7 @@ class CRM_Core_OptionValue
                 } else {
                     $action -= CRM_Core_Action::DISABLE;
                 }
-                if ( ( ( $groupName == 'case_type' ) && in_array( $dao->value, $caseTypeIds ) ) || 
-                     ( ( $groupName == 'case_status' ) && in_array( $dao->value, $caseStatusIds ) ) ) {
-                    $action -= CRM_Core_Action::DELETE;
-                }
             }
-
             $optionValue[$dao->id]['label']  = htmlspecialchars( $optionValue[$dao->id]['label'] );
             $optionValue[$dao->id]['order']  = $optionValue[$dao->id]['weight'];
             $optionValue[$dao->id]['action'] = CRM_Core_Action::formLink($links, $action, 
@@ -288,7 +276,7 @@ class CRM_Core_OptionValue
             $nameTitle = array( );
             if ( $mode == 'contribute' ) {
                 $nameTitle = array('payment_instrument' => array('name' =>'payment_instrument',
-                                                                 'title'=> ts('Payment Instrument'),
+                                                                 'title'=> 'Payment Instrument',
                                                                  'headerPattern' => '/^payment|(p(ayment\s)?instrument)$/i'
                                                                  )
                                    );
@@ -297,16 +285,18 @@ class CRM_Core_OptionValue
                 //the field addressee is meant for all contact types, CRM-4575
                 if ( in_array($contactType, array('Individual', 'Household', 'Organization', 'All') ) ) {
                     $nameTitle = array( 'addressee'     => array('name' => 'addressee',
-                                                                 'title'=> ts('Addressee'),
+                                                                 'title'=> 'Addressee',
                                                                  'headerPattern' => '/^addressee$/i'
                                                                  ),
                                         );
+                }
+                if ( $contactType == 'Individual' || $contactType == 'Household' || $contactType == 'All' ) {
                     $title = array( 'email_greeting'    => array('name' => 'email_greeting',
-                                                                 'title'=> ts('Email Greeting'),
+                                                                 'title'=> 'Email Greeting',
                                                                  'headerPattern' => '/^email_greeting$/i'
                                                                  ),  
                                     'postal_greeting'   => array('name' => 'postal_greeting',
-                                                                 'title'=> ts('Postal Greeting'),
+                                                                 'title'=> 'Postal Greeting',
                                                                  'headerPattern' => '/^postal_greeting$/i'
                                                                  ),
                                     );
@@ -315,15 +305,15 @@ class CRM_Core_OptionValue
 
                 if ( $contactType == 'Individual' || $contactType == 'All') {
                     $title = array( 'gender'            => array('name' => 'gender',
-                                                                 'title'=> ts('Gender'),
+                                                                 'title'=> 'Gender',
                                                                  'headerPattern' => '/^gender$/i'
                                                                  ),
                                     'individual_prefix' => array('name' => 'individual_prefix',
-                                                                 'title'=> ts('Individual Prefix'),
+                                                                 'title'=> 'Individual Prefix',
                                                                  'headerPattern' => '/^(prefix|title)/i'
                                                                  ),
                                     'individual_suffix' => array('name' => 'individual_suffix',
-                                                                 'title'=> ts('Individual Suffix'),
+                                                                 'title'=> 'Individual Suffix',
                                                                  'headerPattern' => '/^suffix$/i'
                                                                  ),
                                     );

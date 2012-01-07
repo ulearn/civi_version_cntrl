@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -68,30 +68,24 @@
                 {* Display mapper <select> field for 'Map Fields', and mapper value for 'Preview' *}
                 <td class="form-item even-row{if $wizard.currentStepName == 'Preview'} labels{/if}">
                     {if $wizard.currentStepName == 'Preview'}
-            		    {if $relatedContactDetails && $relatedContactDetails[$i] != ''}
+            			{if $relatedContactDetails && $relatedContactDetails[$i] != ''}
                             {$mapper[$i]} - {$relatedContactDetails[$i]}
                             
                             {if $relatedContactLocType && $relatedContactLocType[$i] != ''}
 	                            - {$relatedContactLocType[$i]}
-                	    {/if}
+                			{/if}
 
                             {if $relatedContactPhoneType && $relatedContactPhoneType[$i] != ''}
 	                            - {$relatedContactPhoneType[$i]}
-                	    {/if}
+                			{/if}
                             
                             {* append IM Service Provider type for related contact *}
                             {if  $relatedContactImProvider && $relatedContactImProvider[$i] != ''}
                                 - {$relatedContactImProvider[$i]}
                             {/if}
-			    
-			    {* append website type *}
-			    {if  $relatedContactWebsiteType && $relatedContactWebsiteType[$i] != ''}
-                                - {$relatedContactWebsiteType[$i]}
-                            {/if}
                                        
-			    {else}                        
-			    
-                            {if $locations[$i]}
+			            {else}                        
+			                {if $locations[$i]}
                                 {$locations[$i]} - 
                             {/if}
 
@@ -103,12 +97,6 @@
                             {if $ims[$i]}
                                 {$ims[$i]} - 
                             {/if}
-			    
-			    {* append website type *}
-                            {if $websites[$i]}
-                                {$websites[$i]} - 
-                            {/if}
-			    
                             {*else*}
                                 {$mapper[$i]}
                             {*/if*}

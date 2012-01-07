@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -49,7 +49,7 @@ class CRM_Admin_Form_ParticipantStatus extends CRM_Admin_Form
 
         $attributes = CRM_Core_DAO::getAttribute('CRM_Event_DAO_ParticipantStatusType');
 
-        $this->add('text', 'name',  ts('Name'), null,  true);
+        $this->add('text', 'name',  ts('Name'),  $attributes['name'],  true);
 
         $this->add('text', 'label', ts('Label'), $attributes['label'], true);
 
@@ -75,7 +75,7 @@ class CRM_Admin_Form_ParticipantStatus extends CRM_Admin_Form
             require_once 'CRM/Utils/Weight.php';
             $defaults['weight'] = CRM_Utils_Weight::getDefaultWeight('CRM_Event_DAO_ParticipantStatusType');
         }
-        $this->_isReserved = CRM_Utils_Array::value('is_reserved', $defaults);
+        $this->_isReserved = $defaults['is_reserved'];
         if ($this->_isReserved) $this->freeze(array('name', 'class', 'is_active'));
         return $defaults;
     }

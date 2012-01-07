@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,9 +23,6 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-{if $onbehalf} 
-   {include file=CRM/Contribute/Form/Contribution/OnBehalfOf.tpl} 
-{else}
 {literal}
 <script type="text/javascript">
 <!--
@@ -65,15 +62,15 @@ function clearAmountOther() {
         {$intro_text}
     </div>
 
-{if $priceSet && empty($useForMember)}
+{if $priceSet}
     <div id="priceset">
         <fieldset>
             <legend>{ts}Contribution{/ts}</legend>
-            {include file="CRM/Price/Form/PriceSet.tpl" extends="Contribution"}
+            {include file="CRM/Price/Form/PriceSet.tpl"}
         </fieldset>
     </div>
 {else}
-        {include file="CRM/Contribute/Form/Contribution/MembershipBlock.tpl" context="makeContribution"}
+    {include file="CRM/Contribute/Form/Contribution/MembershipBlock.tpl" context="makeContribution"}
 
 	{if $form.amount}
 	    <div class="crm-section {$form.amount.name}-section">
@@ -151,8 +148,7 @@ function clearAmountOther() {
 
 
     {if $is_for_organization} 
-        <div id='onBehalfOfOrg' class="crm-section"></div>
-        {include file=CRM/Contribute/Form/Contribution/OnBehalfOf.tpl} 
+        {include file=CRM/Contact/Form/OnBehalfOf.tpl} 
     {/if} 
     {* User account registration option. Displays if enabled for one of the profiles on this page. *}
 
@@ -335,35 +331,14 @@ function enablePeriod ( ) {
 	}
 	document.getElementById('installments').disabled   = true;
 	document.getElementById('frequency_unit').disabled = true;
-
-	//get back to auto renew settings. 
-	var allowAutoRenew = {/literal}'{$allowAutoRenewMembership}'{literal};
-	if ( allowAutoRenew && cj("#auto_renew") ) {
-	   showHideAutoRenew( null );
-	}	
     } else {
 	if ( frqInt ) {
 	    document.getElementById('frequency_interval').disabled = false;
 	}
 	document.getElementById('installments').disabled   = false;
 	document.getElementById('frequency_unit').disabled = false;
-	
-	//disabled auto renew settings.
-	var allowAutoRenew = {/literal}'{$allowAutoRenewMembership}'{literal};
-	if ( allowAutoRenew && cj("#auto_renew") ) {
-	    cj("#auto_renew").attr( 'checked', false );
-	    cj('#allow_auto_renew').hide( );
-	} 
-	
     }
 }
-
-{/literal}{if $relatedOrganizationFound and $reset}{literal}
-   cj( "#is_for_organization" ).attr( 'checked', true );
-   showOnBehalf( false );
-{/literal}{elseif $onBehalfRequired}{literal}
-   showOnBehalf( true );
-{/literal}{/if}{literal}
 
 {/literal}{if $honor_block_is_active AND $form.honor_type_id.html}{literal}
     enableHonorType();
@@ -427,4 +402,3 @@ function showHidePayPalExpressOption()
 }
 {/literal}
 </script>
-{/if}

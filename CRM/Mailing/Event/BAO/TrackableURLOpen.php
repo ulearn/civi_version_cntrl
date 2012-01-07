@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -70,17 +70,6 @@ class CRM_Mailing_Event_BAO_TrackableURLOpen extends CRM_Mailing_Event_DAO_Track
         $eq = CRM_Mailing_Event_BAO_Queue::getTableName();
         $turl = CRM_Mailing_BAO_TrackableURL::getTableName();
         
-        if ( !$queue_id ) {
-        	$search->query("SELECT $turl.url as url from $turl
-                    WHERE $turl.id = " 
-                        . CRM_Utils_Type::escape($url_id, 'Integer')
-                           );
-            if (! $search->fetch()) {
-                return CRM_Utils_System::baseURL();
-            }
-            return $search->url; 
-        }
-
         $search->query("SELECT $turl.url as url from $turl
                     INNER JOIN $job ON $turl.mailing_id = $job.mailing_id
                     INNER JOIN $eq ON $job.id = $eq.job_id
@@ -228,16 +217,7 @@ class CRM_Mailing_Event_BAO_TrackableURLOpen extends CRM_Mailing_Event_DAO_Track
             $query .= " GROUP BY $queue.id ";
         }
 
-        $orderBy = "sort_name ASC, {$click}.time_stamp DESC";
-        if ($sort) {
-            if ( is_string( $sort ) ) {
-                $orderBy = $sort;
-            } else {
-                $orderBy = trim( $sort->orderBy() );
-            }
-        }
-        
-        $query .= " ORDER BY {$orderBy} ";
+        $query .= " ORDER BY $contact.sort_name, $url.id, $click.time_stamp DESC ";
 
         if ($offset||$rowCount) {//Added "||$rowCount" to avoid displaying all records on first page
             $query .= ' LIMIT ' 

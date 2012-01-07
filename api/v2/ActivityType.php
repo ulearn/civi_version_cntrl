@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -36,8 +36,8 @@
  * @package CiviCRM_APIv2
  * @subpackage API_Activity
  *
- * @copyright CiviCRM LLC (c) 2004-2011
- * $Id: ActivityType.php 32998 2011-03-14 22:00:35Z kurund $
+ * @copyright CiviCRM LLC (c) 2004-2010
+ * $Id: ActivityType.php 27075 2010-04-13 23:15:34Z shot $
  *
  */
 

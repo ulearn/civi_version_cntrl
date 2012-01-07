@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -35,33 +35,16 @@
         <p>{ts}You will not be able to send an acknowledgment for this pledge because there is no email address recorded for this contact. If you want a acknowledgment to be sent when this pledge is recorded, click Cancel and then click Edit from the Summary tab to add an email address before recording the pledge.{/ts}</p>
 </div>
 {/if}
-{if $action EQ 1}
-    <h3>{ts}New Pledge{/ts}</h3>
-{elseif $action EQ 2}
-    <h3>{ts}Edit Pledge{/ts}</h3>
-    {* Check if current Total Pledge Amount is different from original pledge amount. *}
-    {math equation="x / y" x=$amount y=$installments format="%.2f" assign="currentInstallment"}
-    {* Check if current Total Pledge Amount is different from original pledge amount. *}
-    {if $currentInstallment NEQ $eachPaymentAmount}
-    	{assign var=originalPledgeAmount value=`$installments*$eachPaymentAmount`}
-    {/if}
-{elseif $action EQ 8}
-    <h3>{ts}Delete Pledge{/ts}</h3>
-{/if}
 <div class="crm-block crm-form-block crm-pledge-form-block">
  <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"}</div> 
    {if $action eq 8} 
-    <div class="messages status">
-        <div class="icon inform-icon"></div>&nbsp;       
-        <span class="font-red bold">{ts}WARNING: Deleting this pledge will also delete any related pledge payments.{/ts} {ts}This action cannot be undone.{/ts}</span>
-        <p>{ts}Consider cancelling the pledge instead if you want to maintain an audit trail and avoid losing payment data. To set the pledge status to Cancelled and cancel any not-yet-paid pledge payments, first click Cancel on this form. Then click the more &gt; link from the pledge listing, and select the Cancel action.{/ts}</p>
-    </div>
+      <div class="messages status"> 
+          <div class="icon inform-icon"></div>
+          {ts}WARNING: Deleting this pledge will result in the loss of the associated financial transactions (if any).{/ts} {ts}Do you want to continue?{/ts}
+      </div> 
    {else}
       <table class="form-layout-compressed">
         {if $context eq 'standalone'}
-	    {if !$email and $outBound_option != 2}
-	      {assign var='profileCreateCallback' value=1 }
-	    {/if}
             {include file="CRM/Contact/Form/NewContact.tpl"}
         {else}
           <tr class="crm-pledge-form-block-displayName">
@@ -69,10 +52,7 @@
               <td class="font-size12pt"><strong>{$displayName}</strong></td>
           </tr>
         {/if}
-	<tr class="crm-pledge-form-block-amount">
-	    <td class="font-size12pt right">{$form.amount.label}</td>
-	    <td><span class="font-size12pt">{$form.amount.html|crmMoney}</span> {if $originalPledgeAmount}<div class="messages status"><div class="icon inform-icon"></div>&nbsp;{ts 1=$originalPledgeAmount|crmMoney} Pledge total has changed due to payment adjustments. Original pledge amount was %1.{/ts}</div>{/if}</td>
-	</tr>
+	<tr class="crm-pledge-form-block-amount"><td class="font-size12pt right">{$form.amount.label}</td><td class="font-size12pt">{$form.amount.html|crmMoney}</td></tr>
         <tr class="crm-pledge-form-block-installments"><td class="label">{$form.installments.label}</td><td>{$form.installments.html} {ts}installments of{/ts} {if $action eq 1 or $isPending}{$form.eachPaymentAmount.html|crmMoney}{elseif $action eq 2 and !$isPending}{$eachPaymentAmount|crmMoney}{/if}&nbsp;{ts}every{/ts}&nbsp;{$form.frequency_interval.html}&nbsp;{$form.frequency_unit.html}</td></tr>
         <tr class="crm-pledge-form-block-frequency_day"><td class="label nowrap">{$form.frequency_day.label}</td><td>{$form.frequency_day.html} {ts}day of the period{/ts}<br />
             <span class="description">{ts}This applies to weekly, monthly and yearly payments.{/ts}</td></tr>
@@ -104,20 +84,11 @@
 	    {elseif $context eq 'standalone' and $outBound_option != 2 }
                 <tr id="acknowledgment-receipt" style="display:none;"><td class="label">{$form.is_acknowledge.label}</td><td>{$form.is_acknowledge.html} <span class="description">{ts}Automatically email an acknowledgment of this pledge to {/ts}<span id="email-address"></span>?</span></td></tr>
         {/if}
-        <tr id="fromEmail" style="display:none;">
-            <td class="label">{$form.from_email_address.label}</td>
-            <td>{$form.from_email_address.html}</td>
-        </tr>
         <tr id="acknowledgeDate"><td class="label" class="crm-pledge-form-block-acknowledge_date">{$form.acknowledge_date.label}</td>
             <td>{include file="CRM/common/jcalendar.tpl" elementName=acknowledge_date}<br />
             <span class="description">{ts}Date when an acknowledgment of the pledge was sent.{/ts}</span></td></tr>
             <tr class="crm-pledge-form-block-contribution_type_id"><td class="label">{$form.contribution_type_id.label}</td><td>{$form.contribution_type_id.html}<br />
             <span class="description">{ts}Sets the default contribution type for payments against this pledge.{/ts}</span></td></tr>
-
-	    {* CRM-7362 --add campaign *}
-	    {include file="CRM/Campaign/Form/addCampaignToComponent.tpl"
-	    campaignTrClass="crm-pledge-form-block-campaign_id"}
-
 	    <tr class="crm-pledge-form-block-contribution_page_id"><td class="label">{$form.contribution_page_id.label}</td><td>{$form.contribution_page_id.html}<br />
             <span class="description">{ts}Select an Online Contribution page that the user can access to make self-service pledge payments. (Only Online Contribution pages configured to include the Pledge option are listed.){/ts}</span></td></tr>
         
@@ -191,11 +162,7 @@ cj(function() {
      function verify( ) {
        var element = document.getElementsByName("is_acknowledge");
         if ( element[0].checked ) {
-            var emailAddress = '{/literal}{$email}{literal}';
-	    if ( !emailAddress ) {
-	    var emailAddress = cj('#email-address').html(); 
-	    }
-	    var message = '{/literal}{ts 1="'+emailAddress+'"}Click OK to save this Pledge record AND send an acknowledgment to %1 now{/ts}{literal}.';
+            var message = '{/literal}{ts 1=$email}Click OK to save this Pledge record AND send an acknowledgment to %1 now{/ts}{literal}.';
             if (!confirm( message) ) {
                 return false;
             }
@@ -206,8 +173,6 @@ cj(function() {
        var thousandMarker = '{/literal}{$config->monetaryThousandSeparator}{literal}';
        var seperator      = '{/literal}{$config->monetaryDecimalPoint}{literal}';
        var amount = document.getElementById("amount").value;
-       // replace all thousandMarker and change the seperator to a dot
-       amount = amount.replace(thousandMarker,'').replace(seperator,'.');
        var installments = document.getElementById("installments").value;
        if ( installments != '' && installments != NaN) {
             amount =  amount/installments;
@@ -230,15 +195,13 @@ cj(function() {
     {if $context eq 'standalone' and $outBound_option != 2 }
     {literal}
     cj( function( ) {
-        cj("#contact_1").blur( function( ) {
+        cj("#contact").blur( function( ) {
             checkEmail( );
         });
         checkEmail( );
-	showHideByValue( 'is_acknowledge', '', 'acknowledgeDate', 'table-row', 'radio', true); 
-	showHideByValue( 'is_acknowledge', '', 'fromEmail', 'table-row', 'radio', false );
     });
     function checkEmail( ) {
-        var contactID = cj("input[name='contact_select_id[1]']").val();
+        var contactID = cj("input[name=contact_select_id]").val();
         if ( contactID ) {
             var postUrl = "{/literal}{crmURL p='civicrm/ajax/checkemail' h=0}{literal}";
             cj.post( postUrl, {contact_id: contactID},
@@ -251,13 +214,7 @@ cj(function() {
                     }
                 }
             );
-        } else {
-	  cj("#acknowledgment-receipt").hide( );
-	}
-    }
-    
-    function profileCreateCallback( blockNo ) {
-        checkEmail( );
+        }
     }
     {/literal}
     {/if}
@@ -271,14 +228,6 @@ cj(function() {
     target_element_type ="table-row"
     field_type          ="radio"
     invert              = 1
-}
-{include file="CRM/common/showHideByFieldValue.tpl" 
-    trigger_field_id    ="is_acknowledge"
-    trigger_value       =""
-    target_element_id   ="fromEmail" 
-    target_element_type ="table-row"
-    field_type          ="radio"
-    invert              = 0	
 }
 {/if}
 

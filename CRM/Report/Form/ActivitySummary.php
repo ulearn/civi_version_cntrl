@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -49,7 +49,7 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
                                        array( 'id' => 
                                               array('required'   => true,
                                                     'no_display' => true ),
-                                              'sort_name' => 
+                                              'display_name' => 
                                               array('title'     => ts('Contact Name'),
                                                     'default'   => true,
                                                     'no_repeat' => true ) ),
@@ -58,14 +58,11 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
                                               array('title'  => ts('Contact Name'),),
                                               ),
                                        'group_bys' => 
-                                       array( 'sort_name' =>
+                                       array( 'display_name' =>
                                               array( 'name'     => 'id',
                                                      'title'    => ts( 'Contact' ),
                                                      'default'  => true ),
                                               ),
-                                       'order_bys' =>             
-                                       array( 'sort_name'  =>
-                                              array( 'title' => ts( 'Contact Name') ) ),
                                        'grouping' => 'contact-fields',
                                        ),
                                 
@@ -75,9 +72,6 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
                                        array( 'email'   =>
                                               array( 'title'   => 'Email',
                                                      'default' => true ) ),
-                                       'order_bys' =>             
-                                       array( 'email'  =>
-                                              array( 'title' => ts( 'Email') ) ),
                                        'grouping' => 'contact-fields',
                                        ),
                                 
@@ -111,7 +105,7 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
                                               'activity_type_id'    => 
                                               array( 'title'        => ts( 'Activity Type' ),
                                                      'operatorType' => CRM_Report_Form::OP_MULTISELECT,
-                                                     'options'      => CRM_Core_PseudoConstant::activityType(true, true, false, 'label', true), ), 
+                                                     'options'      => CRM_Core_PseudoConstant::activityType(), ), 
                                               'status_id'           => 
                                               array( 'title'        => ts( 'Activity Status' ),
                                                      'operatorType' => CRM_Report_Form::OP_MULTISELECT,
@@ -129,12 +123,6 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
                                               'activity_type_id'   =>
                                               array( 'title'      => ts( 'Activity Type' ),
                                                      'default'    => true ),
-                                              ),
-                                       'order_bys' =>             
-                                       array( 'activity_date_time'  =>
-                                              array( 'title' => ts( 'Activity Date' ) ),
-                                              'activity_type_id'  =>
-                                              array( 'title' => ts( 'Activity Type' ) )
                                               ),
                                        'grouping' => 'activity-fields',
                                        'alias'    => 'activity'
@@ -231,14 +219,13 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
                                 $select[] = "{$field['dbAlias']} as {$tableName}_{$fieldName}";
                             }
                             $this->_columnHeaders["{$tableName}_{$fieldName}"]['type']  = CRM_Utils_Array::value( 'type', $field );
-                            $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = CRM_Utils_Array::value( 'title', $field );
-                            $this->_columnHeaders["{$tableName}_{$fieldName}"]['no_display'] = CRM_Utils_Array::value( 'no_display', $field );    
+                            $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = $field['title'];
+                            $this->_columnHeaders["{$tableName}_{$fieldName}"]['no_display'] = $field['no_display'];    
                         } else {
                             $select[] = "{$field['dbAlias']} as {$tableName}_{$fieldName}";
                             $this->_columnHeaders["{$tableName}_{$fieldName}"]['type']  = CRM_Utils_Array::value( 'type', $field );
-                            $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = CRM_Utils_Array::value( 'title', $field );
-                            $this->_columnHeaders["{$tableName}_{$fieldName}"]['no_display'] = CRM_Utils_Array::value( 'no_display', $field );
-                        }
+                            $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = $field['title'];
+                            $this->_columnHeaders["{$tableName}_{$fieldName}"]['no_display'] = $field['no_display'];}
                     }
                 }
             }
@@ -301,7 +288,7 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
                 
                 foreach ( $table['filters'] as $fieldName => $field ) {
                     $clause = null;
-                    if ( CRM_Utils_Array::value('type', $field) & CRM_Utils_Type::T_DATE ) {
+                    if ( $field['type'] & CRM_Utils_Type::T_DATE ) {
                         $relative = CRM_Utils_Array::value( "{$fieldName}_relative", $this->_params );
                         $from     = CRM_Utils_Array::value( "{$fieldName}_from"    , $this->_params );
                         $to       = CRM_Utils_Array::value( "{$fieldName}_to"      , $this->_params );
@@ -366,19 +353,19 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
                 }
             }
             
-            $this->_groupBy = "GROUP BY " . implode( ', ', $this->_groupBy );            
+            $this->_groupBy = "GROUP BY " . implode( ', ', $this->_groupBy ) . " {$this->_rollup} ";
         } else {
             $this->_groupBy = "GROUP BY {$this->_aliases['civicrm_contact']}.id ";
         }
     }
     
-    function formRule ( $fields, $files, $self ) {
+    function formRule ( &$fields, &$files, $self ) {
         $errors = array();
-        $contactFields = array( 'sort_name', 'email', 'phone' );
+        $contactFields = array( 'display_name', 'email', 'phone' );
         if ( CRM_Utils_Array::value( 'group_bys', $fields ) ) {
             
             if ( CRM_Utils_Array::value( 'activity_type_id', $fields['group_bys'] ) &&
-                 !CRM_Utils_Array::value( 'sort_name', $fields['group_bys'] ) ) {
+                 !CRM_Utils_Array::value( 'display_name', $fields['group_bys'] ) ) {
                 foreach ( $fields['fields'] as $fieldName => $val ) {
                     if ( in_array( $fieldName, $contactFields ) ) {
                         $errors['fields'] = ts("Please select GroupBy 'Contact' to display Contact Fields");
@@ -388,7 +375,7 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
             }
             
             if ( CRM_Utils_Array::value( 'activity_date_time', $fields['group_bys'] ) ) {
-                if ( CRM_Utils_Array::value( 'sort_name', $fields['group_bys'] ) ) {
+                if ( CRM_Utils_Array::value( 'display_name', $fields['group_bys'] ) ) {
                     $errors['fields'] = ts("Please do not select GroupBy 'Activity Date' with GroupBy 'Contact'");
                 } else {
                     foreach ( $fields['fields'] as $fieldName => $val ) {
@@ -413,13 +400,13 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
         // custom code to alter rows
         
         $entryFound   = false;
-        $activityType = CRM_Core_PseudoConstant::activityType( true, true, false, 'label', true );
+        $activityType = CRM_Core_PseudoConstant::activityType( true, true );
         $flagContact  = 0;
         
         $onHover        = ts('View Contact Summary for this Contact');
         foreach ( $rows as $rowNum => $row ) {
             
-            if ( array_key_exists('civicrm_contact_sort_name', $row ) && $this->_outputMode != 'csv' ) {
+            if ( array_key_exists('civicrm_contact_display_name', $row ) && $this->_outputMode != 'csv' ) {
                 if ( $value = $row['civicrm_contact_id'] ) {  
                     
                     if( $rowNum == 0 ) {
@@ -435,7 +422,7 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
                     }
                     
                     if( $flagContact == 1 ) {
-                        $rows[$rowNum]['civicrm_contact_sort_name'] = "";
+                        $rows[$rowNum]['civicrm_contact_display_name'] = "";
                         
                         if( array_key_exists('civicrm_email_email', $row ) ) {
                             $rows[$rowNum]['civicrm_email_email'] = ""; 
@@ -448,7 +435,7 @@ class CRM_Report_Form_ActivitySummary extends CRM_Report_Form {
                         $url = CRM_Utils_System::url( 'civicrm/contact/view', 
                                                       'reset=1&cid=' . $value );
                         
-                        $rows[$rowNum]['civicrm_contact_sort_name'] ="<a href='$url'>" .$row['civicrm_contact_sort_name']. '</a>';
+                        $rows[$rowNum]['civicrm_contact_display_name'] ="<a href='$url'>" .$row['civicrm_contact_display_name']. '</a>';
                     }
                     $entryFound = true;
                 }

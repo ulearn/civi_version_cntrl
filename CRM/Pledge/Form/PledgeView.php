@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -59,6 +59,7 @@ class CRM_Pledge_Form_PledgeView extends CRM_Core_Form
                                           $ids );
 
         $values['frequencyUnit'] = ts( '%1(s)', array( 1 => $values['frequency_unit'] ) );
+        $values['eachPaymentAmount'] = floor($values['amount'] / $values['installments']);
         
         if (isset( $values["honor_contact_id"] ) && $values["honor_contact_id"] ) {
             $sql = "SELECT display_name FROM civicrm_contact WHERE id = " . $values["honor_contact_id"];
@@ -90,17 +91,7 @@ class CRM_Pledge_Form_PledgeView extends CRM_Core_Form
         require_once 'CRM/Contact/BAO/Contact.php';
         $url = CRM_Utils_System::url( 'civicrm/contact/view/pledge', 
                "action=view&reset=1&id={$values['id']}&cid={$values['contact_id']}&context=home" );
-        
-        $recentOther = array( );
-        if ( CRM_Core_Permission::checkActionPermission( 'CiviPledge', CRM_Core_Action::UPDATE ) ) {
-            $recentOther['editUrl'] = CRM_Utils_System::url( 'civicrm/contact/view/pledge', 
-                                                             "action=update&reset=1&id={$values['id']}&cid={$values['contact_id']}&context=home" );
-        } 
-        if ( CRM_Core_Permission::checkActionPermission( 'CiviPledge', CRM_Core_Action::DELETE ) ) {
-            $recentOther['deleteUrl'] = CRM_Utils_System::url( 'civicrm/contact/view/pledge', 
-                                                               "action=delete&reset=1&id={$values['id']}&cid={$values['contact_id']}&context=home" );
-        }
-        
+       
         require_once 'CRM/Utils/Money.php';
         $displayName = CRM_Contact_BAO_Contact::displayName( $values['contact_id'] );
         $this->assign( 'displayName', $displayName );
@@ -115,17 +106,8 @@ class CRM_Pledge_Form_PledgeView extends CRM_Core_Form
                                $values['id'],
                                'Pledge',
                                $values['contact_id'],
-                               null,
-                               $recentOther
-                               );
-        
-        //do check for campaigns
-        if ( $campaignId = CRM_Utils_Array::value( 'campaign_id', $values ) ) {
-            require_once 'CRM/Campaign/BAO/Campaign.php';
-            $campaigns = CRM_Campaign_BAO_Campaign::getCampaigns( $campaignId );
-            $values['campaign'] = $campaigns[$campaignId];
-        }
-        
+                               null );
+             
         $this->assign( $values );
     }
 

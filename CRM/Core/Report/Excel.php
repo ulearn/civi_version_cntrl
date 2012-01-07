@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -101,10 +101,10 @@ class CRM_Core_Report_Excel {
                     if ($enclosed == '') {
                         $schema_insert .= $value;
                     } else {
-                        if ( ( substr( $value, 0, 1 ) == CRM_Core_DAO::VALUE_SEPARATOR )&& 
-                             ( substr( $value, -1, 1 ) == CRM_Core_DAO::VALUE_SEPARATOR ) ) {
+                        if ( ( substr( $value, 0, 1 ) == CRM_Core_BAO_CustomOption::VALUE_SEPERATOR )&& 
+                             ( substr( $value, -1, 1 ) == CRM_Core_BAO_CustomOption::VALUE_SEPERATOR ) ) {
                             
-                            $strArray = explode( CRM_Core_DAO::VALUE_SEPARATOR, $value );
+                            $strArray = explode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR, $value );
                             
                             foreach( $strArray as $key => $val ) {
                                 if ( trim( $val ) == '' ) {
@@ -147,35 +147,6 @@ class CRM_Core_Report_Excel {
             return $result;
         }
     } // end of the 'getTableCsv()' function
-
-    function writeHTMLFile ( $fileName, &$header, &$rows, $titleHeader = null, $outputHeader = true ) {
-        if ( $outputHeader ) {
-            require_once 'CRM/Utils/System.php';
-            CRM_Utils_System::download( CRM_Utils_String::munge( $fileName ),
-                                        'application/vnd.ms-excel',
-                                        CRM_Core_DAO::$_nullObject,
-                                        'xls',
-                                        false );
-        }
-        echo "<table><thead><tr>";
-        foreach ( $header as $field ) {
-          echo "<th>$field</th>";
-        } // end while
-        echo "</tr></thead><tbody>";
-        $i = 0;
-        $fields_cnt = count($header);
-
-        foreach ( $rows as $row ) {
-            $schema_insert = '';
-            $colNo = 0;
-            echo "<tr>";
-            foreach ( $row as $j => $value ) {
-                echo "<td>".htmlentities ($value,ENT_COMPAT,'UTF-8')."</td>";
-            } // end for
-            echo "</tr>";
-        } // end for
-        echo "</tbody></table>";
-    } 
 
     function writeCSVFile( $fileName, &$header, &$rows, $titleHeader = null, $outputHeader = true ) {
         if ( $outputHeader ) {

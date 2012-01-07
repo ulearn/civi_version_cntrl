@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,7 +23,7 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-{if !empty($form.address.$blockId.street_address)}
+{if $form.address.$blockId.street_address}
     <tr id="streetAddress_{$blockId}">
         <td colspan="2">
            {$form.address.$blockId.street_address.label}<br />
@@ -67,13 +67,9 @@ function processAddressFields( name, blockId, loadData ) {
             var allAddressValues = {/literal}{if $allAddressFieldValues}{$allAddressFieldValues}{else}''{/if}{literal};
 
 	    var streetName    = eval( "allAddressValues.street_name_"    + blockId );
-	    if (streetName === null) streetName = '';  
 	    var streetUnit    = eval( "allAddressValues.street_unit_"    + blockId );
-	    if (streetUnit === null) streetUnit = '';  
 	    var streetNumber  = eval( "allAddressValues.street_number_"  + blockId );
-	    if (streetNumber === null) streetNumber = '';  
 	    var streetAddress = eval( "allAddressValues.street_address_" + blockId );
-	    if (streetAddress === null) streetAddress = '';  
 	}
 
 	var showBlockName = '';

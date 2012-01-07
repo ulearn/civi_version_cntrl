@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -122,21 +122,19 @@ class CRM_Contact_Form_Task extends CRM_Core_Form
         $qfKey = CRM_Utils_Request::retrieve( 'qfKey', 'String', $form );
         require_once 'CRM/Utils/Rule.php';
         $urlParams = 'force=1';
-        if ( CRM_Utils_Rule::qfKey( $qfKey ) ) {
-            $urlParams .= "&qfKey=$qfKey";
-        }
+        if ( CRM_Utils_Rule::qfKey( $qfKey ) ) $urlParams .= "&qfKey=$qfKey";
         
         $url = CRM_Utils_System::url( 'civicrm/contact/' . $fragment, $urlParams );
         $session = CRM_Core_Session::singleton( );
         $session->replaceUserContext( $url );
         
         require_once 'CRM/Contact/Task.php';
-        $form->_task         = CRM_Utils_Array::value( 'task', $values ) ;
+        $form->_task         = $values['task'];
         $crmContactTaskTasks = CRM_Contact_Task::taskTitles();
-        $form->assign( 'taskName', CRM_Utils_Array::value( $form->_task, $crmContactTaskTasks ) );
+        $form->assign( 'taskName', $crmContactTaskTasks[$form->_task] );
        
         if ( $useTable ) {
-            $form->_componentTable = CRM_Core_DAO::createTempTableName( 'civicrm_task_action', true, $qfKey );
+            $form->_componentTable = CRM_Core_DAO::createTempTableName( 'civicrm_task_action', false );
             $sql = " DROP TABLE IF EXISTS {$form->_componentTable}";
             CRM_Core_DAO::executeQuery( $sql );
 
@@ -160,7 +158,7 @@ class CRM_Contact_Form_Task extends CRM_Core_Form
 
             $fv          = $form->get( 'formValues' );
             $customClass = $form->get( 'customSearchClass' );
-            require_once 'CRM/Core/BAO/Mapping.php';
+            require_once "CRM/Core/BAO/Mapping.php";
             $returnProperties = CRM_Core_BAO_Mapping::returnProperties( $values);
 
             eval( '$selector   = new ' .
@@ -176,15 +174,7 @@ class CRM_Contact_Form_Task extends CRM_Core_Form
                  $sortByCharacter != 1 ) {
                 $params[] = array( 'sortByCharacter', '=', $sortByCharacter, 0, 0 );
             }
-            $queryOperator = $form->get( 'queryOperator' );
-            if ( ! $queryOperator ) {
-                $queryOperator = 'AND';
-            }
-            $dao =& $selector->contactIDQuery( $params, $form->_action, $sortID,
-                                               CRM_Utils_Array::value( 'display_relationship_type',
-                                                                       $fv ),
-                                               $queryOperator );
-
+            $dao =& $selector->contactIDQuery( $params, $form->_action, $sortID );
 
             $form->_contactIds = array( );
             if ( $useTable ) {
@@ -195,31 +185,21 @@ class CRM_Contact_Form_Task extends CRM_Core_Form
                     $insertString[] = " ( {$dao->contact_id} ) ";
                     if ( $count % 200 == 0 ) {
                         $string = implode( ',', $insertString );
-                        $sql = "REPLACE INTO {$form->_componentTable} ( contact_id ) VALUES $string";
+                        $sql = "INSERT INTO {$form->_componentTable} ( contact_id ) VALUES $string";
                         CRM_Core_DAO::executeQuery( $sql );
                         $insertString = array( );
                     }
                 }
                 if ( ! empty( $insertString ) ) {
                     $string = implode( ',', $insertString );
-                    $sql = "REPLACE INTO {$form->_componentTable} ( contact_id ) VALUES $string";
+                    $sql = "INSERT INTO {$form->_componentTable} ( contact_id ) VALUES $string";
                     CRM_Core_DAO::executeQuery( $sql );
                 }
                 $dao->free( );
             } else {
-                // filter duplicates here
-                // CRM-7058
-                // might be better to do this in the query, but that logic is a bit complex
-                // and it decides when to use distinct based on input criteria, which needs
-                // to be fixed and optimized.
-                $alreadySeen = array( );
                 while ( $dao->fetch( ) ) {
-                    if ( ! array_key_exists( $dao->contact_id, $alreadySeen ) ) {
-                        $form->_contactIds[] = $dao->contact_id;
-                        $alreadySeen[$dao->contact_id] = 1;
-                    }
+                    $form->_contactIds[] = $dao->contact_id;
                 }
-                unset( $alreadySeen );
                 $dao->free( );
             }
         } else if ( CRM_Utils_Array::value( 'radio_ts' , $values ) == 'ts_sel') {
@@ -238,7 +218,7 @@ class CRM_Contact_Form_Task extends CRM_Core_Form
             }
             if ( ! empty( $insertString ) ) {
                 $string = implode( ',', $insertString );
-                $sql = "REPLACE INTO {$form->_componentTable} ( contact_id ) VALUES $string";
+                $sql = "INSERT INTO {$form->_componentTable} ( contact_id ) VALUES $string";
                 CRM_Core_DAO::executeQuery( $sql );
             }
         }
@@ -247,7 +227,7 @@ class CRM_Contact_Form_Task extends CRM_Core_Form
         //CRM-5521
         if ( $selectedTypes = CRM_Utils_Array::value( 'contact_type' , $values ) ) {
             if( !is_array( $selectedTypes ) ) {
-                $selectedTypes  = explode( ' ', $selectedTypes );
+                $selectedTypes  = explode( " ", $selectedTypes );
             }
             foreach( $selectedTypes as $ct => $dontcare ) {
                 if ( strpos($ct, CRM_Core_DAO::VALUE_SEPARATOR) === false ) {

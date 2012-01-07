@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -40,17 +40,17 @@
                 <tr><td class="label">{ts}Current Employee?{/ts}</td><td>{ts}Yes{/ts}</td></tr>
             {/if}
             {if $row.start_date}
-                <tr><td class="label">{ts}Start Date{/ts}</td><td>{$row.start_date|crmDate}</td></tr>
+                <tr><td class="label">{ts}Start Date:{/ts}</td><td>{$row.start_date|crmDate}</td></tr>
             {/if}
             {if $row.end_date}
-                <tr><td class="label">{ts}End Date{/ts}</td><td>{$row.end_date|crmDate}</td></tr>
+                <tr><td class="label">{ts}End Date:{/ts}</td><td>{$row.end_date|crmDate}</td></tr>
             {/if}
             {if $row.description}
-                <tr><td class="label">{ts}Description{/ts}</td><td>{$row.description}</td></tr>
+                <tr><td class="label">{ts}Description:{/ts}</td><td>{$row.description}</td></tr>
             {/if}
 	        {foreach from=$viewNote item="rec"}
 		    {if $rec }
-			    <tr><td class="label">{ts}Note{/ts}</td><td>{$rec}</td></tr>	
+			    <tr><td class="label">{ts}Note:{/ts}</td><td>{$rec}</td></tr>	
 	   	    {/if}
             {/foreach}
             {if $row.is_permission_a_b}
@@ -69,9 +69,10 @@
             {/if}
            
             <tr><td class="label">{ts}Status{/ts}</td><td>{if $row.is_active}{ts}Enabled{/ts} {else} {ts}Disabled{/ts}{/if}</td></tr>
+
+            {include file="CRM/Custom/Page/CustomDataView.tpl"}
         {/foreach}
         </table>
-        {include file="CRM/Custom/Page/CustomDataView.tpl"}
         <div class="crm-submit-buttons"><input type="button" name='cancel' value="{ts}Done{/ts}" onclick="location.href='{crmURL p='civicrm/contact/view' q='action=browse&selectedChild=rel'}';"/></div>
         </div>
   {/if}
@@ -104,12 +105,11 @@
                 <td><label>{$sort_name_b}</label></td></tr>
                 <tr class="crm-relationship-form-block-is_current_employer">
                   <td class="label">
-                     <span id="employee"><label>{ts}Current Employee?{/ts}</label></span>
-                     <span id="employer"><label>{ts}Current Employer?{/ts}</label></span>
+                     <div id="employee"><label>{ts}Current Employee?{/ts}</label></div>
+                     <div id="employer"><label>{ts}Current Employer?{/ts}</label></div>
                   </td>
                   <td id="current_employer">{$form.is_current_employer.html}</td>
-                </tr>
-             </table>  
+                </tr>  
             {else} {* action = add *}
              </tr>
              <tr class="crm-relationship-form-block-rel_contact">
@@ -122,9 +122,8 @@
                         var relationshipType = cj('#relationship_type_id'); 
                         relationshipType.change( function() { 
                             cj('#relationship-refresh-save').hide();
-			     cj('#saveButtons').hide();
                             cj('#rel_contact').val('');
-                            cj("input[name='rel_contact_id']").val('');
+                            cj("input[name=rel_contact_id]").val('');
                             createRelation( );
                             changeCustomData( 'Relationship' );
                             setPermissionStatus( cj(this).val( ) ); 
@@ -137,17 +136,17 @@
                         var relContact = cj('#rel_contact');
                         if ( relType ) {
                              relContact.unbind( 'click' );
-                             cj("input[name='rel_contact_id']").val('');
+                             cj("input[name=rel_contact_id]").val('');
                              var dataUrl = {/literal}'{crmURL p="civicrm/ajax/rest" h=0 q="className=CRM_Contact_Page_AJAX&fnName=getContactList&json=1&context=relationship&rel="}'{literal} + relType;
                              relContact.autocomplete( dataUrl, { width : 180, selectFirst : false, matchContains: true });
                              relContact.result(function( event, data ) {
-                               	cj("input[name='rel_contact_id']").val(data[1]);
+                               	cj("input[name=rel_contact_id]").val(data[1]);
                                 cj('#relationship-refresh-save').show( );
                                 buildRelationFields( relType );
                              });
                         } else { 
                             relContact.unautocomplete( );
-                            cj("input[name='rel_contact_id']").val('');
+                            cj("input[name=rel_contact_id]").val('');
                             relContact.click( function() { alert( '{/literal}{ts}Please select a relationship type first.{/ts}{literal} ...' );});
                         }
                     }       
@@ -157,7 +156,7 @@
               </tr>
               </table>
                 <div class="crm-submit-buttons">
-                    <span id="relationship-refresh" class="crm-button crm-button-type-refresh crm-button_qf_Relationship_refresh">{$form._qf_Relationship_refresh.html}</span>
+                    <span id="relationship-refresh" class="crm-button crm-button-type-refresh crm-button_qf_Relationship_refresh.html">{$form._qf_Relationship_refresh.html}</span>
                     <span id="relationship-refresh-save" class="crm-button crm-button-type-save crm-button_qf_Relationship_refresh_save" style="display:none">{$form._qf_Relationship_refresh_save.html}</span>
                     <span class="crm-button crm-button-type-cancel crm-button_qf_Relationship_cancel">{$form._qf_Relationship_cancel.html}</span>
                 </div>
@@ -232,7 +231,8 @@
               {/if} {* end if searchDone *}
         {/if} {* end action = add *}
         
-            <div id = 'saveElements'>
+        <fieldset id = 'saveElements'>
+            <div>
                 {if $action EQ 1}
                 <div id='addCurrentEmployer'>
                    <table class="form-layout-compressed">  
@@ -320,10 +320,10 @@
                         }
                     </script>
                 {/literal}
-            </div>{* end of save element div *}
+            </div>
         <div id="customData"></div>
         <div class="spacer"></div>
-        <div class="crm-submit-buttons" id="saveButtons"> {include file="CRM/common/formButtons.tpl" location="top"}</div> 
+        <div class="crm-submit-buttons" id="saveButtons"> {include file="CRM/common/formButtons.tpl"}</div> 
         {if $action EQ 1}
             <div class="crm-submit-buttons" id="saveDetails">
             <span class="crm-button crm-button-type-save crm-button_qf_Relationship_refresh_savedetails">{$form._qf_Relationship_refresh_savedetails.html}</span>
@@ -339,7 +339,7 @@
             {capture assign=relationshipsString}{$currentRelationships.$id.relation}{ $disableRelationships.$id.relation} {$currentRelationships.$id.name}{ $disableRelationships.$id.name }{/capture}
             {ts 1=$relationshipsString}Are you sure you want to delete the Relationship '%1'?{/ts}
         </div>
-        <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
+        <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl"}</div>
     </fieldset>	
   {/if}
 {/if} {* close of custom data else*}
@@ -459,29 +459,16 @@ cj('#saveDetails').hide( );
 cj('#addCurrentEmployer').hide( );
 cj('#addCurrentEmployee').hide( );
 
-cj(document).ready(function(){
-  if ( cj.browser.msie ) {
-       cj('#rel_contact').keyup( function(e) {
-         if( e.keyCode == 9 || e.keyCode == 13 ) {
-	     return false;
-	     }
-         cj("input[name='rel_contact_id']").val('');
-         cj('#relationship-refresh').show( );
-         cj('#relationship-refresh-save').hide( );
-    }); } else {
-         cj('#rel_contact').focus( function() {
-         cj("input[name='rel_contact_id']").val('');
-         cj('#relationship-refresh').show( );
-         cj('#relationship-refresh-save').hide( ); 
-}); }
+cj('#rel_contact').focus( function() {
+    cj("input[name=rel_contact_id]").val('');
+    cj('#relationship-refresh').show( );
+    cj('#relationship-refresh-save').hide( );	      
 });
 
 {/literal}{if $searchRows || $callAjax}{literal} 
 show('saveElements');
-show('saveButtons');
 {/literal}{else}{literal}
 hide('saveElements');
-hide('saveButtons');
 {/literal}{/if}{/if}{literal}	
 
 cj( function( ) {
@@ -508,9 +495,6 @@ function buildRelationFields( relType ) {
                 hide('addCurrentEmployee');
                 show('addCurrentEmployer');
             }
-        } else {
-            hide('addCurrentEmployee');
-            hide('addCurrentEmployer');
         }
         hide('relationship-refresh');
         show('relationship-refresh-save');

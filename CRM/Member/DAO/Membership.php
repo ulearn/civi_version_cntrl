@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.4                                                |
+| CiviCRM version 3.1                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -79,7 +79,7 @@ class CRM_Member_DAO_Membership extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = true;
+    static $_log = false;
     /**
      * Membership Id
      *
@@ -156,18 +156,6 @@ class CRM_Member_DAO_Membership extends CRM_Core_DAO
      */
     public $is_pay_later;
     /**
-     * Conditional foreign key to civicrm_contribution_recur id. Each membership in connection with a recurring contribution carries a foreign key to the recurring contribution record. This assumes we can track these processor initiated events.
-     *
-     * @var int unsigned
-     */
-    public $contribution_recur_id;
-    /**
-     * The campaign for which this membership is attached.
-     *
-     * @var int unsigned
-     */
-    public $campaign_id;
-    /**
      * class constructor
      *
      * @access public
@@ -191,8 +179,6 @@ class CRM_Member_DAO_Membership extends CRM_Core_DAO
                 'membership_type_id' => 'civicrm_membership_type:id',
                 'status_id' => 'civicrm_membership_status:id',
                 'owner_membership_id' => 'civicrm_membership:id',
-                'contribution_recur_id' => 'civicrm_contribution_recur:id',
-                'campaign_id' => 'civicrm_campaign:id',
             );
         }
         return self::$_links;
@@ -233,13 +219,13 @@ class CRM_Member_DAO_Membership extends CRM_Core_DAO
                 'membership_type_id' => array(
                     'name' => 'membership_type_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Membership Type Id') ,
+                    'title' => ts('Membership Type') ,
                     'required' => true,
                     'import' => true,
                     'where' => 'civicrm_membership.membership_type_id',
                     'headerPattern' => '/^(m(embership\s)?type)$/i',
                     'dataPattern' => '',
-                    'export' => false,
+                    'export' => true,
                     'FKClassName' => 'CRM_Member_DAO_MembershipType',
                 ) ,
                 'join_date' => array(
@@ -287,13 +273,13 @@ class CRM_Member_DAO_Membership extends CRM_Core_DAO
                 'status_id' => array(
                     'name' => 'status_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Membership Status Id') ,
+                    'title' => ts('Membership Status') ,
                     'required' => true,
                     'import' => true,
                     'where' => 'civicrm_membership.status_id',
                     'headerPattern' => '/(member(ship|).)?(status)$/i',
                     'dataPattern' => '',
-                    'export' => false,
+                    'export' => true,
                     'FKClassName' => 'CRM_Member_DAO_MembershipStatus',
                 ) ,
                 'is_override' => array(
@@ -340,22 +326,6 @@ class CRM_Member_DAO_Membership extends CRM_Core_DAO
                     'headerPattern' => '/(is.)?(pay(.)?later)$/i',
                     'dataPattern' => '',
                     'export' => true,
-                ) ,
-                'contribution_recur_id' => array(
-                    'name' => 'contribution_recur_id',
-                    'type' => CRM_Utils_Type::T_INT,
-                    'FKClassName' => 'CRM_Contribute_DAO_ContributionRecur',
-                ) ,
-                'member_campaign_id' => array(
-                    'name' => 'campaign_id',
-                    'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Campaign ID') ,
-                    'import' => true,
-                    'where' => 'civicrm_membership.campaign_id',
-                    'headerPattern' => '',
-                    'dataPattern' => '',
-                    'export' => true,
-                    'FKClassName' => 'CRM_Campaign_DAO_Campaign',
                 ) ,
             );
         }

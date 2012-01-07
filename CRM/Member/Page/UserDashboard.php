@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -49,6 +49,10 @@ class CRM_Member_Page_UserDashboard extends CRM_Contact_Page_View_UserDashBoard
      */
     function listMemberships( ) 
     {
+        $idList = array('membership_type' => 'MembershipType',
+                        'status'          => 'MembershipStatus',
+                      );
+
         $membership = array( );
         require_once "CRM/Member/BAO/Membership.php";
         $dao = new CRM_Member_DAO_Membership( );
@@ -59,14 +63,21 @@ class CRM_Member_Page_UserDashboard extends CRM_Contact_Page_View_UserDashBoard
         while ($dao->fetch()) {
             $membership[$dao->id] = array( );
             CRM_Core_DAO::storeValues( $dao, $membership[$dao->id]);
-
-            //get the membership status and type values.
-            $statusANDType = CRM_Member_BAO_Membership::getStatusANDTypeValues( $dao->id );
-            foreach ( array( 'status', 'membership_type' ) as $fld ) {
-                $membership[$dao->id][$fld] = CRM_Utils_Array::value( $fld, $statusANDType[$dao->id] );
+            foreach ( $idList as $name => $file ) {
+                if ( $membership[$dao->id][$name .'_id'] ) {
+                    $membership[$dao->id][$name] = 
+                        CRM_Core_DAO::getFieldValue( "CRM_Member_DAO_$file", 
+                                                     $membership[$dao->id][$name .'_id'] );
+                }
             }
-            if ( CRM_Utils_Array::value( 'is_current_member', $statusANDType[$dao->id] ) ) {
-                $membership[$dao->id]['active'] = true;
+            if ( $dao->status_id ) {
+                $active =
+                    CRM_Core_DAO::getFieldValue('CRM_Member_DAO_MembershipStatus',
+                                                $dao->status_id,
+                                                'is_current_member');
+                if ( $active ) {
+                    $membership[$dao->id]['active'] = $active;
+                }
             }
 
             $membership[$dao->id]['renewPageId'] = CRM_Member_BAO_Membership::getContributionPageId( $dao->id );

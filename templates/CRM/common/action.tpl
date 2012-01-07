@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -25,15 +25,14 @@
 *}
 {literal}
 <script type="text/javascript">
-cj('#crm-container')
-    .live('click', function(event) {
-        if (cj(event.target).is('.btn-slide')) {
-            cj(event.target).children().show();
-            cj(event.target).addClass('btn-slide-active');
-        } else {
-            cj('.btn-slide .panel').hide();
-            cj('.btn-slide-active').removeClass('btn-slide-active');	
-        } 
-});
+ cj({/literal}{if $isSnippet }document{else}'#crm-container'{/if}{literal})
+ 	.bind('click', function(event) {
+    if (cj(event.target).is('.btn-slide')) {
+      cj('.panel').css('display', 'none');
+      cj(event.target).children().show();
+    } else {
+    	cj('.btn-slide .panel').hide();	
+	} 
+  });
 </script>
 {/literal}

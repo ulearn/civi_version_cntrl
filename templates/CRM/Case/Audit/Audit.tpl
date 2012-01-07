@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -125,8 +125,6 @@ There's the potential for collisions (two different labels having the same short
 				{else}
 					{$field.value|escape|truncate:10:'':true|crmDate}
 				{/if}
-            {elseif $field.label eq 'Details'}
-                {$field.value}
 			{else}
 				{$field.value|escape}
 			{/if}

@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,7 +24,7 @@
  +--------------------------------------------------------------------+
 *}
 {* Relationship tab within View Contact - browse, and view relationships for a contact *}
-{if !empty($cdType) }
+{if $cdType }
   {include file="CRM/Custom/Form/CustomData.tpl"}
 {else}
  <div class="view-content">
@@ -67,24 +67,10 @@
             {else}
                 {assign var = "rtype" value = "b_a" }
             {/if*}
-            
-            <tr id="rel_{$rel.id}" class="{cycle values="odd-row,even-row"} row-relationship {if $rel.is_permission_a_b eq 1 or $rel.is_permission_b_a eq 1}row-highlight{/if}">
-
+            <tr id="rel_{$rel.id}" class="{cycle values="odd-row,even-row"}">
             {if $relationshipTabContext}
-                <td class="bold">
-                   <a href="{crmURL p='civicrm/contact/view/rel' q="action=view&reset=1&selectedChild=rel&cid=`$contactId`&id=`$rel.id`&rtype=`$rel.rtype`"}">{$rel.relation}</a>
-			{if ($rel.cid eq $rel.contact_id_a and $rel.is_permission_a_b eq 1) OR
-			    ($rel.cid eq $rel.contact_id_b and $rel.is_permission_b_a eq 1) }
-		            <span id="permission-b-a" class="crm-marker permission-relationship"> *</span>
-		        {/if}
-		</td>
-                <td>
-		   <a href="{crmURL p='civicrm/contact/view' q="action=view&reset=1&cid=`$rel.cid`"}">{$rel.name}</a>
-		        {if ($contactId eq $rel.contact_id_a and $rel.is_permission_a_b eq 1) OR
-			    ($contactId eq $rel.contact_id_b and $rel.is_permission_b_a eq 1) } 
-		    	    <span id="permission-a-b" class="crm-marker permission-relationship"> *</span>
-		        {/if}
-		</td>
+                <td class="bold"><a href="{crmURL p='civicrm/contact/view/rel' q="action=view&reset=1&selectedChild=rel&cid=`$contactId`&id=`$rel.id`&rtype=`$rel.rtype`"}">{$rel.relation}</a></td>
+                <td><a href="{crmURL p='civicrm/contact/view' q="action=view&reset=1&cid=`$rel.cid`"}">{$rel.name}</a></td>
             {else}
                 <td class="bold">{$rel.relation}</strong></td>
                 <td>{$rel.name}</td>
@@ -100,10 +86,6 @@
         {/foreach}
         </table>
         {/strip}
-        </div>
-
-        <div id="permission-legend" class="crm-content-block">
-	     <span class="crm-marker">* </span>{ts}Indicates a permissioned relationship. This contact can be viewed and updated by the other.{/ts}
         </div>
 {/if}
 {* end of code to show current relationships *}
@@ -172,10 +154,10 @@
 {* end of code to show inactive relationships *}
 
 
-</div>
 {/if} {* close of custom data else*}
 
-{if !empty($searchRows) }
+{if $searchRows }
  {*include custom data js file*}
  {include file="CRM/common/customData.tpl"}
 {/if}
+</div>

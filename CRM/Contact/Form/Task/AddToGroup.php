@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -104,15 +104,7 @@ class CRM_Contact_Form_Task_AddToGroup extends CRM_Contact_Form_Task {
             require_once 'CRM/Core/OptionGroup.php';
             $groupTypes = CRM_Core_OptionGroup::values( 'group_type', true );
             if ( ! CRM_Core_Permission::access( 'CiviMail' ) ) {
-                require_once 'CRM/Mailing/Info.php';
-                $isWorkFlowEnabled = CRM_Mailing_Info::workflowEnabled( );
-                if ( $isWorkFlowEnabled && 
-                     !CRM_Core_Permission::check( 'create mailings' ) &&
-                     !CRM_Core_Permission::check( 'schedule mailings' ) &&
-                     !CRM_Core_Permission::check( 'approve mailings' )
-                     ) {
-                    unset( $groupTypes['Mailing List'] );
-                }
+                unset( $groupTypes['Mailing List'] );
             }
             
             if ( ! empty( $groupTypes ) ) {
@@ -190,9 +182,9 @@ class CRM_Contact_Form_Task_AddToGroup extends CRM_Contact_Form_Task {
     {
         $errors = array( );
        
-        if ( !empty($params['group_option']) && empty($params['title']) ) {
+        if ( $params['group_option'] && !$params['title'] ) {
             $errors['title'] = "Group Name is a required field";
-        } elseif ( empty($params['group_option']) && empty($params['group_id'])) {
+        } else if ( !$params['group_option'] && !$params['group_id']) {
             $errors['group_id'] = "Select Group is a required field.";
         }
         

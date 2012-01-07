@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,24 +30,24 @@
   </div><!-- /.crm-accordion-header -->
   <div id="demographics" class="crm-accordion-body">
   <div class="form-item">
-        <span class="label">{$form.gender_id.label}</span>
+        <span class="labels">{$form.gender_id.label}</span>
         
-	<span class="value">
+	<span class="fields">
         {$form.gender_id.html}
         <span class="crm-clear-link">(<a href="#" title="unselect" onclick="unselectRadio('gender_id', '{$form.formName}'); return false;">{ts}clear{/ts}</a>)</span>
         </span>
   </div>
   <div class="form-item">
-        <span class="label">{$form.birth_date.label}</span>
-        <span class="value">{include file="CRM/common/jcalendar.tpl" elementName=birth_date}</span>
+        <span class="labels">{$form.birth_date.label}</span>
+        <span class="fields">{include file="CRM/common/jcalendar.tpl" elementName=birth_date}</span>
   </div>
   <div class="form-item">
        {$form.is_deceased.html}
        {$form.is_deceased.label}
   </div>
   <div id="showDeceasedDate" class="form-item">
-       <span class="label">{$form.deceased_date.label}</span>
-       <span class="value">{include file="CRM/common/jcalendar.tpl" elementName=deceased_date}</span>
+       <span class="labels">{$form.deceased_date.label}</span>
+       <span class="fields">{include file="CRM/common/jcalendar.tpl" elementName=deceased_date}</span>
   </div> 
  </div><!-- /.crm-accordion-body -->
 </div><!-- /.crm-accordion-wrapper -->
@@ -57,11 +57,10 @@
     showDeceasedDate( );    
     function showDeceasedDate( )
     {
-        if ( cj("#is_deceased").is(':checked') ) {
-      	    cj("#showDeceasedDate").show( );
+        if (document.getElementsByName("is_deceased")[0].checked) {
+      	    show('showDeceasedDate');
         } else {
-	  cj("#showDeceasedDate").hide( );
-         cj("#deceased_date").val('');
+	    hide('showDeceasedDate');
         }
     }     
 </script>

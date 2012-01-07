@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -25,7 +25,7 @@
 *}
 <div class="crm-block crm-mailing-forward-form-block">
 <br />
-<div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"}</div><br />
+<div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl"}</div><br />
 <table class="form-layout">
 <tr class="crm-mailing-forward-form-block-fromEmail"><td class="label">From</td><td>{$fromEmail}</td></tr>
 <tr><td colspan="2">{ts}Please enter up to 5 email addresses to receive the mailing.{/ts}</td></tr>
@@ -41,7 +41,7 @@
 </div><div class="spacer"></div>
 <div id="comment" style="display:none">
             <table class="form-layout">
-            <tr class="crm-mailing-forward-form-block-forward_comment"><td><a href="#" onclick="hide('comment'); show('comment_show'); return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}close section{/ts}"/></a>
+            <tr class="crm-mailing-forward-form-block-forward_comment"><td><a href="#" onclick="hide('comment'); show('comment_show'); return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}close section{/ts}"/></a></a>
                 <label>{$form.forward_comment.label}</label></td>
                 <td>{$form.forward_comment.html}<br /><br />
               &nbsp;{$form.html_comment.html}<br /></td>
@@ -49,7 +49,7 @@
             </table>
 </div> 
 <br />
-<div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
+<div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl"}</div>
 </div>
 
 {literal}

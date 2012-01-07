@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -35,7 +35,7 @@
     {strip} 
         <table class="form-layout">
         <tr>
-           <td class="font-size12pt" colspan="3">
+           <td class="font-size12pt" colspan="2">
                {$form.sort_name.label}&nbsp;&nbsp;{$form.sort_name.html|crmReplace:class:'twenty'}&nbsp;&nbsp;&nbsp;{$form.buttons.html}
            </td>       
         </tr>
@@ -43,7 +43,7 @@
         {include file="CRM/Activity/Form/Search/Common.tpl"}
      
         <tr>
-           <td colspan="3">{$form.buttons.html}</td>
+           <td colspan="2">{$form.buttons.html}</td>
         </tr>
         </table>
     {/strip}

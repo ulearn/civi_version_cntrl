@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -309,7 +309,7 @@ abstract class CRM_Event_Import_Parser
             /* trim whitespace around the values */
             $empty = true;
             foreach ($values as $k => $v) {
-                $values[$k] = trim($v, " \t\r\n");
+                $values[$k] = trim($v, " .\t\r\n");
             }
             
             if ( CRM_Utils_System::isNull( $values ) ) {

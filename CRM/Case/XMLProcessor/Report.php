@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -134,11 +134,14 @@ class CRM_Case_XMLProcessor_Report extends CRM_Case_XMLProcessor {
             }
             $caseTypeIDs = explode( CRM_Core_DAO::VALUE_SEPARATOR,
                                     $dao->case_type_id );
+            $case['caseType'] = CRM_Core_OptionGroup::getLabel( 'case_type',
+                                                                $caseTypeID );
 
-            require_once 'CRM/Case/BAO/Case.php';
-            $case['caseType']     = CRM_Case_BAO_Case::getCaseType( $caseID );
-            $case['caseTypeName'] = CRM_Case_BAO_Case::getCaseType( $caseID, 'name' );
-            $case['status']       = CRM_Core_OptionGroup::getLabel( 'case_status', $dao->status_id, false );
+            require_once 'CRM/Case/PseudoConstant.php';
+            $caseTypeName = CRM_Case_PseudoConstant::caseTypeName( $caseID );
+            $case['caseTypeName'] = $caseTypeName['name'];
+            $case['status'] = CRM_Core_OptionGroup::getLabel( 'case_status',
+                                                              $dao->status_id );
         }
         return $case;
     }
@@ -192,7 +195,7 @@ class CRM_Case_XMLProcessor_Report extends CRM_Case_XMLProcessor {
         foreach ( $coreActivityTypes as $aType ) {
             $map[$aType['id']] = $aType;
         }               
-        
+                
         $activityTypeIDs = implode( ',', array_keys( $map ) );
         $query = "
 SELECT a.*, c.id as caseID
@@ -200,7 +203,6 @@ FROM   civicrm_activity a,
        civicrm_case     c,
        civicrm_case_activity ac
 WHERE  a.is_current_revision = 1
-AND    a.is_deleted =0
 AND    a.activity_type_id IN ( $activityTypeIDs )
 AND    c.id = ac.case_id
 AND    a.id = ac.activity_id
@@ -289,8 +291,7 @@ WHERE      a.id = %1
         if ( $clientID ) {
             $clientID = CRM_Utils_Type::escape($clientID, 'Integer');
             if ( !in_array( $activityTypeInfo['name'], array( 'Email', 'Inbound Email' ) ) ) {
-                $activity['editURL'] = CRM_Utils_System::url( 'civicrm/case/activity',
-                                                              "reset=1&cid={$clientID}&caseid={$activityDAO->caseID}&action=update&atype={$activityDAO->activity_type_id}&id={$activityDAO->id}" );
+                $activity['editURL'] = CRM_Utils_System::url( 'civicrm/case/activity',                                          "reset=1&cid={$clientID}&caseid={$activityDAO->caseID}&action=update&atype={$activityDAO->activity_type_id}&id={$activityDAO->id}" );
             } else {
                 $activity['editURL'] = '';
             }
@@ -396,6 +397,7 @@ WHERE      a.id = %1
                                        'value' => $this->redact( $reporter ),
                                        'type'  => 'String' );
         
+       
         if ( $activityDAO->assigneeID ) {
             //allow multiple assignee contacts.CRM-4503.
             require_once 'CRM/Activity/BAO/ActivityAssignment.php';
@@ -416,7 +418,7 @@ WHERE      a.id = %1
         if ( $activityDAO->medium_id ) {
             $activity['fields'][] = array( 'label' => 'Medium',
                                            'value' => CRM_Core_OptionGroup::getLabel( 'encounter_medium',
-                                                                                      $activityDAO->medium_id, false ),
+                                                                                      $activityDAO->medium_id ),
                                            'type'  => 'String' );
         }
         
@@ -477,18 +479,12 @@ WHERE      a.id = %1
                     
                     // Note: this is already taken care in getDisplayValue above, but sometimes 
                     // strings like '^A^A' creates problem. So to fix this special case -
-                    if ( strstr($value, CRM_Core_DAO::VALUE_SEPARATOR) ) {
-                        $value = trim($value, CRM_Core_DAO::VALUE_SEPARATOR);
+                    if ( strstr($value, CRM_Core_BAO_CustomOption::VALUE_SEPERATOR) ) {
+                        $value = trim($value, CRM_Core_BAO_CustomOption::VALUE_SEPERATOR);
                     }
                     if ( CRM_Utils_Array::value('type', $typeValue) == 'String' ||
                          CRM_Utils_Array::value('type', $typeValue) == 'Memo' ) {
                         $value = $this->redact($value );
-                    } else if ( CRM_Utils_Array::value( 'type', $typeValue ) == 'File' ) {
-                        require_once 'CRM/Core/BAO/File.php';
-                        $tableName = CRM_Core_DAO::getFieldValue( 'CRM_Core_DAO_EntityFile', $typeValue, 'entity_table' );
-                        $value     = CRM_Core_BAO_File::attachmentInfo( $tableName, $activityDAO->id );
-                    } else if ( CRM_Utils_Array::value( 'type', $typeValue ) == 'Link' ) {
-                        $value = CRM_Utils_System::formatWikiURL( $value );
                     }
 
                     //$typeValue
@@ -505,10 +501,6 @@ WHERE      a.id = %1
     
     function getActivityTypeCustomSQL( $activityTypeID, $dateFormat = null ) {
         static $cache = array( );
-
-        if ( is_null( $activityTypeID  ) ) {
-            $activityTypeID = 0;
-        }
         
         if ( ! isset( $cache[$activityTypeID] ) ) {
             $query = "
@@ -524,13 +516,9 @@ SELECT cg.title           as groupTitle,
 FROM   civicrm_custom_group cg,
        civicrm_custom_field cf
 WHERE  cf.custom_group_id = cg.id
-AND    cg.extends = 'Activity'";
-
-            if ( $activityTypeID ) {
-                $query .= "AND ( cg.extends_entity_column_value IS NULL OR cg.extends_entity_column_value LIKE '%" . CRM_Core_DAO::VALUE_SEPARATOR . "%1" . CRM_Core_DAO::VALUE_SEPARATOR . "%' )";
-            } else {
-                $query .= "AND cg.extends_entity_column_value IS NULL";
-            }
+AND    cg.extends = 'Activity'
+AND    cg.extends_entity_column_value LIKE '" . CRM_Core_DAO::VALUE_SEPARATOR . "%1" . CRM_Core_DAO::VALUE_SEPARATOR . "'
+";
             $params = array( 1 => array( $activityTypeID,
                                          'Integer' ) );
             $dao = CRM_Core_DAO::executeQuery( $query, $params );
@@ -688,6 +676,7 @@ LIMIT  1
         $includeActivities = CRM_Utils_Request::retrieve( 'all'    , 'Positive', CRM_Core_DAO::$_nullObject );
         $params = $otherRelationships = $globalGroupInfo = array();
         $report = new CRM_Case_XMLProcessor_Report( $isRedact );
+        
         if ( $includeActivities ) {
             $params['include_activities'] = 1;
         } 
@@ -701,11 +690,11 @@ LIMIT  1
         //get case related relationships (Case Role)
         require_once('CRM/Case/BAO/Case.php');
         $caseRelationships = CRM_Case_BAO_Case::getCaseRoles( $clientID, $caseID );
-        $caseType = CRM_Case_BAO_Case::getCaseType( $caseID, 'name' );
+        $caseType = CRM_Case_PseudoConstant::caseTypeName( $caseID );
         
         require_once ('CRM/Case/XMLProcessor/Process.php');
         $xmlProcessor = new CRM_Case_XMLProcessor_Process( );
-        $caseRoles    = $xmlProcessor->get( $caseType, 'CaseRoles' );
+        $caseRoles    = $xmlProcessor->get( $caseType['name'], 'CaseRoles' );
         foreach( $caseRelationships as $key => &$value ) {          
             if ( CRM_Utils_Array::value($value['relation_type'], $caseRoles) ) {
                 unset( $caseRoles[$value['relation_type']] );

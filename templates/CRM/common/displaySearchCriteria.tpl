@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -54,11 +54,7 @@
             <div class="qill">
             {$item}
             {if !$smarty.foreach.criteria.last}
-                {if $operator}
-                  <span class="font-italic">...{$operator}...</span>
-                {else}
-                  <span class="font-italic">...{ts}AND{/ts}...</span>
-                {/if}
+                <span class="font-italic">{ts}...AND...{/ts}</span>
             {/if}
             </div>
         {/foreach}

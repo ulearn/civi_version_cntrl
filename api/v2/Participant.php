@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,8 +32,8 @@
  * @package CiviCRM_APIv2
  * @subpackage API_Participant
  * 
- * @copyright CiviCRM LLC (c) 2004-2011
- * @version $Id: Participant.php 32998 2011-03-14 22:00:35Z kurund $
+ * @copyright CiviCRM LLC (c) 2004-2010
+ * @version $Id: Participant.php 26310 2010-02-18 15:10:24Z shot $
  *
  */
 
@@ -41,7 +41,7 @@
  * Files required for this package
  */
 require_once 'api/v2/utils.php';
-require_once 'api/v2/ParticipantPayment.php';
+
 /**
  * Create an Event Participant
  *  
@@ -74,11 +74,7 @@ function civicrm_participant_create(&$params)
     if ( !isset($params['register_date'] )) {
         $params['register_date']= date( 'YmdHis' );
     }
-    $errors= civicrm_participant_check_params( $params );
-    if ( civicrm_error( $errors ) ) {
-        return $errors;
-    }
-     
+    
     require_once 'CRM/Event/BAO/Participant.php';
     $participant = CRM_Event_BAO_Participant::create($params);
     
@@ -184,9 +180,9 @@ function &civicrm_participant_search( &$params ) {
 
     $newParams =& CRM_Contact_BAO_Query::convertFormValues( $params);
     $query = new CRM_Contact_BAO_Query( $newParams, $returnProperties, null );
-    list( $select, $from, $where, $having ) = $query->query( );
+    list( $select, $from, $where ) = $query->query( );
     
-    $sql = "$select $from $where $having";  
+    $sql = "$select $from $where";  
 
     if ( ! empty( $sort ) ) {
         $sql .= " ORDER BY $sort ";
@@ -226,12 +222,30 @@ function &civicrm_participant_update(&$params)
         $error = civicrm_create_error( 'Required parameter missing' );
         return $error;
     }
-    $errors= civicrm_participant_check_params( $params );
-    if ( civicrm_error( $errors ) ) {
-        return $errors;
-    }
+    
     require_once 'CRM/Event/BAO/Participant.php';
-    $participantBAO = CRM_Event_BAO_Participant::create( $params );
+    $participantBAO = new CRM_Event_BAO_Participant( );
+    $participantBAO->id = $params['id'];
+    $fields = $participantBAO->fields( );
+    $datefields = array("register_date" => "register_date");    
+    foreach ( array('source','status_id','register_date','role_id') as $v) {    
+        $fields[$v] = $fields['participant_'.$v];
+        unset( $fields['participant_'.$v] );
+    }
+    
+    if ($participantBAO->find(true)) {
+        foreach ( $fields as $name => $field) {
+            if (array_key_exists($name, $params)) {
+                $participantBAO->$name = $params[$name];
+            }
+        }
+        
+        //fix the dates 
+        foreach ( $datefields as $key => $value ) {
+            $participantBAO->$key  = CRM_Utils_Date::customFormat($participantBAO->$key,'%Y%m%d');
+        }
+        $participantBAO->save();
+    }
     
     $participant = array();
     _civicrm_object_to_array( $participantBAO, $participant );
@@ -276,6 +290,113 @@ function &civicrm_participant_delete( &$params )
 }
 
 
+/**
+ * Create a Event Participant Payment
+ *  
+ * This API is used for creating a Participant Payment of Event.
+ * Required parameters : participant_id, contribution_id.
+ * 
+ * @param   array  $params     an associative array of name/value property values of civicrm_participant_payment
+ * 
+ * @return array of newly created payment property values.
+ * @access public
+ */
+function &civicrm_participant_payment_create(&$params)
+{
+    _civicrm_initialize();
+    if ( !is_array( $params ) ) {
+        $error = civicrm_create_error( 'Params is not an array' );
+        return $error;
+    }
+    
+    if ( !isset($params['participant_id']) || !isset($params['contribution_id']) ) {
+        $error = civicrm_create_error( 'Required parameter missing' );
+        return $error;
+    }
+   
+    $ids= array();
+    if( CRM_Utils_Array::value( 'id', $params ) ) {
+        $ids['id'] = $params['id']; 
+    }
+    require_once 'CRM/Event/BAO/ParticipantPayment.php';
+    $participantPayment = CRM_Event_BAO_ParticipantPayment::create($params, $ids);
+    
+    if ( is_a( $participantPayment, 'CRM_Core_Error' ) ) {
+        $error = civicrm_create_error( "Participant payment could not be created" );
+        return $error;
+    } else {
+        $payment = array( );
+        $payment['id'] = $participantPayment->id;
+        $payment['is_error']   = 0;
+    }
+    return $payment;
+   
+}
+
+/**
+ * Update an existing contact participant payment
+ *
+ * This api is used for updating an existing contact participant payment
+ * Required parameters : id of a participant_payment
+ * 
+ * @param  Array   $params  an associative array of name/value property values of civicrm_participant_payment
+ * 
+ * @return array of updated participant_payment property values
+ * @access public
+ */
+function &civicrm_participant_payment_update( &$params )
+{
+    _civicrm_initialize();
+    if ( !is_array( $params ) ) {
+        $error = civicrm_create_error( 'Params is not an array' );
+        return $error;
+    }
+    
+    if ( !isset($params['id']) ) {
+        $error = civicrm_create_error( 'Required parameter missing' );
+        return $error;
+    }
+
+    $ids = array();
+    $ids['id'] = $params['id'];
+
+    require_once 'CRM/Event/BAO/ParticipantPayment.php';
+    $payment = CRM_Event_BAO_ParticipantPayment::create( $params, $ids );
+   
+    $participantPayment = array();
+    _civicrm_object_to_array( $payment, $participantPayment );
+    
+    return $participantPayment;
+}
+
+/**
+ * Deletes an existing Participant Payment
+ * 
+ * This API is used for deleting a Participant Payment
+ * 
+ * @param  Int  $participantPaymentID   Id of the Participant Payment to be deleted
+ * 
+ * @return null if successfull, array with is_error=1 otherwise
+ * @access public
+ */
+function civicrm_participant_payment_delete( &$params )
+{
+    _civicrm_initialize();
+    
+    if ( !is_array( $params ) ) {
+        $error = civicrm_create_error( 'Params is not an array' );
+        return $error;
+    }
+    
+    if ( ! CRM_Utils_Array::value( 'id', $params ) ) {
+        $error = civicrm_create_error( 'Invalid or no value for Participant payment ID' );
+        return $error;
+    }
+    require_once 'CRM/Event/BAO/ParticipantPayment.php';
+    $participant = new CRM_Event_BAO_ParticipantPayment();
+    
+    return $participant->deleteParticipantPayment( $params ) ? civicrm_create_success( ) : civicrm_create_error('Error while deleting participantPayment');
+}
 
 /**
  *
@@ -295,7 +416,7 @@ function civicrm_create_participant_formatted( &$params , $onDuplicate )
     require_once 'CRM/Event/Import/Parser.php';
     if ( $onDuplicate != CRM_Event_Import_Parser::DUPLICATE_NOCHECK) {
         CRM_Core_Error::reset( );
-        $error = civicrm_participant_check_params( $params ,true );
+        $error = civicrm_participant_check_params( $params );
         if ( civicrm_error( $error ) ) {
             return $error;
         }
@@ -309,49 +430,24 @@ function civicrm_create_participant_formatted( &$params , $onDuplicate )
  * @param <type> $params
  * @return <type> 
  */
-function civicrm_participant_check_params( &$params ,$checkDuplicate = false ) 
+function civicrm_participant_check_params( &$params ) 
 {
     require_once 'CRM/Event/BAO/Participant.php';
-    //check if participant id is valid or not
-    if( CRM_Utils_Array::value( 'id', $params ) ) {
-        $participant = new CRM_Event_BAO_Participant();
-        $participant->id = $params['id'];
-        if ( !$participant->find( true )) {
-            return civicrm_create_error( ts( 'Participant  id is not valid' ));
-        }
-    }
-    require_once 'CRM/Contact/BAO/Contact.php';
-    //check if contact id is valid or not
-    if( CRM_Utils_Array::value( 'contact_id', $params ) ) {
-        $contact = new CRM_Contact_BAO_Contact();
-        $contact->id = $params['contact_id'];
-        if ( !$contact->find( true )) {
-            return civicrm_create_error( ts( 'Contact id is not valid' ));
-        }
-    }
-    
-    //check that event id is not an template
-    if( CRM_Utils_Array::value( 'event_id', $params ) ) {
-        $isTemplate = CRM_Core_DAO::getFieldValue( 'CRM_Event_DAO_Event', $params['event_id'], 'is_template' );
-        if ( !empty( $isTemplate ) ) {
-            return civicrm_create_error( ts( 'Event templates are not meant to be registered' ));
-        }
-    }
     
     $result = array( );
-    if( $checkDuplicate ) {
-        if( CRM_Event_BAO_Participant::checkDuplicate( $params, $result ) ) {
-            $participantID = array_pop( $result );
-            
-            $error = CRM_Core_Error::createError( "Found matching participant record.", 
-                                                  CRM_Core_Error::DUPLICATE_PARTICIPANT, 
-                                                  'Fatal', $participantID );
-            
-            return civicrm_create_error( $error->pop( ),
-                                         array( 'contactID'     => $params['contact_id'],
-                                                'participantID' => $participantID ) );
-        }
+    
+    if( CRM_Event_BAO_Participant::checkDuplicate( $params, $result ) ) {
+        $participantID = array_pop( $result );
+        
+        $error = CRM_Core_Error::createError( "Found matching participant record.", 
+                                              CRM_Core_Error::DUPLICATE_PARTICIPANT, 
+                                              'Fatal', $participantID );
+        
+        return civicrm_create_error( $error->pop( ),
+                                     array( 'contactID'     => $params['contact_id'],
+                                            'participantID' => $participantID ) );
     }
+    
     return true;
 }
 

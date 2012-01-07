@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.4                                                |
+ | CiviCRM version 3.1                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -98,7 +98,7 @@ class CRM_Admin_Form_Preferences extends CRM_Core_Form
         foreach ( $this->_cbs as $name => $title ) {
             if ( isset( $this->_config->$name ) &&
                  $this->_config->$name ) {
-                $value = explode( CRM_Core_DAO::VALUE_SEPARATOR,
+                $value = explode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR,
                                   substr( $this->_config->$name, 1, -1 ) );
                 if ( ! empty( $value ) ) {
                     $defaults[$name] = array( );
@@ -160,10 +160,10 @@ class CRM_Admin_Form_Preferences extends CRM_Core_Form
             if ( CRM_Utils_Array::value( $name, $this->_params ) &&
                  is_array( $this->_params[$name] ) ) {
                 $this->_config->$name = 
-                    CRM_Core_DAO::VALUE_SEPARATOR .
-                    implode( CRM_Core_DAO::VALUE_SEPARATOR,
+                    CRM_Core_BAO_CustomOption::VALUE_SEPERATOR .
+                    implode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR,
                              array_keys( $this->_params[$name] ) ) .
-                    CRM_Core_DAO::VALUE_SEPARATOR;
+                    CRM_Core_BAO_CustomOption::VALUE_SEPERATOR;
             } else {
                 $this->_config->$name = 'NULL';
             }

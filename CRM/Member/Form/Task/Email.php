@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -30,7 +30,7 @@
  *
  * @package CRM
  * @copyright CiviCRM LLC (c) 2004-2010
- * $Id: Email.php 26615 2010-03-21 21:05:35Z kurund $
+ * $Id: Email.php 30684 2010-11-11 08:37:12Z yashodha $
  *
  */
 
@@ -91,6 +91,9 @@ class CRM_Member_Form_Task_Email extends CRM_Member_Form_Task {
      */
     public function buildQuickForm()
     {
+        //enable form element
+        $this->assign( 'emailTask', true );
+
         CRM_Contact_Form_Task_EmailCommon::buildQuickForm( $this );
     }
 

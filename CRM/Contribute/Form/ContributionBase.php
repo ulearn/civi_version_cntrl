@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -304,7 +304,7 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form
 
                 // ensure that processor has a valid config
                 $this->_paymentObject =&
-                    CRM_Core_Payment::singleton( $this->_mode, 'Contribute', $this->_paymentProcessor, $this );
+                    CRM_Core_Payment::singleton( $this->_mode, $this->_paymentProcessor, $this );
                 $error = $this->_paymentObject->checkConfig( );
                 if ( ! empty( $error ) ) {
                     CRM_Core_Error::fatal( $error );
@@ -533,6 +533,11 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form
         
         $this->_amount   = $this->get( 'amount' );
         
+        //CRM-6907
+        $config = CRM_Core_Config::singleton( );
+        $config->defaultCurrency = CRM_Utils_Array::value( 'currency', 
+                                                           $this->_values, 
+                                                           $config->defaultCurrency );
     }
 
     /** 
@@ -588,6 +593,12 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form
 
         foreach ( $vars as $v ) {
             if ( CRM_Utils_Array::value( $v, $this->_params ) ) {
+                if ( $v == 'frequency_unit' || $v == 'pledge_frequency_unit' ) {
+                    $frequencyUnits =  CRM_Core_OptionGroup::values( 'recur_frequency_units' );
+                    if ( array_key_exists( $this->_params[$v], $frequencyUnits ) ) {
+                        $this->_params[$v] = $frequencyUnits[$this->_params[$v]];
+                    }
+                }
                 $this->assign( $v, $this->_params[$v] );
             }
         }
@@ -714,6 +725,7 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form
                     CRM_Core_Session::setStatus("Some of the profile fields cannot be configured for this page.");
                 }
                 
+                $fields = array_diff_assoc( $fields, $this->_fields );
                 $this->assign( $name, $fields );
                 
                 $addCaptcha = false;
@@ -786,7 +798,7 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form
         
         //get all status
         require_once 'CRM/Contribute/PseudoConstant.php';
-        $allStatus = CRM_Contribute_PseudoConstant::contributionStatus( );
+        $allStatus = CRM_Contribute_PseudoConstant::contributionStatus( null, 'name' );
         $validStatus = array( array_search( 'Pending', $allStatus ), 
                               array_search( 'In Progress', $allStatus ),
                               array_search( 'Overdue', $allStatus ), );

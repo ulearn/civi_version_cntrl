@@ -1,6 +1,6 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -30,11 +30,15 @@
 function setIntermediate( ) {
 	var dataUrl = "{/literal}{$statusUrl}{literal}";
 	cj.getJSON( dataUrl, function( response ) {
+	
 	   var dataStr = response.toString();
 	   var result  = dataStr.split(",");
 	   cj("#intermediate").html( result[1] );
-	   cj("#importProgressBar").progressBar( result[0] );
-	});
+           if( result[0] < 100 ){ 
+	        cj("#importProgressBar .ui-progressbar-value").animate({width: result[0]+"%"}, 500);
+		cj("#status").text( result[0]+"% Completed");
+             }
+ 	});
 }
 
 function pollLoop( ){
@@ -60,17 +64,8 @@ function verify( ) {
 		    cj("#id-processing").dialog().parents(".ui-dialog").find(".ui-dialog-titlebar").remove();
 		}
 	});
-	
-	var imageBase = "{/literal}{$config->resourceBase}{literal}packages/jquery/plugins/images/";
-    cj("#importProgressBar").progressBar({
-        boxImage:       imageBase + 'progressbar.gif',
-        barImage: { 0 : imageBase + 'progressbg_red.gif',
-                    20: imageBase + 'progressbg_orange.gif',
-                    50: imageBase + 'progressbg_yellow.gif',
-                    70: imageBase + 'progressbg_green.gif'
-                  }
-	}); 
-	cj("#importProgressBar").show( );
+	cj("#importProgressBar" ).progressbar({value:0});
+    	cj("#importProgressBar").show( );
 	pollLoop( );
 }
 </script>
@@ -104,7 +99,8 @@ function verify( ) {
 {* Import Progress Bar and Info *}
 <div id="id-processing" class="hiddenElement">
 	<h3>Importing records...</h3><br />
-	<div class="progressBar" id="importProgressBar" style="margin-left:45px;display:none;"></div>
+       <div id="status" style="margin-left:6px;"></div>
+	<div class="progressBar" id="importProgressBar" style="margin-left:6px;display:none;"></div>
 	<div id="intermediate"></div>
 	<div id="error_status"></div>
 </div>
@@ -151,7 +147,7 @@ function verify( ) {
  
  {* Group options *}
  {* New Group *}
-<div class="crm-accordion-wrapper crm-accordion_title-accordion crm-accordion-closed">
+<div id="new-group" class="crm-accordion-wrapper crm-accordion_title-accordion crm-accordion-closed">
  <div class="crm-accordion-header">
   <div class="icon crm-accordion-pointer"></div> 
     {ts}Add imported records to a new group{/ts}
@@ -188,7 +184,7 @@ function verify( ) {
 
     {* Tag options *}
     {* New Tag *}
-<div class="crm-accordion-wrapper crm-accordion_title-accordion crm-accordion-closed">
+<div id="new-tag" class="crm-accordion-wrapper crm-accordion_title-accordion crm-accordion-closed">
  <div class="crm-accordion-header">
   <div class="icon crm-accordion-pointer"></div>
   {ts}Create a new tag and assign it to imported records{/ts}            
@@ -235,10 +231,20 @@ function verify( ) {
    {include file="CRM/common/formButtons.tpl" location="bottom"}
 </div>
 </div>
+
 {literal}
 <script type="text/javascript">
 cj(function() {
    cj().crmaccordions(); 
 });
+
+{/literal}{if $invalidGroupName}{literal}
+cj("#new-group").removeClass( 'crm-accordion-closed' ).addClass( 'crm-accordion-open' );
+{/literal}{/if}{literal}
+
+{/literal}{if $invalidTagName}{literal}
+cj("#new-tag").removeClass( 'crm-accordion-closed' ).addClass( 'crm-accordion-open' );
+{/literal}{/if}{literal}
+
 </script>
-{/literal}
+{/literal} 

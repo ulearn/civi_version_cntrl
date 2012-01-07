@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.2                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -37,8 +37,8 @@
  *
  */
 
-require_once ('CRM/Event/BAO/Event.php');
-require_once ('CRM/Utils/PDF/Label.php');
+require_once 'CRM/Event/BAO/Event.php';
+require_once 'CRM/Utils/PDF/Label.php';
 
 /**
  * This class print the name badges for the participants
@@ -52,6 +52,7 @@ class CRM_Event_Badge {
         $this->format = '5160';
         $this->imgExtension = 'png';
         $this->imgRes = 300;
+        $this->event = null;
         $this->setDebug(false); 
      }
      
@@ -66,6 +67,7 @@ class CRM_Event_Badge {
      }
      /**
       * function to create the labels (pdf)
+      * It assumes the participants are from the same event
       *
       * @param   array    $participants
       * @return  null      
@@ -73,7 +75,8 @@ class CRM_Event_Badge {
       */
     public function run ( &$participants )
     {
-        $eventID = $participants[0]['event_id'];
+        $participant = reset ($participants); //fetch the 1st participant, and take her event to retrieve its attributes
+        $eventID = $participant['event_id'];
         $this->event= self::retrieveEvent ($eventID);
         //call function to create labels
         self::createLabels($participants);
@@ -83,10 +86,10 @@ class CRM_Event_Badge {
    protected function retrieveEvent($eventID) {
        require_once 'CRM/Event/BAO/Event.php';
        $bao = new CRM_Event_BAO_Event ();
-       if ($bao->get(array('id'=>$eventID))) {
+       if ($bao->get('id',$eventID)) {
           return $bao;
        }
-       return false;
+       return null;
    }
 
   function getImageFileName ($eventID,$img=false) {
@@ -154,20 +157,22 @@ class CRM_Event_Badge {
       * @return  null      
       * @access  public
       */
-    function createLabels(&$participants)
+    function createLabels( &$participants )
     {
         require_once 'CRM/Utils/String.php';
         
-        $this->pdf = new CRM_Utils_PDF_Label($this->format,'mm');
+        $this->pdf = new CRM_Utils_PDF_Label( $this->format, 'mm' );
         $this->pdfExtraFormat();
         $this->pdf->Open();
+        $this->pdf->setPrintHeader( false );
+	 $this->pdf->setPrintFooter( false );
         $this->pdf->AddPage();
-        $this->pdf->AddFont('DejaVu Sans', '', 'DejaVuSans.php');
-        $this->pdf->SetFont('DejaVu Sans');
-        $this->pdf->SetGenerator($this, "generateLabel");
+        $this->pdf->AddFont( 'DejaVu Sans', '', 'DejaVuSans.php' );
+        $this->pdf->SetFont( 'DejaVu Sans' );
+        $this->pdf->SetGenerator( $this, "generateLabel" );
        
-        foreach ($participants as $participant) {
-          $this->pdf->AddPdfLabel($participant);
+        foreach ( $participants as $participant ) {
+          $this->pdf->AddPdfLabel( $participant );
         }
         $this->pdf->Output( $this->event->title.'.pdf', 'D' );
     }

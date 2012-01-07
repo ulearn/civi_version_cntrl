@@ -1,6 +1,6 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -40,17 +40,17 @@
                 <tr><td class="label">{ts}Current Employee?{/ts}</td><td>{ts}Yes{/ts}</td></tr>
             {/if}
             {if $row.start_date}
-                <tr><td class="label">{ts}Start Date:{/ts}</td><td>{$row.start_date|crmDate}</td></tr>
+                <tr><td class="label">{ts}Start Date{/ts}</td><td>{$row.start_date|crmDate}</td></tr>
             {/if}
             {if $row.end_date}
-                <tr><td class="label">{ts}End Date:{/ts}</td><td>{$row.end_date|crmDate}</td></tr>
+                <tr><td class="label">{ts}End Date{/ts}</td><td>{$row.end_date|crmDate}</td></tr>
             {/if}
             {if $row.description}
-                <tr><td class="label">{ts}Description:{/ts}</td><td>{$row.description}</td></tr>
+                <tr><td class="label">{ts}Description{/ts}</td><td>{$row.description}</td></tr>
             {/if}
 	        {foreach from=$viewNote item="rec"}
 		    {if $rec }
-			    <tr><td class="label">{ts}Note:{/ts}</td><td>{$rec}</td></tr>	
+			    <tr><td class="label">{ts}Note{/ts}</td><td>{$rec}</td></tr>	
 	   	    {/if}
             {/foreach}
             {if $row.is_permission_a_b}
@@ -69,10 +69,9 @@
             {/if}
            
             <tr><td class="label">{ts}Status{/ts}</td><td>{if $row.is_active}{ts}Enabled{/ts} {else} {ts}Disabled{/ts}{/if}</td></tr>
-
-            {include file="CRM/Custom/Page/CustomDataView.tpl"}
         {/foreach}
         </table>
+        {include file="CRM/Custom/Page/CustomDataView.tpl"}
         <div class="crm-submit-buttons"><input type="button" name='cancel' value="{ts}Done{/ts}" onclick="location.href='{crmURL p='civicrm/contact/view' q='action=browse&selectedChild=rel'}';"/></div>
         </div>
   {/if}
@@ -105,11 +104,12 @@
                 <td><label>{$sort_name_b}</label></td></tr>
                 <tr class="crm-relationship-form-block-is_current_employer">
                   <td class="label">
-                     <div id="employee"><label>{ts}Current Employee?{/ts}</label></div>
-                     <div id="employer"><label>{ts}Current Employer?{/ts}</label></div>
+                     <span id="employee"><label>{ts}Current Employee?{/ts}</label></span>
+                     <span id="employer"><label>{ts}Current Employer?{/ts}</label></span>
                   </td>
                   <td id="current_employer">{$form.is_current_employer.html}</td>
-                </tr>  
+                </tr>
+             </table>  
             {else} {* action = add *}
              </tr>
              <tr class="crm-relationship-form-block-rel_contact">
@@ -122,6 +122,7 @@
                         var relationshipType = cj('#relationship_type_id'); 
                         relationshipType.change( function() { 
                             cj('#relationship-refresh-save').hide();
+			     cj('#saveButtons').hide();
                             cj('#rel_contact').val('');
                             cj("input[name=rel_contact_id]").val('');
                             createRelation( );
@@ -156,7 +157,7 @@
               </tr>
               </table>
                 <div class="crm-submit-buttons">
-                    <span id="relationship-refresh" class="crm-button crm-button-type-refresh crm-button_qf_Relationship_refresh.html">{$form._qf_Relationship_refresh.html}</span>
+                    <span id="relationship-refresh" class="crm-button crm-button-type-refresh crm-button_qf_Relationship_refresh">{$form._qf_Relationship_refresh.html}</span>
                     <span id="relationship-refresh-save" class="crm-button crm-button-type-save crm-button_qf_Relationship_refresh_save" style="display:none">{$form._qf_Relationship_refresh_save.html}</span>
                     <span class="crm-button crm-button-type-cancel crm-button_qf_Relationship_cancel">{$form._qf_Relationship_cancel.html}</span>
                 </div>
@@ -231,8 +232,7 @@
               {/if} {* end if searchDone *}
         {/if} {* end action = add *}
         
-        <fieldset id = 'saveElements'>
-            <div>
+            <div id = 'saveElements'>
                 {if $action EQ 1}
                 <div id='addCurrentEmployer'>
                    <table class="form-layout-compressed">  
@@ -320,7 +320,7 @@
                         }
                     </script>
                 {/literal}
-            </div>
+            </div>{* end of save element div *}
         <div id="customData"></div>
         <div class="spacer"></div>
         <div class="crm-submit-buttons" id="saveButtons"> {include file="CRM/common/formButtons.tpl"}</div> 
@@ -459,16 +459,29 @@ cj('#saveDetails').hide( );
 cj('#addCurrentEmployer').hide( );
 cj('#addCurrentEmployee').hide( );
 
-cj('#rel_contact').focus( function() {
-    cj("input[name=rel_contact_id]").val('');
-    cj('#relationship-refresh').show( );
-    cj('#relationship-refresh-save').hide( );	      
+cj(document).ready(function(){
+  if ( cj.browser.msie ) {
+       cj('#rel_contact').keyup( function(e) {
+         if( e.keyCode == 9 || e.keyCode == 13 ) {
+	     return false;
+	     }
+         cj("input[name=rel_contact_id]").val('');
+         cj('#relationship-refresh').show( );
+         cj('#relationship-refresh-save').hide( );
+    }); } else {
+         cj('#rel_contact').focus( function() {
+         cj("input[name=rel_contact_id]").val('');
+         cj('#relationship-refresh').show( );
+         cj('#relationship-refresh-save').hide( ); 
+}); }
 });
 
 {/literal}{if $searchRows || $callAjax}{literal} 
 show('saveElements');
+show('saveButtons');
 {/literal}{else}{literal}
 hide('saveElements');
+hide('saveButtons');
 {/literal}{/if}{/if}{literal}	
 
 cj( function( ) {

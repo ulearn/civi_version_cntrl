@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -103,6 +103,21 @@ class CRM_Utils_Mail
         if (CRM_Utils_Array::value( 'autoSubmitted', $params )) {
           $headers['Auto-Submitted']          = "Auto-Generated";
         }
+        
+        //make sure we has to have space, CRM-6977
+        foreach ( array( 'From', 'To', 'Cc', 'Bcc', 'Reply-To', 'Return-Path' ) as $fld ) {
+            $headers[$fld] = str_replace( '"<', '" <', $headers[$fld] );
+        }
+
+        // quote FROM, if comma is detected AND is not already quoted. CRM-7053
+        if ( strpos( $headers['From'], ',' )  !== false ) {
+            $from = explode( ' <', $headers['From'] );
+            if ( substr( $from[0],  0,  1 ) != '"' || 
+                 substr( $from[0], -1,  1 ) != '"' ) {
+                $from[0] = str_replace( '"', '\"', $from[0] );
+                $headers['From'] = "\"{$from[0]}\" <{$from[1]}";
+            }
+        }
 
         require_once 'Mail/mime.php';
         $msg = new Mail_mime("\n");
@@ -122,10 +137,11 @@ class CRM_Utils_Mail
             }
         }
         
-        $message =  self::setMimeParams( $msg );
+        $message =& self::setMimeParams( $msg );
         $headers =& $msg->headers($headers);
         
         $to = array( $params['toEmail'] );
+
         //get emails from headers, since these are 
         //combination of name and email addresses.
         if ( CRM_Utils_Array::value( 'Cc', $headers ) ) {
@@ -137,7 +153,7 @@ class CRM_Utils_Mail
         }
         
         $result = null;
-        $mailer = CRM_Core_Config::getMailer( );
+        $mailer =& CRM_Core_Config::getMailer( );
         CRM_Core_Error::ignoreException( );
         if ( is_object( $mailer ) ) {
             $result = $mailer->send($to, $headers, $message);

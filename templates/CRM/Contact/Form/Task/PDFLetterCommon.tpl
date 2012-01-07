@@ -1,6 +1,6 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -23,19 +23,22 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-{*common template for compose mail*}
+{*common template for compose PDF letters*}
+{if $form.template.html}
 <table class="form-layout-compressed">
     <tr>
         <td class="label-left">{$form.template.label}</td>
 	    <td>{$form.template.html}</td>
     </tr>
 </table>
+{/if}
 
 <div class="crm-accordion-wrapper crm-html_email-accordion crm-accordion-open">
     <div class="crm-accordion-header">
         {$form.html_message.label}
     </div>
     <div class="crm-accordion-body">
+    {if $action neq 4}
         <span class="helpIcon" id="helphtml">
 		<a href="#" onClick="return showToken('Html', 1);">{$form.token1.label}</a> 
 		{help id="id-token-html" file="CRM/Contact/Form/Task/Email.hlp"}
@@ -45,6 +48,7 @@
 		    {$form.token1.html}
 		</div>
 	    </span>
+	    {/if}
 	    <div class="clear"></div>
         <div class='html'>
         {if $editor EQ 'textarea'}
@@ -233,24 +237,41 @@ function tokenReplHtml ( )
         oEditor = CKEDITOR.instances['html_message'];
 		oEditor.setData( {/literal}'{$message_html}'{literal});
 		loadEditor();	
-		oEditor.on( 'onFocus', verify );
     }
-
+    cj( function() {
+     	 oEditor = CKEDITOR.instances['html_message'];
+	 oEditor.on( 'focus', verify );
+     });
 {/literal}
 {/if}
 {if $editor eq "tinymce"}
 {literal}
 	function customEvent() {
 		loadEditor();
-		tinyMCE.get('html_message').onKeyPress.add(function(ed, e) {
- 		verify();
-		});
 	}
 
 tinyMCE.init({
 	oninit : "customEvent"
 });
 
+cj( function() {
+  cj('div.html').hover( 
+  function( ) {
+    if ( cj('#html_message').tinymce() ) {
+      tinyMCE.get('html_message').onKeyPress.add(function(ed, e) {
+        verify( );
+      });
+    }
+  },
+  function( ) {
+   if ( cj('#html_message').tinymce() ) {
+     if ( tinyMCE.get('html_message').getContent() ) {
+       verify( );
+     } 
+   }
+  }	
+  );
+});
 {/literal}
 {/if}
 {include file="CRM/common/Filter.tpl"}

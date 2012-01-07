@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -37,10 +37,8 @@
 require_once 'CRM/Core/Form.php';
 require_once 'CRM/Core/Selector/Base.php';
 require_once 'CRM/Core/Selector/API.php';
-
 require_once 'CRM/Utils/Pager.php';
 require_once 'CRM/Utils/Sort.php';
-
 require_once 'CRM/Activity/BAO/Activity.php';
 
 /**
@@ -116,13 +114,17 @@ class CRM_Activity_Selector_Activity extends CRM_Core_Selector_Base implements C
                           $sourceRecordId = null, 
                           $accessMailingReport = false, 
                           $activityId = null, 
-                          $key = null ) 
+                          $key = null,
+                          $compContext = null ) 
     {
         $activityTypes   = CRM_Core_PseudoConstant::activityType( false );
-        $activityTypeIds = array_flip( CRM_Core_PseudoConstant::activityType( true, false, false, 'name' ) );
+        $activityTypeIds = array_flip( CRM_Core_PseudoConstant::activityType( true, true, false, 'name' ) );
         
         $extraParams = ( $key ) ? "&key={$key}" : null;
-        
+        if ( $compContext ) {
+            $extraParams .= "&compContext={$compContext}";
+        }
+
         //show  edit link only for meeting/phone and other activities
         $showUpdate = false;
         $showDelete = false;
@@ -152,9 +154,16 @@ class CRM_Activity_Selector_Activity extends CRM_Core_Selector_Base implements C
         } elseif ( $activityTypeId == $activityTypeIds['Inbound Email'] ) {
             $url      = 'civicrm/contact/view/activity';
             $qsView   = "atype={$activityTypeId}&action=view&reset=1&id=%%id%%&cid=%%cid%%&context=%%cxt%%{$extraParams}";
+        } elseif ( $activityTypeId == CRM_Utils_Array::value( 'Open Case', $activityTypeIds ) ||
+                   $activityTypeId == CRM_Utils_Array::value( 'Change Case Type', $activityTypeIds ) ||
+                   $activityTypeId == CRM_Utils_Array::value( 'Change Case Status', $activityTypeIds ) ||
+                   $activityTypeId == CRM_Utils_Array::value( 'Change Case Start Date', $activityTypeIds ) ) {
+            $showUpdate =  $showDelete = false;
+            $url      = 'civicrm/contact/view/activity';
+            $qsView   = "atype={$activityTypeId}&action=view&reset=1&id=%%id%%&cid=%%cid%%&context=%%cxt%%{$extraParams}";
+            $qsUpdate = "atype={$activityTypeId}&action=update&reset=1&id=%%id%%&cid=%%cid%%&context=%%cxt%%{$extraParams}";
         } else {
-            $showUpdate = true;
-            $showDelete = true;
+            $showUpdate = $showDelete = true;
             $url      = 'civicrm/contact/view/activity';
             $qsView   = "atype={$activityTypeId}&action=view&reset=1&id=%%id%%&cid=%%cid%%&context=%%cxt%%{$extraParams}";
             $qsUpdate = "atype={$activityTypeId}&action=update&reset=1&id=%%id%%&cid=%%cid%%&context=%%cxt%%{$extraParams}";
@@ -374,11 +383,6 @@ class CRM_Activity_Selector_Activity extends CRM_Core_Selector_Base implements C
                                                                   ));
             }
             
-            if($config->civiHRD){
-                require_once 'CRM/Core/OptionGroup.php';
-                $caseActivityType = CRM_Core_OptionGroup::values('case_activity_type');
-                $row['activitytag1'] =  $caseActivityType[CRM_Core_DAO::getFieldValue('CRM_Activity_DAO_Activity',$row['id'],'activity_tag1_id' )];
-            }
             unset($row);
         }
          

@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -32,7 +32,7 @@
  * @subpackage API_Contribute
  *
  * @copyright CiviCRM LLC (c) 2004-2010
- * @version $Id: Contribution.php 28724 2010-07-16 10:38:41Z rahulbile $
+ * @version $Id: Contribution.php 31024 2010-12-02 06:14:30Z yashodha $
  *
  */
 
@@ -41,6 +41,7 @@
  */
 require_once 'api/v2/utils.php';
 require_once 'CRM/Utils/Rule.php';
+require_once 'CRM/Contribute/PseudoConstant.php';
 
 /**
  * Add or update a contribution
@@ -53,20 +54,10 @@ require_once 'CRM/Utils/Rule.php';
  */
 function &civicrm_contribution_add( &$params ) {
     _civicrm_initialize( );
-
-    if ( empty( $params ) ) {
-        return civicrm_create_error( ts( 'No input parameters present' ) );
-    }
-
-    if ( ! is_array( $params ) ) {
-        return civicrm_create_error( ts( 'Input parameters is not an array' ) );
-    }
     
-    if ( !CRM_Utils_Array::value( 'id', $params ) ) {
-        $error = _civicrm_contribute_check_params( $params );
-        if ( civicrm_error( $error ) ) {
-            return $error;
-        }
+    $error = _civicrm_contribute_check_params( $params );
+    if ( civicrm_error( $error ) ) {
+        return $error;
     }
 
     $values  = array( );
@@ -77,9 +68,9 @@ function &civicrm_contribution_add( &$params ) {
         return $error;
     }
 
-    $values["contact_id"] = $params["contact_id"];
-    $values["source"]     = $params["source"];
-    
+    $values['contact_id'] = $params['contact_id'];
+    $values['source']     = CRM_Utils_Array::value( 'source', $params );
+    $values['skipRecentView'] = true;
     $ids     = array( );
     if ( CRM_Utils_Array::value( 'id', $params ) ) {
         $ids['contribution'] = $params['id'];
@@ -142,7 +133,7 @@ function &civicrm_contribution_get( &$params ) {
  * @access public
  */
 function civicrm_contribution_delete( &$params ) {
-
+    _civicrm_initialize( );
     $contributionID = CRM_Utils_Array::value( 'contribution_id', $params );
     if ( ! $contributionID ) {
         return civicrm_create_error( ts( 'Could not find contribution_id in input parameters' ) );
@@ -275,17 +266,40 @@ function &civicrm_contribution_format_create( &$params ) {
  * @access private
  */
 function _civicrm_contribute_check_params( &$params ) {
-    static $required = array( 'contact_id', 'total_amount', 'contribution_type_id' );
+    static $required = array( 'contact_id'           => null, 
+                              'total_amount'         => null, 
+                              'contribution_type_id' => 'contribution_type' );
     
+    // params should be an array
+    if ( ! is_array( $params ) ) {
+        return civicrm_create_error( ts( 'Input parameters is not an array' ) );
+    }
+
     // cannot create a contribution with empty params
     if ( empty( $params ) ) {
         return civicrm_create_error( 'Input Parameters empty' );
     }
-
+    
     $valid = true;
     $error = '';
-    foreach ( $required as $field ) {
-        if ( ! CRM_Utils_Array::value( $field, $params ) ) {
+    
+    // check params for contribution id during update
+    if ( CRM_Utils_Array::value( 'id', $params ) ) {
+        require_once 'CRM/Contribute/BAO/Contribution.php';
+        $contributor     = new CRM_Contribute_BAO_Contribution();
+        $contributor->id = $params['id'];
+        if ( !$contributor->find( true ) ) {
+            return civicrm_create_error( ts( 'Contribution id is not valid' ));
+        }
+        // do not check other field during update
+        return array();
+    }
+    
+    foreach ( $required as $field => $eitherField ) {
+        if ( !CRM_Utils_Array::value( $field, $params ) ) {
+            if ( $eitherField && CRM_Utils_Array::value( $eitherField, $params ) ) {
+                continue;
+            }
             $valid = false;
             $error .= $field;
             break;
@@ -388,10 +402,23 @@ function _civicrm_contribute_format_params( &$params, &$values, $create=false ) 
                 return civicrm_create_error("currency not a valid code: $value");
             }
             break;
-        case 'contribution_type':            
-            $values['contribution_type_id'] = CRM_Utils_Array::key( ucfirst( $value ),
-                                                                    CRM_Contribute_PseudoConstant::contributionType( )
-                                                                    );
+        case 'contribution_type_id' :
+            if ( !CRM_Utils_Array::value( $value, CRM_Contribute_PseudoConstant::contributionType( ) ) ) {
+                return civicrm_create_error( 'Invalid Contribution Type Id' );
+            }
+            break;
+        case 'contribution_type':
+            $contributionTypeId = CRM_Utils_Array::key( ucfirst( $value ), 
+                                                        CRM_Contribute_PseudoConstant::contributionType( ) );
+            if ( $contributionTypeId ) {
+                if ( CRM_Utils_Array::value( 'contribution_type_id', $values ) &&
+                     $contributionTypeId != $values['contribution_type_id'] ) {
+                    return civicrm_create_error( 'Mismatched Contribution Type and Contribution Type Id' );
+                } 
+                $values['contribution_type_id'] = $contributionTypeId; 
+            } else {
+                return civicrm_create_error( 'Invalid Contribution Type' );
+            }
             break;
         case 'payment_instrument': 
             require_once 'CRM/Core/OptionGroup.php';
@@ -497,7 +524,7 @@ function civicrm_contribute_transact($params) {
   }
 
   require_once 'CRM/Core/Payment.php';
-  $payment =& CRM_Core_Payment::singleton( $params['payment_processor_mode'], 'Contribute', $paymentProcessor );
+  $payment =& CRM_Core_Payment::singleton( $params['payment_processor_mode'], $paymentProcessor );
   if ( civicrm_error($payment) ) {
     return $payment ;
   }

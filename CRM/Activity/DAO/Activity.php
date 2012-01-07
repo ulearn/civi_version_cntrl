@@ -1,7 +1,7 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.1                                                |
+| CiviCRM version 3.3                                                |
 +--------------------------------------------------------------------+
 | Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
@@ -79,7 +79,7 @@ class CRM_Activity_DAO_Activity extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = false;
+    static $_log = true;
     /**
      * Unique  Other Activity ID
      *
@@ -198,6 +198,12 @@ class CRM_Activity_DAO_Activity extends CRM_Core_DAO
      */
     public $original_id;
     /**
+     * Currently being used to store result id for survey activity, FK to option value.
+     *
+     * @var string
+     */
+    public $result;
+    /**
      *
      * @var boolean
      */
@@ -276,7 +282,7 @@ class CRM_Activity_DAO_Activity extends CRM_Core_DAO
                     'where' => 'civicrm_activity.activity_type_id',
                     'headerPattern' => '/(activity.)?type(.id$)/i',
                     'dataPattern' => '',
-                    'export' => true,
+                    'export' => false,
                     'default' => '',
                 ) ,
                 'activity_subject' => array(
@@ -350,12 +356,12 @@ class CRM_Activity_DAO_Activity extends CRM_Core_DAO
                 'activity_status_id' => array(
                     'name' => 'status_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Activity Status Label') ,
+                    'title' => ts('Activity Status Id') ,
                     'import' => true,
                     'where' => 'civicrm_activity.status_id',
                     'headerPattern' => '/(activity.)?status(.label$)?/i',
                     'dataPattern' => '',
-                    'export' => true,
+                    'export' => false,
                 ) ,
                 'priority_id' => array(
                     'name' => 'priority_id',
@@ -408,6 +414,13 @@ class CRM_Activity_DAO_Activity extends CRM_Core_DAO
                     'name' => 'original_id',
                     'type' => CRM_Utils_Type::T_INT,
                     'FKClassName' => 'CRM_Activity_DAO_Activity',
+                ) ,
+                'activity_result' => array(
+                    'name' => 'result',
+                    'type' => CRM_Utils_Type::T_STRING,
+                    'title' => ts('Result') ,
+                    'maxlength' => 255,
+                    'size' => CRM_Utils_Type::HUGE,
                 ) ,
                 'is_deleted' => array(
                     'name' => 'is_deleted',

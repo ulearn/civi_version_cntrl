@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -196,12 +196,39 @@ class CRM_Contact_Selector extends CRM_Core_Selector_Base implements CRM_Core_Se
             $this->_returnProperties['contact_type'] = 1;
             $this->_returnProperties['contact_sub_type'] = 1;
             $this->_returnProperties['sort_name'   ] = 1;
-            //$this->_returnProperties['groups'      ] = 1;
         }
-        
+
+        // rectify params to what proximity search expects if there is a value for prox_distance
+        // CRM-7021
+        if ( !empty( $this->_params ) ) { 
+            foreach ($this->_params as $param){
+                if ($param[0] == 'prox_distance'){
+                    // add prox_ prefix to these
+                    $param_alter = array('street_address', 'city', 'postal_code', 'state_province', 'country');
+
+                    foreach ($this->_params as $key => $_param){
+                        if (in_array($_param[0], $param_alter)){
+                            $this->_params[$key][0] = 'prox_' . $_param[0];
+
+                            // _id suffix where needed
+                            if ($_param[0] == 'country' || $_param[0] == 'state_province'){
+                                $this->_params[$key][0] .= '_id';
+
+                                // flatten state_province array
+                                if (is_array($this->_params[$key][2])){
+                                    $this->_params[$key][2] = $this->_params[$key][2][0];
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
         $this->_query   = new CRM_Contact_BAO_Query( $this->_params,
-                                                      $this->_returnProperties, null, $includeContactIds,
-                                                      false, 1, false, $searchDescendentGroups );
+                                                     $returnProperties, null, $includeContactIds,
+                                                     false, CRM_Contact_BAO_Query::MODE_CONTACTS, false, $searchDescendentGroups );
         $this->_options =& $this->_query->_options;
     }//end of constructor
 
@@ -552,6 +579,12 @@ class CRM_Contact_Selector extends CRM_Core_Selector_Base implements CRM_Core_Se
         while ($result->fetch()) {
             $row = array( );
 
+            // for CRM-3157 purposes
+            require_once 'CRM/Core/PseudoConstant.php';
+            if (in_array('country',        $names)) $countries =& CRM_Core_PseudoConstant::country();
+            if (in_array('state_province', $names)) $provinces =& CRM_Core_PseudoConstant::stateProvince();
+            if (in_array('world_region',   $names)) $regions   =& CRM_Core_PseudoConstant::worldRegions();
+
             // the columns we are interested in
             foreach ($names as $property) {
                 if ( $property == 'status' ) {
@@ -596,6 +629,12 @@ class CRM_Contact_Selector extends CRM_Core_Selector_Base implements CRM_Core_Se
                 } else if ( in_array( $property, array( 'addressee', 'email_greeting', 'postal_greeting' ) ) ) {
                     $greeting = $property.'_display';
                     $row[$property] = $result->$greeting;
+                } elseif ($property == 'country') {
+                    $row[$property] = CRM_Utils_Array::value( $result->country_id, $countries );
+                } elseif ($property == 'state_province') {
+                    $row[$property] = CRM_Utils_Array::value( $result->state_province_id, $provinces );
+                } elseif ($property == 'world_region') {
+                    $row[$property] = $regions[$result->world_region_id];
                 } else {
                     $row[$property] = $result->$property;
                 }

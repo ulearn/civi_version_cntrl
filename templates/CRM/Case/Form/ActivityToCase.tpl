@@ -1,6 +1,6 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.2                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -118,9 +118,10 @@ function fileOnCase( action, activityID, currentCaseId ) {
     	             cj("#fileOnCaseDialog").show( ).html( content ).dialog({
 		             title       : dialogTitle,
 		             modal       : true,
-			         bgiframe    : true,
-	    	         width       : 600,
+			     bgiframe    : true,
+	    	             width       : 600,
 		             height      : 270,
+			     close       : function( event, ui ) { cj( "#unclosed_cases" ).unautocomplete( ); },
 		             overlay     : { opacity: 0.5, background: "black" },
 		             beforeclose : function( event, ui ) {
                                      cj(this).dialog("destroy");
@@ -133,18 +134,17 @@ function fileOnCase( action, activityID, currentCaseId ) {
 				var targetContactId = cj("#target_contact_id").val( );
 				
 			    if ( !cj("#unclosed_cases").val( )  ) {
-			       alert('{/literal}{ts}Please select a case from the list{/ts}{literal}.');
+			       alert('{/literal}{ts escape="js"}Please select a case from the list{/ts}{literal}.');
 				   return false;
 				}
 						
-				cj(this).dialog("close"); 
 				cj(this).dialog("destroy");
 									
 				var postUrl = {/literal}"{crmURL p='civicrm/ajax/activity/convert' h=0 }"{literal};
 			        cj.post( postUrl, { activityID: activityID, caseID: selectedCaseId, contactID: contactId, newSubject: subject, targetContactIds: targetContactId, mode: action, key: {/literal}"{crmKey name='civicrm/ajax/activity/convert'}"{literal} },
 					 function( values ) {
 					      if ( values.error_msg ) {
-                             alert( "{/literal}{ts}Unable to file on case{/ts}{literal}.\n\n" + values.error_msg );
+                             alert( "{/literal}{ts escape='js'}Unable to file on case{/ts}{literal}.\n\n" + values.error_msg );
 						     return false;
                           } else {
 					          var destUrl = {/literal}"{crmURL p='civicrm/contact/view/case' q='reset=1&action=view&id=' h=0 }"{literal}; 
@@ -180,7 +180,7 @@ function fileOnCase( action, activityID, currentCaseId ) {
 						      	  window.location.reload( ); 
 						      } else {
 						          var activitySubject = cj("#case_activity_subject").val( );
-						          var statusMsg = '<a id="closeFileOnCaseStatusMsg" href="#"><div class="icon close-icon"></div></a> "' + activitySubject + '" has been filed to selected case: ' + cj("#unclosed_cases").val( ) + '. Click <a href="' + caseUrl + '">here</a> to view that case.';
+						          var statusMsg = '<a id="closeFileOnCaseStatusMsg" href="#"><div class="ui-icon ui-icon-close" style="float:left"></div></a> "' + activitySubject + '" has been filed to selected case: ' + cj("#unclosed_cases").val( ) + '. Click <a href="' + caseUrl + '">here</a> to view that case.';
 						          cj('#fileOnCaseStatusMsg').addClass('msgok').html( statusMsg ).show( );
                                   cj("#closeFileOnCaseStatusMsg").click(function(){ cj('#fileOnCaseStatusMsg').fadeOut("slow");return false;}).focus( );
                              }

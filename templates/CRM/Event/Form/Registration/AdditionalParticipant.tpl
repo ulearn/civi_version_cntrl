@@ -1,6 +1,6 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -41,61 +41,16 @@
     </div>
 {/if}
 
+{if $priceSet && $allowGroupOnWaitlist}   
+    {include file="CRM/Price/Form/ParticipantCount.tpl"}
+    <div id="waiting-status" style="display:none;" class="messages status"></div>
+    <div class="messages status" style="width:25%"><span id="event_participant_status"></span></div> 
+{/if}
+
 <div class="crm-block crm-event-additionalparticipant-form-block">
 {if $priceSet}
-    <fieldset id="priceset"><legend>{$event.fee_label}</legend>
-    <table class="form-layout">
-    {foreach from=$priceSet.fields item=element key=field_id}
-      {* Skip 'Admin' visibility price fields since this tpl is used in online registration. *}
-      {if $element.visibility EQ 'public'}
-        {if ($element.html_type eq 'CheckBox' || $element.html_type == 'Radio') && $element.options_per_line}
-            {assign var="element_name" value=price_$field_id}
-         <tr class="crm-event-additionalparticipant-form-block-element_name">
-            <td class="label">{$form.$element_name.label}</td>
-            <td>
-            {assign var="count" value="1"}
-            <table class="form-layout-compressed">
-                <tr class="crm-event-additionalparticipant-form-block-element_name">
-                    {foreach name=outer key=key item=item from=$form.$element_name}
-                        {if is_numeric($key) }
-                            <td class="labels font-light">{$form.$element_name.$key.html}</td>
-                            {if $count == $element.options_per_line}
-                                {assign var="count" value="1"}
-                                </tr>
-                                <tr>
-                            {else}
-                                {assign var="count" value=`$count+1`}
-                            {/if}
-                        {/if}
-                    {/foreach}
-                </tr>
-            </table>
-            </td>
-         </tr>
-        {else}
-            {assign var="name" value=`$element.name`}
-            {assign var="element_name" value="price_"|cat:$field_id}
-            <td class="label">{$form.$element_name.label}</td>
-            <td>&nbsp;{$form.$element_name.html}</td>
-        </tr>
-        {/if}
-        {if $element.help_post}
-        <tr>
-           <td>&nbsp;</td>
-           <td class="description">{$element.help_post}</td>
-        </tr>
-        {/if}
-      {/if}
-    {/foreach}
-    </table>
-    <div>
-     <table class="form-layout">
-         <tr></tr>
-         <tr>
-            <td>{include file="CRM/Price/Form/Calculate.tpl"}</td>
-         </tr>
-     </table>
-    </div> 
+     <fieldset id="priceset" class="crm-group priceset-group"><legend>{$event.fee_label}</legend>
+     	 {include file="CRM/Price/Form/PriceSet.tpl"}
     </fieldset>
 {else}
     {if $paidEvent}
@@ -123,3 +78,48 @@
     {include file="CRM/common/formButtons.tpl"}
 </div>
 </div>
+
+{if $priceSet && $allowGroupOnWaitlist}
+{literal} 
+<script type="text/javascript">
+
+function allowGroupOnWaitlist( participantCount, currentCount ) 
+{
+  var formId          = {/literal}'{$formId}'{literal};
+  var waitingMsg      = {/literal}'{$waitingMsg}'{literal};
+  var confirmedMsg    = {/literal}'{$confirmedMsg}'{literal};
+  var paymentBypassed = {/literal}'{$paymentBypassed}'{literal};
+
+  var availableRegistrations = {/literal}{$availableRegistrations}{literal}; 
+  if ( !participantCount ) participantCount = {/literal}'{$currentParticipantCount}'{literal};	 
+  var totalParticipants = parseInt(participantCount) + parseInt(currentCount);
+
+  var seatStatistics = '{/literal}{ts 1="' + totalParticipants + '"}Total Participants : %1{/ts}{literal}' + '<br />' + '{/literal}{ts 1="' + availableRegistrations + '"}Event Availability : %1{/ts}{literal}';
+  cj("#event_participant_status").html( seatStatistics );
+  
+  if ( !{/literal}'{$lastParticipant}'{literal} ) return; 
+
+  if ( totalParticipants > availableRegistrations ) {
+
+    cj('#waiting-status').show( ).html(waitingMsg);
+
+    if ( paymentBypassed ) {
+      cj('input[name=_qf_Participant_'+ formId +'_next]').parent( ).show( );
+      cj('input[name=_qf_Participant_'+ formId +'_next_skip]').parent( ).show( );
+    }  
+  } else {
+    if ( paymentBypassed ) {
+      confirmedMsg += '<br /> ' + paymentBypassed;
+    }	
+    cj('#waiting-status').show( ).html(confirmedMsg);
+
+    if ( paymentBypassed ) {
+      cj('input[name=_qf_Participant_'+ formId +'_next]').parent( ).hide( );
+      cj('input[name=_qf_Participant_'+ formId +'_next_skip]').parent( ).hide( );
+    }  
+  }
+}
+
+</script>
+{/literal} 	
+{/if}

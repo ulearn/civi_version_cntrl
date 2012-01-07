@@ -1,6 +1,6 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -125,6 +125,7 @@ eval('tableId =[' + tableId + ']');
 		"aoColumns"  : columns,
 	    	"bProcessing": true,
 		"sPaginationType": "full_numbers",
+		"sDom"       : '<"crm-datatable-pager-top"lfp>rt<"crm-datatable-pager-bottom"ip>',
 	   	"bServerSide": true,
 	   	"sAjaxSource": sourceUrl,
 
@@ -133,7 +134,7 @@ eval('tableId =[' + tableId + ']');
 		{/literal}{/if}{literal}
 
 		"fnServerData": function ( sSource, aoData, fnCallback ) {
-			$.ajax( {
+			cj.ajax( {
 				"dataType": 'json', 
 				"type": "POST", 
 				"url": sSource, 

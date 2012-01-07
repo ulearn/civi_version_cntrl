@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -386,7 +386,10 @@ class CRM_Core_Permission {
                       'access Contact Dashboard'          => ts( 'access Contact Dashboard' ),
                       'translate CiviCRM'                 => ts( 'translate CiviCRM' ),
                       'administer Tagsets'                => ts( 'administer Tagsets' ),
-                      'administer reserved tags'          => ts( 'administer reserved tags' )
+                      'administer reserved tags'          => ts( 'administer reserved tags' ),
+                      'administer dedupe rules'           => ts( 'administer dedupe rules' ),
+                      'merge duplicate contacts'          => ts( 'merge duplicate contacts' ),
+                      'view all notes'                    => ts( 'view all notes' ),
                       );
 
             if ( defined( 'CIVICRM_MULTISITE' ) && CIVICRM_MULTISITE ) {
@@ -444,4 +447,39 @@ class CRM_Core_Permission {
         return $hasPermission;
     }
     
-}
+    /**
+     * Function to get component name from given permission.
+     * 
+     * @param string  $permission  
+     *
+     * return string $componentName the name of component.
+     * @static
+     */
+    static function getComponentName( $permission ) 
+    {
+        $componentName = null;
+        $permission = trim( $permission );
+        if ( empty( $permission ) ) return $componentName;
+        
+        static $allCompPermissions;
+        if ( !is_array( $allCompPermissions ) ) {
+            require_once 'CRM/Core/Component.php';
+            $components = CRM_Core_Component::getComponents( );
+            foreach ( $components as $name => $comp ) {
+                $allCompPermissions[$name] = $comp->getPermissions( );
+            }
+        }
+        
+        if ( is_array( $allCompPermissions ) ) {
+            foreach ( $allCompPermissions as $name => $permissions ) {
+                if ( in_array( $permission, $permissions ) ) {
+                    $componentName = $name;
+                    break;
+                }
+            }
+        }
+        
+        return $componentName;
+    }
+    
+  }

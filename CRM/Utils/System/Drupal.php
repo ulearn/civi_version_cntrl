@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -286,60 +286,80 @@ class CRM_Utils_System_Drupal {
      */
     static function getUFLocale()
     {
-        // an array of xx_YY locales
-        static $locales = null;
-        if ($locales === null) {
-            require_once 'CRM/Core/I18n/PseudoConstant.php';
-            $locales = array_keys(CRM_Core_I18n_PseudoConstant::languages());
-            sort($locales);
-        }
-
-        // an array of xx → xx_YY mappings (naïve, as pt_PT will trump pt_BR
-        // and en_US will trump other English entries, but works in our case)
-        static $prefixes = null;
-        if ($prefixes === null) {
-            // seed with Chinese mappings for CRM-6281
-            $prefixes = array('zh-hans' => 'zh_CN', 'zh-hant' => 'zh_TW');
-            foreach ($locales as $locale) {
-                $prefixes[substr($locale, 0, 2)] = $locale;
-            }
-        }
-
-        // return CiviCRM locale that either matches Drupal’s xx_YY
-        // or begins with Drupal’s xx (so Drupal’s pt_BR will return
-        // CiviCRM’s pt_BR, while Drupal’s pt will return CiviCRM’s pt_PT)
+        // return CiviCRM’s xx_YY locale that either matches Drupal’s Chinese locale
+        // (for CRM-6281), Drupal’s xx_YY or is retrieved based on Drupal’s xx
         global $language;
-        if (in_array($language->language, $locales)) {
-            return $language->language;
-        } elseif (in_array($language->language, array_keys($prefixes))) {
-            return $prefixes[$language->language];
-        } else {
-            return null;
+        switch (true) {
+        case $language->language == 'zh-hans':             return 'zh_CN';
+        case $language->language == 'zh-hant':             return 'zh_TW';
+        case preg_match('/^.._..$/', $language->language): return $language->language;
+        default:
+            require_once 'CRM/Core/I18n/PseudoConstant.php';
+            return CRM_Core_I18n_PseudoConstant::longForShort(substr($language->language, 0, 2));
         }
     }
 
     /**
      * load drupal bootstrap
+     *
+     * @param $name string  optional username for login
+     * @param $pass string  optional password for login
      */
-    static function loadBootStrap( $config ) {
-        $cmsPath = dirname( dirname( dirname (dirname ( dirname( $config->templateDir ) ) ) ) );
+    static function loadBootStrap($name = null, $pass = null)
+    {
+        //take the cms root path.
+        $cmsPath = self::cmsRootPath( );
+        
         if ( !file_exists( "$cmsPath/includes/bootstrap.inc" ) ) {
-            return;
+            echo '<br />Sorry, could not able to locate bootstrap.inc.';
+            exit( );
         }
         
-        $cur_dir = getcwd();
         chdir($cmsPath);
         require_once 'includes/bootstrap.inc';
         @drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-        //chdir( $cur_dir ); 
+        
+        if ( !function_exists('module_exists') || 
+             !module_exists( 'civicrm' ) ) {
+            echo '<br />Sorry, could not able to load drupal bootstrap.';
+            exit( );
+        }
         
         //load user, we need to check drupal permissions.
-        $name = trim( CRM_Utils_Array::value( 'name', $_REQUEST ) );
-        $pass = trim( CRM_Utils_Array::value( 'pass', $_REQUEST ) );
+        $name = $name ? $name : trim(CRM_Utils_Array::value('name', $_REQUEST));
+        $pass = $pass ? $pass : trim(CRM_Utils_Array::value('pass', $_REQUEST));
         if ( $name ) {
-            module_enable( array( 'user' ) );
-            user_authenticate(  array( 'name' => $name, 'pass' => $pass ) );
+            $user = user_authenticate(  array( 'name' => $name, 'pass' => $pass ) );
+            if ( empty( $user->uid ) ) {
+                echo '<br />Sorry, unrecognized username or password.';
+                exit( );
+            }
         }
+        
+    }
+    
+    static function cmsRootPath( ) 
+    {
+        $cmsRoot  = $valid = null;
+        $pathVars = explode( '/', str_replace( '\\', '/', $_SERVER['SCRIPT_FILENAME'] ) );
+        
+        //might be windows installation.
+        $firstVar = array_shift( $pathVars );
+        if ( $firstVar ) $cmsRoot = $firstVar;
+        
+        //start w/ csm dir search.
+        foreach ( $pathVars as $var ) {
+            $cmsRoot .= "/$var";
+            $cmsIncludePath = "$cmsRoot/includes";
+            //stop as we found bootstrap.
+            if ( @opendir( $cmsIncludePath ) && 
+                 file_exists( "$cmsIncludePath/bootstrap.inc" ) ) { 
+                $valid = true;
+                break;
+            }
+        }
+        
+        return ( $valid ) ? $cmsRoot : null; 
     }
     
     /**

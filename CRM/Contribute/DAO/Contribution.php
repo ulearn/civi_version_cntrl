@@ -1,7 +1,7 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.1                                                |
+| CiviCRM version 3.3                                                |
 +--------------------------------------------------------------------+
 | Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
@@ -79,7 +79,7 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
      * @var boolean
      * @static
      */
-    static $_log = false;
+    static $_log = true;
     /**
      * Contribution ID
      *
@@ -302,6 +302,10 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
                 'contribution_type_id' => array(
                     'name' => 'contribution_type_id',
                     'type' => CRM_Utils_Type::T_INT,
+                    'export' => false,
+                    'where' => 'civicrm_contribution.contribution_type_id',
+                    'headerPattern' => '',
+                    'dataPattern' => '',
                     'FKClassName' => 'CRM_Contribute_DAO_ContributionType',
                 ) ,
                 'contribution_page_id' => array(
@@ -392,7 +396,6 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
                     'name' => 'currency',
                     'type' => CRM_Utils_Type::T_STRING,
                     'title' => ts('Currency') ,
-                    'required' => true,
                     'maxlength' => 3,
                     'size' => CRM_Utils_Type::FOUR,
                     'import' => true,
@@ -400,6 +403,7 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
                     'headerPattern' => '/cur(rency)?/i',
                     'dataPattern' => '/^[A-Z]{3}$/i',
                     'export' => true,
+                    'default' => 'UL',
                 ) ,
                 'cancel_date' => array(
                     'name' => 'cancel_date',
@@ -496,12 +500,12 @@ class CRM_Contribute_DAO_Contribution extends CRM_Core_DAO
                 'contribution_status_id' => array(
                     'name' => 'contribution_status_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Contribution Status') ,
+                    'title' => ts('Contribution Status Id') ,
                     'import' => true,
                     'where' => 'civicrm_contribution.contribution_status_id',
                     'headerPattern' => '/status/i',
                     'dataPattern' => '',
-                    'export' => true,
+                    'export' => false,
                     'default' => '',
                 ) ,
                 'honor_type_id' => array(

@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -107,7 +107,10 @@ class CRM_Core_BAO_CustomField extends CRM_Core_DAO_CustomField
         if ( !isset($params['id']) && !isset($params['column_name']) ) {
             // if add mode & column_name not present, calculate it.
             require_once 'CRM/Utils/String.php';
-            $params['column_name'] = strtolower( CRM_Utils_String::munge( $params['label'], '_', 32 ) );
+            $params['column_name'] = 
+                strtolower( CRM_Utils_String::munge( $params['label'], '_', 32 ) );
+            
+            $params['name'] = CRM_Utils_String::munge($params['label'], '_', 64 );
         } else if ( isset($params['id']) ) {
             $params['column_name'] = CRM_Core_DAO::getFieldValue( 'CRM_Core_DAO_CustomField',
                                                                   $params['id'],
@@ -335,10 +338,11 @@ class CRM_Core_BAO_CustomField extends CRM_Core_DAO_CustomField
                                        $inline = false,
                                        $customDataSubType = null,
  									   $customDataSubName = null,
- 									   $onlyParent = false ) 
+ 									   $onlyParent = false,
+                                       $onlySubType = false ) 
     {
-        $onlySubType = false;
-
+        //$onlySubType = false;
+        
         if ( $customDataType && 
              !is_array( $customDataType ) ) {
             
@@ -539,6 +543,12 @@ class CRM_Core_BAO_CustomField extends CRM_Core_DAO_CustomField
                                             'html_type'        => CRM_Utils_Array::value('html_type', $values),
                                             'is_search_range'  => CRM_Utils_Array::value('is_search_range', $values),
                                             );
+
+            // CRM-6681, pass date and time format when html_type = Select Date 
+            if ( CRM_Utils_Array::value('html_type', $values) == 'Select Date' ) {
+                $importableFields[$key]['date_format'] = CRM_Utils_Array::value('date_format', $values);
+                $importableFields[$key]['time_format'] = CRM_Utils_Array::value('time_format', $values);
+            }
         }
          
         return $importableFields;
@@ -697,8 +707,8 @@ class CRM_Core_BAO_CustomField extends CRM_Core_DAO_CustomField
                                                                     $field->option_group_id );
             $include =& $qf->addElement('advmultiselect', $elementName, 
                                         $label, $selectOption,
-                                        array('size' => 5, 
-                                              'style' => 'width:150px',
+                                        array('size' => 5,
+                                              'style'=> '',
                                               'class' => 'advmultiselect')
                                         );
             
@@ -1124,10 +1134,10 @@ class CRM_Core_BAO_CustomField extends CRM_Core_DAO_CustomField
             }
         }
         
-        //set defaults if mode is registration / edit
+        //set defaults if mode is registration
         if ( ! trim( $value ) &&
              ( $value !== 0 ) &&
-             ( $mode != CRM_Profile_Form::MODE_SEARCH ) ) {
+             ( !in_array( $mode, array( CRM_Profile_Form::MODE_EDIT, CRM_Profile_Form::MODE_SEARCH ) ) ) ) {
             $value = $customField->default_value;
         }
 
@@ -1342,7 +1352,7 @@ SELECT id
                     $value = "01-01-{$value}";
                 }
                 
-                $date = CRM_Utils_Date::processDate( $value );
+                $date = CRM_Utils_Date::processDate( $value, null, false, 'YmdHis', $format );
             }
             $value = $date;
         }
@@ -1773,14 +1783,14 @@ SELECT label, value
 SELECT     f.id
 FROM       civicrm_custom_field f
 INNER JOIN civicrm_custom_group g ON f.custom_group_id = g.id
-WHERE      f.label = %1
-AND        g.title = %2
+WHERE      ( f.label = %1 OR f.name  = %1 )
+AND        ( g.title = %2 OR g.title = %2 )
 ";
         } else {
             $sql = "
 SELECT     f.id
 FROM       civicrm_custom_field f
-WHERE      f.label = %1
+WHERE      ( f.label = %1 OR f.name = %1 )
 ";
         }
 

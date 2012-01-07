@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -111,6 +111,21 @@ class CRM_Case_Form_Case extends CRM_Core_Form
             return true;
         }
         
+        if ( !$this->_caseId ) {
+            require_once 'CRM/Case/PseudoConstant.php';
+            $caseAttributes = array( 'case_type'        => CRM_Case_PseudoConstant::caseType( ),
+                                     'case_status'      => CRM_Case_PseudoConstant::caseStatus( ),
+                                     'encounter_medium' => CRM_Case_PseudoConstant::encounterMedium( ) );
+            
+            foreach ( $caseAttributes as $key => $values ) {
+                if ( empty ( $values ) ) {
+                    CRM_Core_Error::fatal( ts( 'You do not have any active %1', 
+                                               array( 1 =>  str_replace( '_', ' ', $key ) ) ) );
+                    break;
+                }
+            }
+        }
+
         if ( $this->_action & CRM_Core_Action::ADD ) {
             require_once 'CRM/Core/OptionGroup.php';
             $this->_activityTypeId = CRM_Core_OptionGroup::getValue( 'activity_type',
@@ -138,7 +153,8 @@ class CRM_Case_Form_Case extends CRM_Core_Form
        
         CRM_Utils_System::setTitle($details[$this->_activityTypeId]['label']);
         $this->assign('activityType', $details[$this->_activityTypeId]['label']);
-       
+        $this->assign( 'activityTypeDescription', $details[$this->_activityTypeId]['description'] );
+        
         if ( isset($this->_currentlyViewedContactId) ) {
             require_once 'CRM/Contact/BAO/Contact.php';
             $contact = new CRM_Contact_DAO_Contact( );
@@ -314,8 +330,10 @@ class CRM_Case_Form_Case extends CRM_Core_Form
         // 2. create/edit case
         require_once 'CRM/Case/BAO/Case.php';
         if ( CRM_Utils_Array::value('case_type_id', $params ) ) {
-            $caseType = CRM_Core_OptionGroup::values('case_type', false, false, false, null, 'name');
+            require_once 'CRM/Case/PseudoConstant.php';
+            $caseType = CRM_Case_PseudoConstant::caseType( 'name' );
             $params['case_type']    = $caseType[$params['case_type_id']];
+            $params['subject'] = $params['activity_subject'];
             $params['case_type_id'] = CRM_Case_BAO_Case::VALUE_SEPERATOR . 
                 $params['case_type_id'] . CRM_Case_BAO_Case::VALUE_SEPERATOR;
         }

@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -34,7 +34,7 @@
  * @subpackage API_Membership
  * 
  * @copyright CiviCRM LLC (c) 2004-2010
- * @version $Id: MembershipContributionLink.php 26310 2010-02-18 15:10:24Z shot $
+ * @version $Id: MembershipContributionLink.php 30171 2010-10-14 09:11:27Z mover $
  */
 
 /**

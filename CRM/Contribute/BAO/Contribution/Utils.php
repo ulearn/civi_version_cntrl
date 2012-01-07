@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -86,7 +86,7 @@ class CRM_Contribute_BAO_Contribution_Utils {
         
         if ( $form->_values['is_monetary'] && $form->_amount > 0.0 && is_array( $form->_paymentProcessor ) ) {
             require_once 'CRM/Core/Payment.php';
-            $payment =& CRM_Core_Payment::singleton( $form->_mode, 'Contribute', $form->_paymentProcessor, $form );
+            $payment =& CRM_Core_Payment::singleton( $form->_mode, $form->_paymentProcessor, $form );
         }
         
         //fix for CRM-2062
@@ -128,7 +128,7 @@ class CRM_Contribute_BAO_Contribution_Utils {
                     return $membershipResult;
                 } else {
                     if ( ! $form->_params['is_pay_later'] ) {
-                        $result =& $payment->doTransferCheckout( $form->_params );
+                        $result =& $payment->doTransferCheckout( $form->_params, 'contribute' );
                     } else {
                         // follow similar flow as IPN
                         // send the receipt mail
@@ -302,7 +302,9 @@ class CRM_Contribute_BAO_Contribution_Utils {
         
         $params = null;
         while ( $dao->fetch( ) ) {
-            $params['By Month'][$dao->contribMonth] = $dao->ctAmt;
+            if ( $dao->contribMonth ) {
+                $params['By Month'][$dao->contribMonth] = $dao->ctAmt;
+            }
         } 
         return $params;
         
@@ -326,11 +328,13 @@ class CRM_Contribute_BAO_Contribution_Utils {
               AND contrib.contribution_status_id = 1
         GROUP BY contribYear
         ORDER BY contribYear";
-        $dao = CRM_Core_DAO::executeQuery( $query, CRM_Core_DAO::$_nullArray );
+        $dao = CRM_Core_DAO::executeQuery( $query );
         
         $params = null;
         while ( $dao->fetch( ) ) {
-            $params['By Year'][$dao->contribYear] = $dao->ctAmt;
+            if ( ! empty( $dao->contribYear ) ) {
+                $params['By Year'][$dao->contribYear] = $dao->ctAmt;
+            }
         }
         return $params;
     }

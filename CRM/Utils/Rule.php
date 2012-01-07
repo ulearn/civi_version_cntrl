@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.1                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
@@ -317,9 +317,6 @@ class CRM_Utils_Rule
         $value = str_replace( array( ' ', "\t", "\n" ), '', $value );
 
         $config =& CRM_Core_Config::singleton( );
-
-        setlocale(LC_MONETARY, $config->lcMonetary);
-        $localeInfo = localeconv( );
 
         if ( $config->monetaryThousandSeparator ) {
             $mon_thousands_sep = $config->monetaryThousandSeparator;

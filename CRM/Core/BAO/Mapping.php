@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -410,7 +410,7 @@ class CRM_Core_BAO_Mapping extends CRM_Core_DAO_Mapping
         if ( ( $mappingType == 'Search Builder' ) || ( $exportMode == CRM_Export_Form_Select::MEMBER_EXPORT ) ) {
             if ( CRM_Core_Permission::access( 'CiviMember' ) ) {
                 require_once 'CRM/Member/BAO/Membership.php';
-                $fields['Membership'] =& CRM_Member_BAO_Membership::getMembershipFields();
+                $fields['Membership'] =& CRM_Member_BAO_Membership::getMembershipFields( $exportMode );
                 unset($fields['Membership']['membership_contact_id']);
                 $compArray['Membership'] = ts('Membership');
             }
@@ -587,8 +587,10 @@ class CRM_Core_BAO_Mapping extends CRM_Core_DAO_Mapping
                     foreach ( $mapperFields[$k] as $field => $dontCare ) {
                         if ( isset ( $hasRelationTypes[$k][$field] ) ) {
                             list( $id, $first, $second ) = explode( '_', $field );
-                            $relationshipCustomFields    = self::getRelationTypeCustomGroupData( $id );
-                            asort( $relationshipCustomFields ) ;
+                            // FIX ME: For now let's not expose custom data related to relationship
+                            $relationshipCustomFields = array( );
+                            //$relationshipCustomFields    = self::getRelationTypeCustomGroupData( $id );
+                            //asort( $relationshipCustomFields ) ;
                             
                             require_once 'CRM/Contact/BAO/RelationshipType.php';
                             $relationshipType = new CRM_Contact_BAO_RelationshipType( ); 
@@ -603,13 +605,13 @@ class CRM_Core_BAO_Mapping extends CRM_Core_DAO_Mapping
                                 }
                             }
                             $relationshipType->free( );
-                            
+                            asort( $relatedFields ); 
                             $sel5[$k][$field] = $relatedFields;
                         } 
                     }
                 }
             }
-         
+
             //Location Type for relationship fields
             
             foreach ( $sel5 as $k => $v ) { 
@@ -798,7 +800,9 @@ class CRM_Core_BAO_Mapping extends CRM_Core_DAO_Mapping
                 //Fix for Search Builder
                if ( $mappingType == 'Export' ) {
                     if ( ! isset( $mappingId ) ) {
-                        if ( array_key_exists ( $formValues['mapper'][$x][$i][1], $relationshipTypes ) ) {
+                        if ( isset($formValues['mapper'] ) && 
+                             isset($formValues['mapper'][$x][$i][1] ) &&
+                             array_key_exists ( $formValues['mapper'][$x][$i][1], $relationshipTypes ) ) {
                             $sel->setOptions( array( $sel1, $sel2, $sel5, $sel6, $sel7, $sel3, $sel4 ) );
                         } else {
                             $sel->setOptions( array( $sel1, $sel2, $sel3, $sel4, $sel5, $sel6, $sel7 ) );

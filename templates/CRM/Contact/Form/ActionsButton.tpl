@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -26,7 +26,7 @@
 {* this template is used for the dropdown menu of the "Actions" button on contacts. *}
 
 <div id="crm-contact-actions-wrapper">
-	<div id="crm-contact-actions-link"><span><div class="icon dropdown-icon"></div>Actions</span></div>
+	<div id="crm-contact-actions-link"><span><div class="icon dropdown-icon"></div>{ts}Actions{/ts}</span></div>
 		<div class="ac_results" id="crm-contact-actions-list">
 			<div class="crm-contact-actions-list-inner">
 			  <div class="crm-contact_activities-list">
@@ -36,7 +36,7 @@
               <div class="crm-contact_print-list">
               <ul class="contact-print">
                   <li class="crm-contact-print">
-                 		<a class="print" title="{ts}Printer-friendly view of this page.{/ts}" href='{crmURL p='civicrm/contact/view/print' q="reset=1&print=1&cid=$contactId"}'">
+                 		<a class="print" title="{ts}Printer-friendly view of this page.{/ts}" href='{crmURL p='civicrm/contact/view/print' q="reset=1&print=1&cid=$contactId"}'>
                  		<span><div class="icon print-icon"></div>{ts}Print Summary{/ts}</span>
                  		</a>
                   </li>

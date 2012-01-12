@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -122,7 +122,7 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form
         $returnProperties = array( 'case_type_id', 'subject', 'status_id', 'start_date' );
         CRM_Core_DAO::commonRetrieve('CRM_Case_BAO_Case', $params, $values, $returnProperties );
                 
-        $values['case_type_id'] = explode( CRM_Case_BAO_Case::VALUE_SEPERATOR, 
+        $values['case_type_id'] = explode( CRM_Core_DAO::VALUE_SEPARATOR,
                                            CRM_Utils_Array::value( 'case_type_id' , $values ) );
 
         require_once 'CRM/Case/PseudoConstant.php';
@@ -248,8 +248,10 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form
              array_key_exists( $linkActTypeId, $aTypes ) ) {
             unset( $aTypes[$linkActTypeId] );
         }
-        
-        asort( $aTypes );
+
+        if( ! $xmlProcessor->getNaturalActivityTypeSort( ) ) {
+            asort( $aTypes );
+        }
         
         $this->add('select', 'activity_type_id',  ts( 'New Activity' ), array( '' => ts( '- select activity type -' ) ) + $aTypes );
         if ( $this->_hasAccessToAllCases ) {
@@ -327,11 +329,16 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form
                 unset( $caseRoles[$value['relation_type']] );
             }
         }
-        
-        // activity type filter for case activity search, need to add Email Sent activity type
-        $emailSentID = CRM_Core_OptionGroup::getValue('activity_type', 'Email', 'name' );
-        $aTypesFilter = array( $emailSentID => 'Email' ) + $aTypes;
-        asort($aTypesFilter);
+
+        // take all case activity types for search filter, CRM-7187
+        $aTypesFilter    = array( );
+        $allCaseActTypes = CRM_Case_PseudoConstant::activityType( );
+        foreach ( $allCaseActTypes as $typeDetails ) {
+            if ( !in_array( $typeDetails['name'] , array( 'Open Case' ) ) ) {
+                $aTypesFilter[$typeDetails['id']] = CRM_Utils_Array::value( 'label', $typeDetails );
+            }
+        }
+        asort( $aTypesFilter );
         $this->add('select', 'activity_type_filter_id',  ts( 'Activity Type' ), array( '' => ts( '- select activity type -' ) ) + $aTypesFilter );
         
         $this->assign('caseRelationships', $caseRelationships);

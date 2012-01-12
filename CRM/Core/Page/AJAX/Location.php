@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -120,6 +120,36 @@ class CRM_Core_Page_AJAX_Location
         echo json_encode( $elements );
         CRM_Utils_System::civiExit( );
     }
+    
+
+    function jqCounty( $config ) {
+        if ( ! isset( $_GET['_value'] ) ||
+        empty( $_GET['_value'] ) ) {
+            $elements = array( array( 'name'  => ts('- select state -'),
+                'value' => '' ) );
+        } else {
+
+            require_once 'CRM/Core/PseudoConstant.php';
+            $result =& CRM_Core_PseudoConstant::countyForState( $_GET['_value'] );
+
+            $elements = array( array( 'name'  => ts('- select -'),
+                'value' => '' ) );
+            foreach ( $result as $id => $name ) {
+                $elements[] = array( 'name'  => $name,
+                    'value' => $id );
+            }
+            
+            if ( $elements == array( array( 'name'  => ts('- select -'), 'value' => '' ) )) {
+                $elements = array( array( 'name'  => ts('- no counties -'),
+                    'value' => '' ) );
+            }
+
+        }
+        
+        require_once "CRM/Utils/JSON.php";
+        echo json_encode( $elements );
+        CRM_Utils_System::civiExit( ); 
+    }
 
     function getLocBlock( ) {
         // i wish i could retrieve loc block info based on loc_block_id, 
@@ -169,6 +199,6 @@ class CRM_Core_Page_AJAX_Location
         $result['count_loc_used'] = CRM_Event_BAO_Event::countEventsUsingLocBlockId( $_POST['lbid'] );
 
         echo json_encode( $result );
-        exit();
+        CRM_Utils_System::civiExit( ); 
     }
 }

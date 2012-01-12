@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -277,7 +277,7 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form
             // also check for billing informatin
             // get the billing location type
             $locationTypes =& CRM_Core_PseudoConstant::locationType( );
-            $this->_bltID = array_search( 'Billing',  $locationTypes );
+            $this->_bltID = array_search( ts('Billing'),  $locationTypes );
             if ( ! $this->_bltID ) {
                 CRM_Core_Error::fatal( ts( 'Please set a location type of %1', array( 1 => 'Billing' ) ) );
             }
@@ -370,6 +370,11 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form
                 //authenticate pledge user for pledge payment.
                 if ( $pledgeId ) {
                     $this->_values['pledge_id'] = $pledgeId;
+                    
+                    //lets override w/ pledge campaign.
+                    $this->_values['campaign_id'] = CRM_Core_DAO::getFieldValue( 'CRM_Pledge_DAO_Pledge', 
+                                                                                 $pledgeId,
+                                                                                 'campaign_id' );
                     self::authenticatePledgeUser( );
                 }
             }
@@ -538,6 +543,17 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form
         $config->defaultCurrency = CRM_Utils_Array::value( 'currency', 
                                                            $this->_values, 
                                                            $config->defaultCurrency );
+        
+        //lets allow user to override campaign. 
+        $campID = CRM_Utils_Request::retrieve( 'campID', 'Positive', $this );
+        if ( $campID && CRM_Core_DAO::getFieldValue( 'CRM_Campaign_DAO_Campaign', $campID ) ) {
+            $this->_values['campaign_id'] = $campID;
+        }
+        
+        //do check for cancel recurring and clean db, CRM-7696
+        if ( CRM_Utils_Request::retrieve( 'cancel', 'Boolean', CRM_Core_DAO::$_nullObject ) ) {
+            self::cancelRecurring( );
+        }
     }
 
     /** 
@@ -727,7 +743,8 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form
                 
                 $fields = array_diff_assoc( $fields, $this->_fields );
                 $this->assign( $name, $fields );
-                
+                require_once 'CRM/Core/BAO/Address.php';
+                CRM_Core_BAO_Address::checkContactSharedAddressFields( $fields, $contactID );
                 $addCaptcha = false;
                 foreach($fields as $key => $field) {
                     if ( $viewOnly &&
@@ -738,7 +755,7 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form
                     }
 
                     list( $prefixName, $index ) = CRM_Utils_System::explode( '-', $key, 2 );
-                    if ( $prefixName == 'state_province' || $prefixName == 'country' ) {
+                    if ( $prefixName == 'state_province' || $prefixName == 'country' || $prefixName == 'county' ) {
                         if ( ! array_key_exists( $index, $stateCountryMap ) ) {
                             $stateCountryMap[$index] = array( );
                         }
@@ -828,7 +845,32 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form
             CRM_Core_Error::fatal(ts('Oops. You cannot make a payment for this pledge - pledge status is %1.', array(1 => CRM_Utils_Array::value($pledgeValues['status_id'], $allStatus)))); 
         }
     }
-
+    
+    /**
+     * In case user cancel recurring contribution,
+     * When we get the control back from payment gate way
+     * lets delete the recurring and related contribution.
+     *
+     **/
+    public function cancelRecurring( ) 
+    {
+        $isCancel = CRM_Utils_Request::retrieve( 'cancel',  'Boolean',  CRM_Core_DAO::$_nullObject );
+        if ( $isCancel ) {
+            $isRecur  = CRM_Utils_Request::retrieve( 'isRecur', 'Boolean',  CRM_Core_DAO::$_nullObject );
+            $recurId  = CRM_Utils_Request::retrieve( 'recurId', 'Positive', CRM_Core_DAO::$_nullObject );
+            //clean db for recurring contribution.
+            if ( $isRecur && $recurId ) {
+                require_once 'CRM/Contribute/BAO/ContributionRecur.php';
+                CRM_Contribute_BAO_ContributionRecur::deleteRecurContribution( $recurId );
+            }
+            $contribId = CRM_Utils_Request::retrieve( 'contribId', 'Positive', CRM_Core_DAO::$_nullObject );
+            if ( $contribId ) {
+                require_once 'CRM/Contribute/BAO/Contribution.php';
+                CRM_Contribute_BAO_Contribution::deleteContribution( $contribId );
+            }
+        }
+    }
+    
 }
 
 

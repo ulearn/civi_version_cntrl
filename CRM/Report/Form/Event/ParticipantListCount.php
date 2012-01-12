@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3		                         				  |
+ | CiviCRM version 4.0		                         				  |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010							      |
+ | Copyright CiviCRM LLC (c) 2004-2011							      |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.								      |
  |																      |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -43,6 +43,8 @@ class CRM_Report_Form_Event_ParticipantListCount extends CRM_Report_Form {
     
 	protected $_summary = null;
     
+    protected $_customGroupExtends = array( 'Participant' );
+
     function __construct( ) {
 		$this->_columns = 
 			array( 

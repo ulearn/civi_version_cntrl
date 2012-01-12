@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CiviCRM_Hook
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id: $
  *
  */
@@ -733,5 +733,27 @@ class CRM_Utils_Hook {
             eval( 'return ' .
                   $config->userHookClass .
                   '::invoke( 3, $obj, $type, $query, $null, $null , \'civicrm_dupeQuery\' );' );
+    }
+
+
+    /**
+     * This hook is called AFTER EACH email has been processed by the script bin/EmailProcessor.php
+     *
+     * @param string  $type    type of mail processed: 'activity' OR 'mailing'
+     * @param array  &$params  the params that were sent to the CiviCRM API function
+     * @param object  $mail    the mail object which is an ezcMail class
+     * @param array  &$result  the result returned by the api call
+     * @param string  $action  (optional ) the requested action to be performed if the types was 'mailing'
+     *
+     * @access public
+     */
+    static function emailProcessor( $type, &$params, $mail, &$result, $action = null ) {
+        $config =& CRM_Core_Config::singleton( );
+        require_once( str_replace( '_', DIRECTORY_SEPARATOR, $config->userHookClass ) . '.php' );
+
+        return
+            eval( 'return ' .
+                  $config->userHookClass .
+                  '::invoke( 5, $type, $params, $mail, $result, $action, \'civicrm_emailProcessor\' );' );
     }
 }

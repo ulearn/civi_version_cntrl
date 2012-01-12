@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -83,7 +83,7 @@
      {/foreach}
   {else}
       {foreach from=$rows item=row}
-         <tr id='rowid{$row.contact_id}' class="{cycle values="odd-row,even-row"}" title="{ts}Click contact name to view a summary. Right-click anywhere in the row for an actions menu."{/ts}>
+         <tr id='rowid{$row.contact_id}' class="{cycle values="odd-row,even-row"}" title="{ts}Click contact name to view a summary. Right-click anywhere in the row for an actions menu.{/ts}">
             {assign var=cbName value=$row.checkbox}
             <td>{$form.$cbName.html}</td>
             {if $context eq 'smog'}
@@ -127,10 +127,10 @@
     on_load_init_checkboxes(fname);
  {literal}
 cj(document).ready( function() {
-var url         = "{/literal}{crmURL p='civicrm/contact/view/changeaction' q="reset=1&action=add&cid=changeid&context=changeaction" h=0}{literal}";
-var activityUrl = "{/literal}{crmURL p='civicrm/contact/view' q="action=browse&selectedChild=activity&reset=1&cid=changeid" h=0}{literal}";
-var emailUrl    = "{/literal}{crmURL p='civicrm/contact/view/activity' q="atype=3&action=add&reset=1&cid=changeid" h=0}{literal}";
-var contactUrl  = "{/literal}{crmURL p='civicrm/contact/changeaction' q="reset=1&cid=changeid" h=0}{literal}";
+var url         = "{/literal}{crmURL p='civicrm/contact/view/changeaction' q='reset=1&action=add&cid=changeid&context=changeaction' h=0}{literal}";
+var activityUrl = "{/literal}{crmURL p='civicrm/contact/view' q='action=browse&selectedChild=activity&reset=1&cid=changeid' h=0}{literal}";
+var emailUrl    = "{/literal}{crmURL p='civicrm/contact/view/activity' q='atype=3&action=add&reset=1&cid=changeid' h=0}{literal}";
+var contactUrl  = "{/literal}{crmURL p='civicrm/contact/changeaction' q='reset=1&cid=changeid' h=0}{literal}";
 // Show menu when contact row is right clicked
 cj(".selector tr").contextMenu({
       menu: 'contactMenu'
@@ -151,10 +151,13 @@ cj(".selector tr").contextMenu({
             break;
         }
         eval( 'locationUrl = locationUrl.replace( /changeid/, contactId );');
-        var destination = "{/literal}{crmURL q="force=1" h=0}{literal}";
+        var destination = "{/literal}{crmURL q='force=1' h=0}{literal}";
         window.location = locationUrl + '&destination=' + encodeURIComponent(destination);
    });
+
+    cj('.selector').crmrowhighlighter( );
 });
+
 cj('ul#contactMenu').mouseup( function(e){ 
    if( e.button !=0 ) {
     //when right or middle button clicked fire default right click popup

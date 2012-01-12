@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,13 +29,12 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
 
 require_once 'CRM/Contribute/Import/Parser.php';
-require_once 'api/v2/Contribution.php';
 
 /**
  * class to parse contribution csv files
@@ -95,6 +94,9 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
             $fields = array_merge( $fields, $pledgeFields );
         }
         foreach ($fields as $name => $field) {
+            $field['type']          = CRM_Utils_Array::value( 'type', $field, CRM_Utils_Type::T_INT );
+            $field['dataPattern']   = CRM_Utils_Array::value( 'dataPattern', $field, '//' );
+            $field['headerPattern'] = CRM_Utils_Array::value( 'headerPattern', $field, '//' );
             $this->addField( $name, $field['title'], $field['type'], $field['headerPattern'], $field['dataPattern'] );
         }
 
@@ -251,7 +253,7 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
 
         $params =& $this->getActiveFieldParams( );            
                 
-        $formatted = array( );
+        $formatted = array('version' => 3);
 
         // don't add to recent items, CRM-4399
         $formatted['skipRecentView'] = true;
@@ -440,8 +442,9 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
                 } else {
                     $cid = $matchedIDs[0];
                     $formatted['contact_id'] = $cid;
-                    
-                    $newContribution = civicrm_contribution_format_create( $formatted );
+                    $formatted['version'] = 2;
+
+                    $newContribution = civicrm_api('contribution', 'format_create', $formatted);
                     if ( civicrm_error( $newContribution ) ) { 
                         if ( is_array( $newContribution['error_message'] ) ) {
                             array_unshift($values, $newContribution['error_message']['message']);
@@ -499,7 +502,7 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
             }
             
         } else {
-            if ( $paramValues['external_identifier'] ) { 
+            if ( CRM_Utils_Array::value( 'external_identifier', $paramValues ) ) { 
                 $checkCid = new CRM_Contact_DAO_Contact();
                 $checkCid->external_identifier = $paramValues['external_identifier'];
                 $checkCid->find(true);
@@ -508,7 +511,8 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
                     return CRM_Contribute_Import_Parser::ERROR;
                 }
             }
-            $newContribution = civicrm_contribution_format_create( $formatted );
+            $formatted['version'] = 2;
+            $newContribution = civicrm_api('contribution', 'format_create', $formatted);
             if ( civicrm_error( $newContribution ) ) { 
                 if ( is_array( $newContribution['error_message'] ) ) {
                     array_unshift($values, $newContribution['error_message']['message']);

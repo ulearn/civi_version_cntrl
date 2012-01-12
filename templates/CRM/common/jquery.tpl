@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,17 +29,14 @@
  * html profile etc
  *}
 <script type="text/javascript" src="{$config->resourceBase}packages/jquery/jquery.js"></script>
-<script type="text/javascript" src="{$config->resourceBase}packages/jquery/jquery-ui-1.8.5/js/jquery-ui-1.8.5.custom.min.js"></script>
-<style type="text/css">@import url("{$config->resourceBase}packages/jquery/jquery-ui-1.8.5/css/custom-theme/jquery-ui-1.8.5.custom.css");</style>
-
-<script type="text/javascript" src="{$config->resourceBase}packages/jquery/plugins/flexigrid.js"></script>
-<style type="text/css">@import url("{$config->resourceBase}packages/jquery/css/flexigrid.css");</style>
+<script type="text/javascript" src="{$config->resourceBase}packages/jquery/jquery-ui-1.8.11/js/jquery-ui-1.8.11.custom.min.js"></script>
+<style type="text/css">@import url("{$config->resourceBase}packages/jquery/jquery-ui-1.8.11/css/smoothness/jquery-ui-1.8.11.custom.css");</style>
 
 <script type="text/javascript" src="{$config->resourceBase}packages/jquery/plugins/jquery.autocomplete.js"></script>
 <style type="text/css">@import url("{$config->resourceBase}packages/jquery/css/jquery.autocomplete.css");</style>
 
 <script type="text/javascript" src="{$config->resourceBase}packages/jquery/plugins/jsTree.v.1.0rc2/jquery.jstree.min.js"></script>
-<style type="text/css">@import url("{$config->resourceBase}packages/jquery/jsTree.v.1.0rc2/themes/default/style.css");</style>
+<style type="text/css">@import url("{$config->resourceBase}packages/jquery/plugins/jsTree.v.1.0rc2/themes/default/jstree.css");</style>
 
 <script type="text/javascript" src="{$config->resourceBase}packages/jquery/plugins/jquery.menu.pack.js"></script>
 <style type="text/css">@import url("{$config->resourceBase}packages/jquery/css/menu.css");</style>
@@ -70,8 +67,8 @@
 
 <script type="text/javascript" src="{$config->resourceBase}packages/jquery/plugins/jquery.toolTip.js"></script>
 
-<script type="text/javascript" src="{$config->resourceBase}packages/jquery/plugins/DataTables-1.7.2/media/js/jquery.dataTables.min.js"></script>
-<style type="text/css">@import url("{$config->resourceBase}packages/jquery/plugins/DataTables-1.7.2/media/css/demo_table_jui.css");</style>
+<script type="text/javascript" src="{$config->resourceBase}packages/jquery/plugins/DataTables-1.7.6/media/js/jquery.dataTables.min.js"></script>
+<style type="text/css">@import url("{$config->resourceBase}packages/jquery/plugins/DataTables-1.7.6/media/css/demo_table_jui.css");</style>
 
 <script type="text/javascript" src="{$config->resourceBase}packages/jquery/plugins/jquery.FormNavigate.js"></script>
 
@@ -80,6 +77,7 @@
 <script type="text/javascript" src="{$config->resourceBase}js/jquery/jquery.crmaccordions.js"></script>
 <script type="text/javascript" src="{$config->resourceBase}js/jquery/jquery.crmasmselect.js"></script>
 <script type="text/javascript" src="{$config->resourceBase}js/jquery/jquery.crmtooltip.js"></script>
+<script type="text/javascript" src="{$config->resourceBase}js/jquery/jquery.crmrowhighlighter.js"></script>
 
 <script type="text/javascript" src="{$config->resourceBase}packages/jquery/plugins/jquery.dashboard.js"></script>
 <style type="text/css">@import url("{$config->resourceBase}packages/jquery/css/dashboard.css");</style>

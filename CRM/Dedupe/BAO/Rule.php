@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -60,6 +60,12 @@ class CRM_Dedupe_BAO_Rule extends CRM_Dedupe_DAO_Rule
      * @return string  SQL query performing the search
      */
     function sql() {
+        if ( $this->params && 
+             ( !array_key_exists($this->rule_table, $this->params) || 
+               !array_key_exists($this->rule_field, $this->params[$this->rule_table]) ) ) {
+            // if params is present and doesn't have an entry for a field, don't construct the clause.
+            return null;
+        }
 
         // we need to initialise WHERE, ON and USING here, as some table types 
         // extend them; $where is an array of required conditions, $on and 
@@ -72,6 +78,15 @@ class CRM_Dedupe_BAO_Rule extends CRM_Dedupe_DAO_Rule
         switch ($this->rule_table) {
         case 'civicrm_contact':
             $id = 'id';
+            //we should restrict by contact type in the first step
+            $sql = "SELECT contact_type FROM civicrm_dedupe_rule_group WHERE id = {$this->dedupe_rule_group_id};";
+            $ct  = CRM_Core_DAO::singleValueQuery( $sql );
+            if ($this->params) {
+                $where[] = "t1.contact_type = '{$ct}'";
+            } else {
+                $where[] = "t1.contact_type = '{$ct}'";
+                $where[] = "t2.contact_type = '{$ct}'";
+            }
             break;
         case 'civicrm_address':
             $id = 'contact_id';
@@ -184,4 +199,23 @@ class CRM_Dedupe_BAO_Rule extends CRM_Dedupe_DAO_Rule
         }
         return $ruleFields;
     }
+
+    function validateContacts( $cid, $oid )
+    {
+        if ( !$cid || !$oid ) return; 
+        require_once 'CRM/Dedupe/DAO/Exception.php';
+        $exception = new CRM_Dedupe_DAO_Exception( );
+        $exception->contact_id1 = $cid;
+        $exception->contact_id2 = $oid;
+        //make sure contact2 > contact1.
+        if ( $cid > $oid ) {
+            $exception->contact_id1 = $oid;
+            $exception->contact_id2 = $cid;
+        }
+        
+        if ( $exception->find( true ) ) {
+            CRM_Core_Error::fatal( ts( 'Oops, these contacts seems to be marked as non duplicates.' ) );
+        }
+    }
+    
 }

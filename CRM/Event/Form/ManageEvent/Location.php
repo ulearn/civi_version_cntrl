@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -135,8 +135,10 @@ class CRM_Event_Form_ManageEvent_Location extends CRM_Event_Form_ManageEvent
                 CRM_Contact_Form_Edit_Address::fixStateSelect( $this,
                                                           "address[$key][country_id]",
                                                           "address[$key][state_province_id]",
+                                                          "address[$key][county_id]",
                                                           CRM_Utils_Array::value( 'country_id', $value,
-                                                                                  $config->defaultContactCountry ) );
+                                                                                  $config->defaultContactCountry ),
+                                                          CRM_Utils_Array::value( 'state_province_id', $value ) );
             }
         }
         $defaults['location_option'] = $this->_oldLocBlockId ? 2 : 1;

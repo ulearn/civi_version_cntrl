@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -51,7 +51,9 @@
    {/if}
 
     {if $rows}
+    	{include file="CRM/common/pager.tpl" location="top"}
         {include file="CRM/Event/Form/Selector.tpl"}
+	{include file="CRM/common/pager.tpl" location="bottom"}
     {else}
        <div class="messages status">
            <table class="form-layout">

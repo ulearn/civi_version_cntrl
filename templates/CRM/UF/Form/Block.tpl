@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -54,7 +54,11 @@
 
     {if $field.options_per_line != 0} 
         <div class="crm-section {$form.$n.id}-section"> 
-        <div class="label option-label">{$form.$n.label}</div> 
+        {* Show explanatory text for field if not in 'view' or 'preview' modes *} 
+             {if $field.help_pre && $action neq 4 && $action neq 1028}
+                &nbsp;&nbsp;<span class="description">{$field.help_pre}</span> 
+             {/if} 
+	<div class="label option-label">{$form.$n.label}</div> 
         <div class="content 3"> 
              {assign var="count" value="1"} 
             {strip} 
@@ -86,9 +90,13 @@
         </div>
         <div class="clear"></div> 
         </div> 
-    {else} 
+    {else}
         <div class="crm-section {$form.$n.id}-section"> 
-           <div class="label">{$form.$n.label}</div>
+           {* Show explanatory text for field if not in 'view' or 'preview' modes *} 
+             {if $field.help_pre && $action neq 4 && $action neq 1028}
+                &nbsp;&nbsp;<span class="description">{$field.help_pre}</span> 
+             {/if} 
+	   <div class="label">{$form.$n.label}</div>
            <div class="content">
              {if $n|substr:0:3 eq 'im-'}
                {assign var="provider" value=$n|cat:"-provider_id"}
@@ -104,7 +112,7 @@
 					<tr><td>{$form.$n.html}{* quickform add closing </td> </tr>*}
 				</table>
              {elseif ( $field.data_type eq 'Date' or 
-                      ( ( ( $n eq 'birth_date' ) or ( $n eq 'deceased_date' ) ) ) ) }
+	     	     ( $n|substr:-5:5 eq '_date' ) ) }
                       {include file="CRM/common/jcalendar.tpl" elementName=$n}
    	    	 {else}
                {$form.$n.html}

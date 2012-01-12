@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -146,7 +146,7 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
         if ( $isTest && !empty( $params['custom_post_id'] ) ) {
             $params['custom_post_id'][] = array( 'contribution_test', '=', 1, 0, 0 );
         }
-        if ( ! $returnMessageText ) {
+        if ( ! $returnMessageText && !empty( $gIds ) ) {
             //send notification email if field values are set (CRM-1941)
             require_once 'CRM/Core/BAO/UFGroup.php';
             foreach ( $gIds as $key => $gId ) {
@@ -158,7 +158,9 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
             }
         }
 
-        if ( CRM_Utils_Array::value( 'is_email_receipt', $values )  || CRM_Utils_Array::value( 'onbehalf_dupe_alert', $values ) ) {
+        if ( CRM_Utils_Array::value( 'is_email_receipt', $values )  || 
+             CRM_Utils_Array::value( 'onbehalf_dupe_alert', $values ) || 
+             $returnMessageText ) {
             $template =& CRM_Core_Smarty::singleton( );
 
             // get the billing location type
@@ -180,6 +182,11 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
             // get primary location email if no email exist( for billing location).
             if ( !$email ) {
                 list( $displayName, $email ) = CRM_Contact_BAO_Contact_Location::getEmailDetails( $contactID );
+            }
+            
+            if ( empty( $displayName ) ) {
+                require_once 'CRM/Contact/BAO/Contact.php';
+                $displayName = CRM_Contact_BAO_Contact::displayName( $contactID );
             }
             
             //for display profile need to get individual contact id,  
@@ -212,11 +219,11 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
                 }
                 self::buildCustomDisplay( $postID, 'customPost', $userID, $template, $params['custom_post_id'] );
             }
-            
+
             // set email in the template here
             $tplParams = array(
                 'email'            => $email,
-                'receiptFromEmail' => $values['receipt_from_email'],
+                'receiptFromEmail' => CRM_Utils_Array::value( 'receipt_from_email', $values ),
                 'contactID'        => $contactID,
                 'contributionID'   => $values['contribution_id'],
                 'membershipID'     => CRM_Utils_Array::value('membership_id', $values),
@@ -228,6 +235,10 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
                 $tplParams['contributionTypeId']   = $contributionTypeId;
                 $tplParams['contributionTypeName'] = CRM_Core_DAO::getFieldValue( 'CRM_Contribute_DAO_ContributionType',
                                                                                   $contributionTypeId );
+            }
+
+            if ( $contributionPageId = CRM_Utils_Array::value('id', $values ) ) {
+                $tplParams['contributionPageId']   = $contributionPageId;
             }
                         
             // address required during receipt processing (pdf and email receipt)
@@ -259,12 +270,12 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
             
             // use either the contribution or membership receipt, based on whether it’s a membership-related contrib or not
             $sendTemplateParams = array(
-                'groupName' => $tplParams['membershipID'] ? 'msg_tpl_workflow_membership' : 'msg_tpl_workflow_contribution',
-                'valueName' => $tplParams['membershipID'] ? 'membership_online_receipt'   : 'contribution_online_receipt',
-                'contactId' => $contactID,
-                'tplParams' => $tplParams,
-                'isTest'    => $isTest,
-            	'PDFFilename' => 'civicrm.pdf',
+                'groupName'   => $tplParams['membershipID'] ? 'msg_tpl_workflow_membership' : 'msg_tpl_workflow_contribution',
+                'valueName'   => $tplParams['membershipID'] ? 'membership_online_receipt'   : 'contribution_online_receipt',
+                'contactId'   => $contactID,
+                'tplParams'   => $tplParams,
+                'isTest'      => $isTest,
+            	'PDFFilename' => 'receipt.pdf',
             );
 
             require_once 'CRM/Core/BAO/MessageTemplates.php';
@@ -311,47 +322,63 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
      * @param int     $contactID    contact id for contributor
      * @param int     $pageID       contribution page id
      * @param object  $recur        object of recurring contribution table
+     * @param object  $autoRenewMembership   is it a auto renew membership.
      *
      * @return void
      * @access public
      * @static
      */
-    static function recurringNofify( $type, $contactID, $pageID , $recur ) 
+    static function recurringNofify( $type, $contactID, $pageID , $recur, $autoRenewMembership = false ) 
     {
-        $value = array();
-        CRM_Core_DAO::commonRetrieveAll( 'CRM_Contribute_DAO_ContributionPage', 'id', 
-                                         $pageID, $value, 
-                                         array( 'title', 'is_email_receipt', 'receipt_from_name',
-                                                'receipt_from_email','cc_receipt','bcc_receipt' ) );
-        if ( $value[$pageID]['is_email_receipt'] ) {
-            $receiptFrom = '"' . CRM_Utils_Array::value('receipt_from_name',$value[$pageID]) . '" <' . $value[$pageID]['receipt_from_email'] . '>';
+        $value = array( );
+        if ( $pageID ) {
+            CRM_Core_DAO::commonRetrieveAll( 'CRM_Contribute_DAO_ContributionPage', 'id', 
+                                             $pageID, $value, 
+                                             array( 'title', 'is_email_receipt', 'receipt_from_name',
+                                                    'receipt_from_email','cc_receipt','bcc_receipt' ) );
+        }
+        
+        $isEmailReceipt = CRM_Utils_Array::value( 'is_email_receipt', $value[$pageID] );
+        $isOfflineRecur = false;
+        if ( !$pageID && $recur->id ) $isOfflineRecur = true; 
+        if ( $isEmailReceipt || $isOfflineRecur ) {
+            if ( $pageID ) {
+                $receiptFrom = '"' . CRM_Utils_Array::value('receipt_from_name',$value[$pageID]) . '" <' . $value[$pageID]['receipt_from_email'] . '>';
+                
+                $receiptFromName  = $value[$pageID]['receipt_from_name'];
+                $receiptFromEmail = $value[$pageID]['receipt_from_email']; 
+            } else {
+                require_once 'CRM/Core/BAO/Domain.php';
+                $domainValues = CRM_Core_BAO_Domain::getNameAndEmail( );
+                $receiptFrom      = "$domainValues[0] <$domainValues[1]>";
+                $receiptFromName  = $domainValues[0];
+                $receiptFromEmail = $domainValues[1];
+            }
+            
             require_once 'CRM/Contact/BAO/Contact/Location.php';
             list( $displayName, $email ) = CRM_Contact_BAO_Contact_Location::getEmailDetails( $contactID, false );
-
+            $templatesParams = array( 'groupName' => 'msg_tpl_workflow_contribution',
+                                      'valueName' => 'contribution_recurring_notify',
+                                      'contactId' => $contactID,
+                                      'tplParams' => array( 'recur_frequency_interval' => $recur->frequency_interval,
+                                                            'recur_frequency_unit'     => $recur->frequency_unit,
+                                                            'recur_installments'       => $recur->installments,
+                                                            'recur_start_date'         => $recur->start_date,
+                                                            'recur_end_date'           => $recur->end_date,
+                                                            'recur_amount'             => $recur->amount,
+                                                            'recur_txnType'            => $type,
+                                                            'displayName'              => $displayName,
+                                                            'receipt_from_name'        => $receiptFromName,
+                                                            'receipt_from_email'       => $receiptFromEmail,
+                                                            'auto_renew_membership'    => $autoRenewMembership ),
+                                      'from'    => $receiptFrom,
+                                      'toName'  => $displayName,
+                                      'toEmail' => $email,
+                                      );
+            
             require_once 'CRM/Core/BAO/MessageTemplates.php';
-            list ($sent, $subject, $message, $html) = CRM_Core_BAO_MessageTemplates::sendTemplate(
-                array(
-                    'groupName' => 'msg_tpl_workflow_contribution',
-                    'valueName' => 'contribution_recurring_notify',
-                    'contactId' => $contactID,
-                    'tplParams' => array(
-                        'recur_frequency_interval' => $recur->frequency_interval,
-                        'recur_frequency_unit'     => $recur->frequency_unit,
-                        'recur_installments'       => $recur->installments,
-                        'recur_start_date'         => $recur->start_date,
-                        'recur_end_date'           => $recur->end_date,
-                        'recur_amount'             => $recur->amount,
-                        'recur_txnType'            => $type,
-                        'displayName'              => $displayName,
-                        'receipt_from_name'        => $value[$pageID]['receipt_from_name'],
-                        'receipt_from_email'       => $value[$pageID]['receipt_from_email'],
-                    ),
-                    'from'    => $receiptFrom,
-                    'toName'  => $displayName,
-                    'toEmail' => $email,
-                )
-            );
-
+            list ($sent, $subject, $message, $html) = CRM_Core_BAO_MessageTemplates::sendTemplate( $templatesParams );
+            
             if ($sent) {
                 CRM_Core_Error::debug_log_message('Success: mail sent for recurring notification.');
             } else {
@@ -359,7 +386,7 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
             }
         }
     }
-
+    
     
     /**  
      * Function to add the custom fields for contribution page (ie profile)
@@ -575,7 +602,7 @@ LEFT JOIN  civicrm_premiums            ON ( civicrm_premiums.entity_id = civicrm
         
         $contributionPage = CRM_Core_DAO::executeQuery( $query );
         while ( $contributionPage->fetch( ) ) {
-            if ( !is_array( $info[$contributionPage->id] ) ) {
+            if ( !isset( $info[$contributionPage->id] ) || !is_array( $info[$contributionPage->id] ) ) {
                 $info[$contributionPage->id] = array_fill_keys( array_values( $sections ), false );
             }
             foreach ( $sections as $section ) {

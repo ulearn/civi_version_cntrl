@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -34,7 +34,7 @@ require_once 'CRM/Core/Component/Info.php';
  * abstract class.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -57,12 +57,33 @@ class CRM_Mailing_Info extends CRM_Core_Component_Info
     }
 
 
+    static function workflowEnabled( ) {
+        $config =& CRM_Core_Config::singleton( );
+
+        $enableWorkflow = defined( 'CIVICRM_CIVIMAIL_WORKFLOW' ) ? (bool) CIVICRM_CIVIMAIL_WORKFLOW : false;
+
+        return ( $enableWorkflow &&
+                 $config->userFramework == 'Drupal' &&
+                 module_exists( 'rules' ) ) ?
+            true :
+            false;
+             
+    }
     // docs inherited from interface
     public function getPermissions()
     {
-        return array( 'access CiviMail', 
-                      'access CiviMail subscribe/unsubscribe pages',
-                      'delete in CiviMail' );
+        $permissions = array( 'access CiviMail', 
+                              'access CiviMail subscribe/unsubscribe pages',
+                              'delete in CiviMail',
+                              'view public CiviMail content');
+
+        if ( self::workflowEnabled( ) ) {
+            $permissions[] = 'create mailings';
+            $permissions[] = 'schedule mailings';
+            $permissions[] = 'approve mailings';
+        }
+
+        return $permissions;
     }
 
 

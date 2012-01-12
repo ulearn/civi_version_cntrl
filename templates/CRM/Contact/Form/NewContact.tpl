@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -70,6 +70,9 @@
 
       var dataURL = {/literal}"{crmURL p='civicrm/profile/create' q="reset=1&snippet=5&context=dialog&blockNo=$blockNo" h=0 }"{literal};
       dataURL = dataURL + '&gid=' + gid;
+      {/literal}{if $profileCreateCallback}{literal}
+        dataURL = dataURL + '&createCallback=1';
+      {/literal}{/if}{literal}
       cj.ajax({
          url: dataURL,
          success: function( content ) {
@@ -111,7 +114,7 @@
       {/literal}{/if}{literal}
 
       var contactElement = '#contact_' + blockNo;
-      var contactHiddenElement = 'input[name=contact_select_id[' + blockNo +']]';
+      var contactHiddenElement = 'input[name="contact_select_id[' + blockNo +']"]';
       cj( contactElement ).autocomplete( contactUrl, { 
           selectFirst : false, matchContains: true, minChars: 1
       }).result( function(event, data, formatted) { 

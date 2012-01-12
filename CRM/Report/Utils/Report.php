@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -97,7 +97,7 @@ WHERE  TRIM(BOTH '/' FROM CONCAT(report_id, '/', name)) = %1";
 	     $params = array( 1 => array( $path, 'String' ) );
 	     $valId[$path] = CRM_Core_DAO::singleValueQuery( $sql, $params );
 	 }
-	 return $valId[$path];
+     return CRM_Utils_Array::value( $path, $valId );
     }
 
     static function getNextUrl( $urlValue, $query = 'reset=1', $absolute = false, $instanceID = null ) {
@@ -201,7 +201,7 @@ WHERE  inst.report_id = %1";
                         } elseif ( CRM_Utils_Array::value( 'group_by', $form->_columnHeaders[$v] ) == 'YEAR' ) {
                             $value =  CRM_Utils_Date::customFormat( $value, $config->dateformatYear );
                         } else {
-                            $value =  CRM_Utils_Date::customFormat( $value,'%Y%m%d' );
+                            $value =  CRM_Utils_Date::customFormat( $value,'%Y-%m-%d' );
                         }
                     } else if ( CRM_Utils_Array::value( 'type', $form->_columnHeaders[$v] ) == 1024 ) {
                         $value =  CRM_Utils_Money::format( $value );

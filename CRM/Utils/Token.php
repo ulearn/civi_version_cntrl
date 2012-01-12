@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id: $
  *
  */
@@ -53,8 +53,18 @@ class CRM_Utils_Token
                                                       'subscribeUrl'
                                                       ),
                              'mailing'       => array(
+                             						  'id',
                                                       'name',
-                                                      'group'
+                                                      'group',
+                                                      'subject',
+                                                      'viewUrl',
+                                                      'editUrl',
+                                                      'scheduleUrl',
+                                                      'approvalStatus',
+                                                      'approvalNote',
+                                                      'approveUrl',
+                                                      'creator',
+                                                      'creatorEmail'
                                                       ),
                              'contact'       => null,  // populate this dynamically
                              'domain'        => array( 
@@ -362,22 +372,80 @@ class CRM_Utils_Token
     public static function getMailingTokenReplacement($token, &$mailing, $escapeSmarty = false) 
     {
         $value = '';
-        
-        // check if the token we were passed is valid
-        // we have to do this because this function is
-        // called only when we find a token in the string
-        if (!in_array($token,self::$_tokens['mailing'])) {
-            $value = "{mailing.$token}";
-        } else if ($token == 'name') {
+        switch ( $token ) {
+        // CRM-7663
+        case 'id':
+        	$value = $mailing ? $mailing->id : 'undefined';
+        	break;
+        case 'name':
             $value = $mailing ? $mailing->name : 'Mailing Name';
-        } else if ($token == 'group') {
+            break;
+
+        case 'group':
             $groups = $mailing  ? $mailing->getGroupNames() : array('Mailing Groups');
             $value = implode(', ', $groups);
+            break;
+
+        case 'subject':
+            $value = $mailing->subject;
+            break;
+
+        case 'viewUrl':
+            $value = CRM_Utils_System::url( 'civicrm/mailing/view',
+                                            "reset=1&id={$mailing->id}",
+                                            true, null, false, true );
+            break;
+
+        case 'editUrl':
+            $value = CRM_Utils_System::url( 'civicrm/mailing/send',
+                                            "reset=1&mid={$mailing->id}&continue=true",
+                                            true, null, false, true );
+            break;
+            
+        case 'scheduleUrl':
+            $value = CRM_Utils_System::url( 'civicrm/mailing/schedule',
+                                            "reset=1&mid={$mailing->id}",
+                                            true, null, false, true );
+            break;
+            
+        case 'html':
+            require_once 'CRM/Mailing/Page/View.php';
+            $page = new CRM_Mailing_Page_View( );
+            $value = $page->run( $mailing->id, false );
+            break;
+            
+        case 'approvalStatus':
+            require_once 'CRM/Mailing/PseudoConstant.php';
+            $mailApprovalStatus = CRM_Mailing_PseudoConstant::approvalStatus( );
+            $value = $mailApprovalStatus[$mailing->approval_status_id];
+            break;
+    
+        case 'approvalNote':
+            $value = $mailing->approval_note;
+            break;
+
+        case 'approveUrl':
+            $value = CRM_Utils_System::url( 'civicrm/mailing/approve',
+                                            "reset=1&mid={$mailing->id}",
+                                            true, null, false, true );
+            break;
+            
+        case 'creator':
+            $value = CRM_Contact_BAO_Contact::displayName( $mailing->created_id );
+            break;
+
+        case 'creatorEmail':
+            $value = CRM_Contact_BAO_Contact::getPrimaryEmail( $mailing->created_id );
+            break;
+            
+        default:
+            $value = "{mailing.$token}";
+            break;
         }
      
         if ( $escapeSmarty ) {
             $value = self::tokenEscapeSmarty( $value );
-        }
+        }     
         return $value;
     }
 

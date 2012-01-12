@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -351,6 +351,10 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship
             // (i.e. the relationship is bi-directional)
             $relationshipType = array_unique( $relationshipType );
         }
+        
+        // sort the relationshipType in ascending order CRM-7736
+        asort( $relationshipType ); 
+
         return $relationshipType;
     }
 
@@ -364,7 +368,7 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship
      *
      * @static
      */
-    static function del ( $id ) 
+    static function del( $id ) 
     {
         // delete from relationship table
         require_once 'CRM/Utils/Hook.php';
@@ -400,7 +404,11 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship
             $ids = array();
             // calling relatedMemberships to delete the memberships of
             // related contacts.
-            self::relatedMemberships( $relationship->contact_id_a, $params, $ids, CRM_Core_Action::DELETE );
+            self::relatedMemberships( $relationship->contact_id_a, 
+                                      $params, 
+                                      $ids, 
+                                      CRM_Core_Action::DELETE,
+                                      false );
         }
         
         $relationship->delete();
@@ -454,10 +462,18 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship
             // calling relatedMemberships to delete/add the memberships of
             // related contacts.
             if ( $action & CRM_Core_Action::DISABLE ) {
-                CRM_Contact_BAO_Relationship::relatedMemberships( $relationship->contact_id_a, $params, $ids, CRM_Core_Action::DELETE );
+                CRM_Contact_BAO_Relationship::relatedMemberships( $relationship->contact_id_a, 
+                                                                  $params, 
+                                                                  $ids, 
+                                                                  CRM_Core_Action::DELETE,
+                                                                  false );
             } else if ( $action & CRM_Core_Action::ENABLE ) {
                 $ids['contact'] = $relationship->contact_id_a;
-                CRM_Contact_BAO_Relationship::relatedMemberships( $relationship->contact_id_a, $params, $ids, CRM_Core_Action::ADD );
+                CRM_Contact_BAO_Relationship::relatedMemberships( $relationship->contact_id_a, 
+                                                                  $params, 
+                                                                  $ids, 
+                                                                  CRM_Core_Action::ADD,
+                                                                  false );
             }     
         }
     }
@@ -725,7 +741,8 @@ class CRM_Contact_BAO_Relationship extends CRM_Contact_DAO_Relationship
                               civicrm_relationship.description as description,
                               civicrm_relationship.is_active as is_active,
                               civicrm_relationship.is_permission_a_b as is_permission_a_b,
-                              civicrm_relationship.is_permission_b_a as is_permission_b_a';
+                              civicrm_relationship.is_permission_b_a as is_permission_b_a,
+                              civicrm_relationship.case_id as case_id';
 
             if ( $direction == 'a_b' ) {
                 $select .= ', civicrm_relationship_type.label_a_b as label_a_b,
@@ -902,7 +919,8 @@ LEFT JOIN  civicrm_country ON (civicrm_address.country_id = civicrm_country.id)
                 $values[$rid]['is_active']  = $relationship->is_active;
                 $values[$rid]['is_permission_a_b']= $relationship->is_permission_a_b;
                 $values[$rid]['is_permission_b_a']= $relationship->is_permission_b_a;
-
+                $values[$rid]['case_id']    = $relationship->case_id;
+                
                 if( $status ) {
                     $values[$rid]['status'] = $status;
                 }
@@ -919,7 +937,9 @@ LEFT JOIN  civicrm_country ON (civicrm_address.country_id = civicrm_country.id)
                     $replace = array( 'id'    => $rid, 
                                       'rtype' => $values[$rid]['rtype'],
                                       'cid'   => $contactId, 
-                                      'cbid'  => $values[$rid]['cid'] );
+                                      'cbid'  => $values[$rid]['cid'],
+                                      'caseid'=> $values[$rid]['case_id'],
+                                      'clientid' => $contactId );
 
                     if ( $status == self::INACTIVE ) {
                         // setting links for inactive relationships
@@ -931,7 +951,35 @@ LEFT JOIN  civicrm_country ON (civicrm_address.country_id = civicrm_country.id)
                             $mask -= CRM_Core_Action::DISABLE ;
                         }               
                     }
+                    
+                    // Give access to manage case link by copying to MAX_ACTION index temporarily, depending on case permission of user.
+                    if ( $values[$rid]['case_id'] ) {
+                        // Borrowed logic from CRM_Case_Page_Tab
+                        $hasCaseAccess = false;
+                        if ( CRM_Core_Permission::check( 'access all cases and activities' ) ) {
+                            $hasCaseAccess = true;
+                        } else {
+                            require_once 'CRM/Case/BAO/Case.php';
+                            $userCases = CRM_Case_BAO_Case::getCases( false );
+                            if ( array_key_exists( $values[$rid]['case_id'], $userCases ) ) {
+                                $hasCaseAccess = true;
+                            }
+                        }
+
+                    	if ( $hasCaseAccess ) {
+                            // give access by copying to MAX_ACTION temporarily, otherwise leave at NONE which won't display
+                            $links[CRM_Core_Action::MAX_ACTION] = $links[CRM_Core_Action::NONE];
+                            $links[CRM_Core_Action::MAX_ACTION]['name'] = ts('Manage Case #%1', array(1 => $values[$rid]['case_id']));
+
+                            // Also make sure we have the right client cid since can get here from multiple relationship tabs.
+                            if ( $values[$rid]['rtype'] == 'b_a' ) {
+                                $replace['clientid'] = $values[$rid]['cid'];
+                            }
+                        }
+                    }
+
                     $values[$rid]['action'] = CRM_Core_Action::formLink( $links, $mask, $replace );
+                    unset($links[CRM_Core_Action::MAX_ACTION]);
                 }
             }
             
@@ -985,7 +1033,7 @@ LEFT JOIN  civicrm_country ON (civicrm_address.country_id = civicrm_country.id)
         $status = self::CURRENT;
         
         if ( ! empty( $params['end_date'] ) ) {
-            $endDate = CRM_Utils_Date::setDateDefaults( $params['end_date'], null, 'Ymd' );
+            $endDate = CRM_Utils_Date::setDateDefaults( CRM_Utils_Date::format( $params['end_date'] ), null, 'Ymd' );
             $today   = date('Ymd' );
             
             if ( $today > $endDate ) {
@@ -1001,7 +1049,7 @@ LEFT JOIN  civicrm_country ON (civicrm_address.country_id = civicrm_country.id)
             return;
         }
         
-        $rel = explode( "_", $params['relationship_type_id'] );
+        $rel = explode( '_', $params['relationship_type_id'] );
         
         $relTypeId     = $rel[0];
         $relDirection  = "_{$rel[1]}_{$rel[2]}";
@@ -1075,12 +1123,27 @@ LEFT JOIN  civicrm_country ON (civicrm_address.country_id = civicrm_country.id)
             if ( ! array_key_exists( 'memberships', $details ) ) {
                 continue;
             }
+
+            $mainRelatedContactId = key( CRM_Utils_Array::value( 'relatedContacts', $details, array( ) ) );
             
             require_once 'CRM/Member/BAO/MembershipType.php';
             foreach ( $details['memberships'] as $membershipId => $membershipValues ) {
-                if ( $action & CRM_Core_Action::DELETE ) {
-                    // delete memberships of the related contacts.
-                    CRM_Member_BAO_Membership::deleteRelatedMemberships( $membershipId );
+                if ( $action & CRM_Core_Action::DELETE ) {                   
+                    // Delete memberships of the related contacts only if relationship type exists for membership type
+                    $query = "
+SELECT relationship_type_id, relationship_direction
+  FROM civicrm_membership_type 
+ WHERE id = {$membershipValues['membership_type_id']}";
+                    $dao = CRM_Core_DAO::executeQuery( $query );
+                    $relTypeDirs = array( );
+                    while ( $dao->fetch( ) ) {
+                        $relTypeId   = $dao->relationship_type_id;
+                       $relDirection = $dao->relationship_direction;
+                    }
+                    $relTypeIds = explode(CRM_Core_DAO::VALUE_SEPARATOR, $relTypeId);      
+                    if ( in_array( $values[$cid]['relationshipTypeId'], $relTypeIds ) ) {
+                        CRM_Member_BAO_Membership::deleteRelatedMemberships( $membershipId, $mainRelatedContactId  );
+                    }
                     continue;
                 }
                 if ( ( $action & CRM_Core_Action::UPDATE        ) && 
@@ -1098,7 +1161,19 @@ LEFT JOIN  civicrm_country ON (civicrm_address.country_id = civicrm_country.id)
                 
                 // Get the Membership Type Details. 
                 $membershipType = CRM_Member_BAO_MembershipType::getMembershipTypeDetails( $membershipValues['membership_type_id'] );
-                if( "{$details['relationshipTypeId']}{$details['relationshipTypeDirection']}" == CRM_Utils_Array::value( 'relationship_type_id', $membershipType ) . "_" . CRM_Utils_Array::value( 'relationship_direction', $membershipType ) ) {
+                // Check if contact's relationship type exists in membership type
+                $relTypeDirs   = array( );
+                if ( CRM_Utils_Array::value( 'relationship_type_id', $membershipType ) ) {
+                    $relTypeIds = explode( CRM_Core_DAO::VALUE_SEPARATOR, $membershipType['relationship_type_id'] );
+                }
+                if ( CRM_Utils_Array::value( 'relationship_direction', $membershipType ) ) {
+                    $relDirections = explode( CRM_Core_DAO::VALUE_SEPARATOR, $membershipType['relationship_direction'] );
+                }
+                foreach( $relTypeIds as $key => $value ) {
+                    $relTypeDirs[] = $value.'_'.$relDirections[$key];
+                }
+                $relTypeDir = $details['relationshipTypeId'].$details['relationshipTypeDirection'];
+                if ( in_array( $relTypeDir, $relTypeDirs ) ) {
                     // Check if relationship being created/updated is
                     // similar to that of membership type's
                     // relationship.
@@ -1129,10 +1204,41 @@ LEFT JOIN  civicrm_country ON (civicrm_address.country_id = civicrm_country.id)
                     // membership=>relationship then we need to
                     // delete the membership record created for
                     // previous relationship.
-                    CRM_Member_BAO_Membership::deleteRelatedMemberships( $membershipId, $ids['contactTarget'] );
+
+                    if ( self::isDeleteRelatedMembership( $relTypeIds, $contactId, $mainRelatedContactId, $relTypeId, CRM_Utils_Array::value('relationship_ids', $params) ) ) {
+                        CRM_Member_BAO_Membership::deleteRelatedMemberships( $membershipId, $mainRelatedContactId );
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Helper function to check whether to delete the membership or
+     * not.
+     *
+     */
+    function isDeleteRelatedMembership( $relTypeIds, $contactId, $mainRelatedContactId, $relTypeId, $relIds ) {
+        if ( in_array($relTypeId, $relTypeIds ) ||
+             empty($relIds) ) {
+            return true;
+        }
+        
+        $relParamas = array( 1 => array( $contactId, 'Integer' ),
+                             2 => array( $mainRelatedContactId, 'Integer' )
+                             );
+        
+        if ( $contactId == $mainRelatedContactId ) {
+            $recordsFound = (int)CRM_Core_DAO::singleValueQuery( "SELECT COUNT(*) FROM civicrm_relationship WHERE relationship_type_id IN ( ". implode(',', $relTypeIds) ." )  AND contact_id_a IN ( %1 ) OR contact_id_b IN ( %1 ) AND id IN (". implode( ',', $relIds ) .")", $relParamas);
+            if ( $recordsFound ) return false;
+            return true;
+        }
+        
+        $recordsFound = (int)CRM_Core_DAO::singleValueQuery( "SELECT COUNT(*) FROM civicrm_relationship WHERE relationship_type_id IN ( ". implode(',', $relTypeIds) ." ) AND contact_id_a IN ( %1, %2 ) AND contact_id_b IN ( %1, %2 ) AND id NOT IN (". implode( ',', $relIds ) . ")", $relParamas );
+        
+        if ( $recordsFound ) return false;
+        
+        return true;
     }
 
     /**

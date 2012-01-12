@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -64,6 +64,13 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
     protected $_waitlistMsg = null;
     protected $_requireApprovalMsg = null;
     
+    /**
+     * Allow deveopera to use hook_civicrm_buildForm()
+     * to override the registration dupe check
+     * CRM-7604
+     */
+    public $_skipDupeRegistrationCheck = false;
+    
     /** 
      * Function to set variables up before form is built 
      *                                                           
@@ -93,7 +100,9 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
         $this->set( 'allowWaitlist', $this->_allowWaitlist );
         
         //To check if the user is already registered for the event(CRM-2426) 
-        self::checkRegistration(null , $this);
+        if (!$this->_skipDupeRegistrationCheck) {
+            self::checkRegistration(null , $this);
+        }
         
         $this->assign( 'availableRegistrations', $this->_availableRegistrations );
         
@@ -175,6 +184,12 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
 
         //set custom field defaults
         if ( ! empty( $this->_fields ) ) {
+            //load default campaign from page.
+            if ( array_key_exists( 'participant_campaign_id', $this->_fields ) ) {
+                $this->_defaults['participant_campaign_id'] = CRM_Utils_Array::value( 'campaign_id', 
+                                                                                      $this->_values['event'] );
+            }
+            
             require_once "CRM/Core/BAO/CustomField.php";
             foreach ( $this->_fields as $name => $field ) {
                 if ( $customFieldID = CRM_Core_BAO_CustomField::getKeyID($name) ) {
@@ -507,7 +522,6 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
             self::formatFieldsForOptionFull( $form );
             
             require_once 'CRM/Event/BAO/Participant.php';
-            $form->addGroup( $elements, 'amount', ts('Event Fee(s)'), '<br />' );      
             $form->add( 'hidden', 'priceSetId', $form->_priceSetId );
             
             require_once 'CRM/Price/BAO/Field.php';                       
@@ -546,12 +560,19 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
             $eventFeeBlockValues = array();
             foreach ( $form->_feeBlock as $fee ) {
                 if ( is_array( $fee ) ) {
+                    
+                    //CRM-7632, CRM-6201
+                    $totalAmountJs = null;
+                    if ( $className == 'CRM_Event_Form_Participant' ) {
+                        $totalAmountJs = array( 'onClick' => "fillTotalAmount(".$fee['value'].")" ); 
+                    }
+                    
                     $eventFeeBlockValues['amount_id_'.$fee['amount_id']] = $fee['value'];
                     $elements[] =& $form->createElement('radio', null, '',
                                                         CRM_Utils_Money::format( $fee['value'] ) . ' ' .
                                                         $fee['label'],
                                                         $fee['amount_id'],
-                                                        array( 'onClick' => "fillTotalAmount(".$fee['value'].")" ) 
+                                                        $totalAmountJs
                                                         );
                 }
             }
@@ -667,7 +688,9 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
         $errors = array( );
         
         //To check if the user is already registered for the event(CRM-2426)
-        $self->checkRegistration($fields, $self);
+        if (!$self->_skipDupeRegistrationCheck) {
+            $self->checkRegistration($fields, $self);
+        }
         //check for availability of registrations.
         if ( !$self->_allowConfirmation &&
              !CRM_Utils_Array::value( 'bypass_payment', $fields ) &&
@@ -746,10 +769,23 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
                 }
             } 
             
+            $isZeroAmount = $skipPayementValidation = false;
+            if ( CRM_Utils_Array::value( 'priceSetId', $fields ) ) {
+                if ( CRM_Utils_Array::value( 'amount', $fields ) == 0 ) {
+                    $isZeroAmount = true;
+                }
+            } else if ( CRM_Utils_Array::value( 'amount', $fields ) &&
+                        ( CRM_Utils_Array::value( 'value',  $self->_values['fee'][$fields['amount']] ) == 0 ) ) {
+                $isZeroAmount = true; 
+            }
+
+            if ( $isZeroAmount && !($self->_forcePayement && CRM_Utils_Array::value( 'additional_participants', $fields ) ) ) {
+                $skipPayementValidation = true;
+            }
             // also return if paylater mode or zero fees for valid members
             if ( CRM_Utils_Array::value( 'is_pay_later', $fields ) ||
                  CRM_Utils_Array::value( 'bypass_payment', $fields ) ||
-                 ( CRM_Utils_Array::value( 'priceSetId', $fields ) && $fields['amount'] == '0' ) ||
+                 $skipPayementValidation || 
                  ( !$self->_allowConfirmation && ( $self->_requireApproval || $self->_allowWaitlist ) ) ) {
                 return empty( $errors ) ? true : $errors;
             }
@@ -805,10 +841,24 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
         $params = $this->controller->exportValues( $this->_name ); 
         
         //set as Primary participant
-        $params ['is_primary'] = 1;         
+        $params ['is_primary'] = 1;   
+
+        if ( !$this->_allowConfirmation ) {
+            // check if the participant is already registered
+            if (! $this->_skipDupeRegistrationCheck) {
+                $params['contact_id'] = self::checkRegistration( $params, $this, false, true );
+            }
+        }
         
         if ( CRM_Utils_Array::value( 'image_URL', $params  ) ) {
             CRM_Contact_BAO_Contact::processImageParams( $params ) ;
+        }
+        
+        //carry campaign to partcipants.
+        if ( array_key_exists( 'participant_campaign_id', $params ) ) {
+            $params['campaign_id'] = $params['participant_campaign_id'];
+        } else {
+            $params['campaign_id'] = CRM_Utils_Array::value( 'campaign_id', $this->_values['event'] );
         }
         
         //hack to allow group to register w/ waiting
@@ -956,7 +1006,6 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
             }
         } else {
             $session = CRM_Core_Session::singleton( );
-            $contactID = parent::getContactID( );
             $params['description'] = ts( 'Online Event Registration' ) . ' ' . $this->_values['event']['title'];
             
             $this->_params                = array();
@@ -990,7 +1039,6 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
     public function processRegistration( $params, $contactID = null ) 
     {
         $session = CRM_Core_Session::singleton( );
-        $contactID = parent::getContactID( );
         $this->_participantInfo   = array();
         
         // CRM-4320, lets build array of cancelled additional participant ids 
@@ -1023,6 +1071,10 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
                     } else {
                         $this->_participantInfo[] = $value['first_name'] .' ' . $value['last_name'];  
                     }
+                } else if ( CRM_Utils_Array::value( 'contact_id', $value ) ) {
+                    $contactID = $value['contact_id'];
+                } else {
+                    $contactID = parent::getContactID( );
                 }
                 
                 require_once 'CRM/Event/Form/Registration/Confirm.php';
@@ -1150,11 +1202,12 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
      * @return void  
      * @access public 
      */ 
-    function checkRegistration($fields, &$self, $isAdditional = false)
+    function checkRegistration( $fields, &$self, $isAdditional = false, $returnContactId = false )
     {
         // CRM-3907, skip check for preview registrations
         // CRM-4320 participant need to walk wizard
-        if ( $self->_mode == 'test' || $self->_allowConfirmation ) {
+        if ( !$returnContactId &&
+             ( $self->_mode == 'test' || $self->_allowConfirmation ) ) {
             return false;
         }
         
@@ -1173,17 +1226,14 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
             //lets check w/ other contact params.
             if ( $self->_values['event']['allow_same_participant_emails'] ) {
                 $params = $fields;
+                $level  = ( $isAdditional ) ? 'Fuzzy' : 'Strict';
 
-                // unset email from dedupe params for 'additional participant wizard' case only
-                if ( isset( $params["email-{$self->_bltID}"] ) && $isAdditional ) {
-                    unset( $params["email-{$self->_bltID}"] );
-                }
                 require_once 'CRM/Dedupe/Finder.php';                
                 $dedupeParams = CRM_Dedupe_Finder::formatParams( $params, 'Individual' );
                 
                 // disable permission based on cache since event registration is public page/feature.
                 $dedupeParams['check_permission'] = false;
-                $ids = CRM_Dedupe_Finder::dupesByParams( $dedupeParams, 'Individual' );
+                $ids       = CRM_Dedupe_Finder::dupesByParams( $dedupeParams, 'Individual', $level );
                 $contactID = CRM_Utils_Array::value( 0, $ids );
             } else if ( isset( $fields["email-{$self->_bltID}"] ) ) {
                 $emailString = trim( $fields["email-{$self->_bltID}"] );
@@ -1196,6 +1246,12 @@ class CRM_Event_Form_Registration_Register extends CRM_Event_Form_Registration
             }
         }
         
+        if ( $returnContactId ) {
+            // CRM-7377 
+            // return contactID if contact already exists
+            return $contactID;
+        }
+
         if ( $contactID ) {
             require_once 'CRM/Event/BAO/Participant.php';
             $participant = new CRM_Event_BAO_Participant();

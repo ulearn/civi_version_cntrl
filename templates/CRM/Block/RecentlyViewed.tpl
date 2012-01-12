@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -36,10 +36,10 @@
          {if $item.isDeleted}<del>{/if}{$item.title|mb_truncate:25:"..":true}{if $item.isDeleted}</del>{/if}</a>
          <ul class="crm-recentview-wrapper" style="display:none;">
       
-         <li><br /><a href='{$item.url}'>View</a> &nbsp;
-	           {if $item.edit_url}<a href='{$item.edit_url}'>Edit</a> &nbsp;{/if}    
-		   {if $item.delete_url}<a href='{$item.delete_url}'>Delete</a> &nbsp;{/if}
-	</li>
+         <li><a href='{$item.url}' class="crm-actions-view">{ts}View{/ts}</a>
+	       {if $item.edit_url}<a href='{$item.edit_url}' class="crm-actions-edit">{ts}Edit{/ts}</a>{/if}    
+		   {if $item.delete_url}<a href='{$item.delete_url}' class="crm-actions-delete">{ts}Delete{/ts}</a>{/if}
+	     </li>
          </ul>
          </li>
 	 

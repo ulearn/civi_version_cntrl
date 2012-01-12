@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -53,17 +53,6 @@ var isMailing    = false;
 {literal}
 
 var editor = {/literal}"{$editor}"{literal};
-function loadEditor()
-{
-    var msg =  {/literal}"{$htmlContent}"{literal};
-    if (msg) {
-        if ( editor == "ckeditor" ) {
-            oEditor = CKEDITOR.instances[html_message];
-            oEditor.setData( msg );
-        }
-    }
-}
-
 function showSaveUpdateChkBox()
 {
     if ( document.getElementById('template') == null ) {
@@ -101,6 +90,9 @@ function selectValue( val ) {
             oEditor.setData('');
         } else if ( editor == "tinymce" ) {
             tinyMCE.getInstanceById(html_message).setContent( html_body );
+        } else if ( editor == "joomlaeditor" ) { 
+            document.getElementById(html_message).value = '' ;
+            tinyMCE.execCommand('mceSetContent',false, '');               
         } else {	
             document.getElementById(html_message).value = '' ;
         }
@@ -131,6 +123,9 @@ function selectValue( val ) {
             oEditor.setData( html_body );
         } else if ( editor == "tinymce" ) {
             cj('#'+ html_message).tinymce().execCommand('mceSetContent',false, html_body);
+        } else if ( editor == "joomlaeditor" ) { 
+            cj("#"+ html_message).val( html_body );
+            tinyMCE.execCommand('mceSetContent',false, html_body);           
         } else {	
             cj("#"+ html_message).val( html_body );
         }
@@ -180,12 +175,10 @@ function selectValue( val ) {
     {if $editor eq "ckeditor"}
         {literal}
         cj( function() {
-            oEditor = CKEDITOR.instances[html_message];
-            oEditor.setData( {/literal}'{$message_html}'{literal});
+            oEditor = CKEDITOR.instances['html_message'];
             oEditor.BaseHref = '' ;
             oEditor.UserFilesPath = '' ; 
-            loadEditor();
-	        oEditor.on( 'focus', verify );
+	    oEditor.on( 'focus', verify );
         });
         {/literal}
     {else if $editor eq "tinymce"}
@@ -242,6 +235,16 @@ function selectValue( val ) {
         var editor     = {/literal}"{$editor}"{literal};
         if ( editor == "tinymce" ) {
             cj('#'+ html_message).tinymce().execCommand('mceInsertContent',false, token2);
+        } else if ( editor == "joomlaeditor" ) { 
+            tinyMCE.execCommand('mceInsertContent',false, token2);
+            var msg       = document.getElementById(html_message).value;
+            var cursorlen = document.getElementById(html_message).selectionStart;
+            var textlen   = msg.length;
+            document.getElementById(html_message).value = msg.substring(0, cursorlen) + token2 + msg.substring(cursorlen, textlen);
+            var cursorPos = (cursorlen + token2.length);
+            document.getElementById(html_message).selectionStart = cursorPos;
+            document.getElementById(html_message).selectionEnd   = cursorPos;
+            document.getElementById(html_message).focus();            
         } else if ( editor == "ckeditor" ) {
             oEditor = CKEDITOR.instances[html_message];
             oEditor.insertHtml(token2.toString() );
@@ -312,6 +315,7 @@ function selectValue( val ) {
                             switch ({/literal}"{$editor}"{literal}) {
                                 case 'ckeditor': { oEditor = CKEDITOR.instances[html_message]; oEditor.focus(); break;}
                                 case 'tinymce'  : { tinyMCE.get(html_message).focus(); break; } 
+                                case 'joomlaeditor' : { tinyMCE.get(html_message).focus(); break; } 
                                 default         : { cj("#"+ html_message).focus(); break; } 
                         }
                     } else if (element == 'Subject') {

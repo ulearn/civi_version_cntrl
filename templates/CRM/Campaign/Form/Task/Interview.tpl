@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -43,11 +43,13 @@
    <div id='survey_instructions' class='help'>{ts 1=$surveyValues.instructions}%1{/ts}</div>
 {/if}
 
+<div id='responseErrors' class = "hiddenElement messages crm-error"></div>
+
 <div id='help'>
     {if $votingTab}
     {ts}Click <strong>record response</strong> button to update values for each respondent as needed.{/ts}
     {else}
-    {ts}Click <strong>record response</strong> button to update values for each respondent as needed. <br />Click <strong>Release Respondents >></strong> button below to release any respondents for whon you haven't recorded a response. <br />Click <strong>Reserve More Respondents >></strong> button if you need to get more respondents to interview.{/ts}
+    {ts}Click <strong>record response</strong> button to update values for each respondent as needed. <br />Click <strong>Release Respondents >></strong> button below to release any respondents for whom you haven't recorded a response. <br />Click <strong>Reserve More Respondents >></strong> button if you need to get more respondents to interview.{/ts}
     {/if}
 </div>
 
@@ -151,6 +153,7 @@
 	//load jQuery data table.
         cj('#voterRecords').dataTable( {
 		"sPaginationType": "full_numbers",
+		"bJQueryUI"  : true,
 		"aaSorting"  : sortColumn,
 		"aoColumns"  : columns
         });        
@@ -159,40 +162,69 @@
 
     function registerInterview( voterId )
     {
-    	var data = new Object;
-    	var fieldName = 'field_' + voterId + '_custom_';
+        //reset all errors.   
+        cj( '#responseErrors' ).hide( ).html( '' );
+    	
+	//collect all submitted data.
+	var data = new Object;
+	
+	//get the values for common elements.
+	var fieldName = 'field_' + voterId + '_custom_';
+	var specialFieldType = new Array( 'radio', 'checkbox', 'select' );
 	cj( '[id^="'+ fieldName +'"]' ).each( function( ) {
-	    if( cj(this).attr( 'type' ) == 'select-multiple' ) {
-	      var eleId = cj(this).attr('id');
-	      cj('#' + eleId +" option").each( function(i) {
-	        if ( cj(this).attr('selected') == true ) {
-		  data[eleId + '['+cj(this).val()+']'] = cj(this).val();
-		} 
-	      });
-	    } else {
-	      data[cj(this).attr( 'id' )] = cj( this ).val( );
-            }
+	    fieldType = cj( this ).attr( 'type' );
+	    if ( specialFieldType.indexOf( fieldType ) == -1 ) {
+	       data[cj(this).attr( 'id' )] = cj( this ).val( );
+	    }
         });
-		
-	var multiValueFields = 'field['+ voterId +'][custom_';		
-	cj( '[id^="'+ multiValueFields +'"]' ).each( function( ) {
-	   if ( cj(this).attr( 'type' ) == 'checkbox' ) {
-	     if ( cj(this).attr('checked') == true ) {
-	       data[cj(this).attr( 'id' )] = 1;
-             } else {
-	       data[cj(this).attr( 'id' )] = '';
-	     }
-           }
-	   
+
+	//get the values for select.
+	cj( 'select[id^="'+ fieldName +'"]' ).each( function( ) {
+	    value = cj(this).val( );
+	    if ( cj(this).attr( 'multiple' ) ) {
+	       values = value;
+	       value = '';
+	       if ( values ) {
+	       	  submittedValues = values.toString().split(",");
+		  value = new Object;
+	       	  for ( val in submittedValues ) {
+		      currentVal = submittedValues[val];
+		      value[currentVal] = currentVal;
+	       	  }
+	       }
+	    }
+	    data[cj(this).attr( 'id' )] = value;
+        });
+				
+	var checkBoxField = 'field['+ voterId +'][custom_';		
+	cj( 'input:checkbox[id^="'+ checkBoxField +'"]' ).each( function( ) {
+	     value = '';
+	     if ( cj(this).attr('checked') == true ) value = 1;
+	     data[cj(this).attr( 'id' )] = value;
         });
 	
-	var radioFields = 'field['+ voterId +'][custom_';		
-	cj( '[name^="'+ radioFields +'"]' ).each( function( ) {
-	   if ( cj(this).attr( 'type' ) == 'radio' ) {
-               if ( cj(this).attr('checked') == true ) {
-                  data[cj(this).attr( 'name' )] = cj(this).val();
-               }
-           }
+	var allRadios   = new Object;
+	var radioField = 'field['+ voterId +'][custom_';		
+	cj( 'input:radio[name^="'+ radioField +'"]' ).each( function( ) {
+	    radioName = cj(this).attr( 'name' );
+	    if ( cj(this).attr('checked') == true ) {
+	       data[radioName] = cj(this).val();
+	    }
+	    allRadios[radioName] = radioName;
+        });
+	for ( radioName in allRadios ) {
+	   if ( !data.hasOwnProperty( radioName ) ) data[radioName] = '';  
+	}
+	
+	//carry contact related profile field data.
+	fieldName = 'field_' + voterId;
+	cj( '[id^="'+ fieldName +'"]' ).each( function( ) {
+	    fldId = cj(this).attr( 'id' );
+	    if ( fldId.indexOf( '_custom_' ) == -1 &&
+	         fldId.indexOf( '_result' ) == -1  && 
+		 fldId.indexOf( '_note' ) == -1  ) {
+	       data[fldId] = cj( this ).val( );
+	    }
         });
 	
 	var surveyActivityIds = {/literal}{$surveyActivityIds}{literal};
@@ -206,8 +238,9 @@
 	data['result']           = cj( '#field_' + voterId + '_result' ).val( ); 
 	data['note']             = cj( '#field_' + voterId + '_note' ).val( );
 	data['surveyTitle']      = {/literal}'{$surveyValues.title|escape:javascript}'{literal};
-
-	var dataUrl = {/literal}"{crmURL p='civicrm/ajax/rest' h=0 q='className=CRM_Campaign_Page_AJAX&fnName=registerInterview' }"{literal}	          
+	data['survey_id']        = {/literal}'{$surveyValues.id}'{literal};
+	
+	var dataUrl = {/literal}"{crmURL p='civicrm/campaign/registerInterview' h=0}"{literal}	          
 	
 	//post data to create interview.
 	cj.post( dataUrl, data, function( interview ) {
@@ -215,6 +248,16 @@
 	       	 cj("#row_"+voterId+' td.name').attr('class', 'name disabled' );
 		 cj( '#restmsg_vote_' + voterId ).fadeIn("slow").fadeOut("slow");
 		 cj( '#interview_voter_button_' + voterId ).html(updateVote);
+		 cj( '#release_voter_button_' + voterId ).hide( );
+	       } else if ( interview.status == 'fail' && interview.errors ) {
+		 var errorList = '';
+		 for ( error in interview.errors ) {
+		    if ( interview.errors[error] ) errorList =  errorList + '<li>' + interview.errors[error] + '</li>';
+	         }
+		 if ( errorList ) {
+		      var allErrors = '<div class = "icon red-icon alert-icon"></div>Please correct the following errors in the survey fields below:' + '<ul>' + errorList + '</ul>';
+		    cj( '#responseErrors' ).show( ).html( allErrors );   
+		 }
 	       }		 
 	}, 'json' );
     }

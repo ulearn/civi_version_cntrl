@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -139,6 +139,7 @@ class CRM_Price_BAO_FieldValue extends CRM_Price_DAO_FieldValue
     {
         $fieldValueDAO = new CRM_Price_DAO_FieldValue( );
         $fieldValueDAO->price_field_id = $fieldId;
+        $fieldValueDAO->orderBy( $orderBy, 'label' );
         if ( $isActive ) {
             $fieldValueDAO->is_active = 1;
         }
@@ -149,6 +150,21 @@ class CRM_Price_BAO_FieldValue extends CRM_Price_DAO_FieldValue
         }
         
         return $values;  
+    }
+
+    /**
+     * Get the price field option label.
+     *
+     * @param int $id id of field option.
+     * @return string name 
+     *
+     * @access public
+     * @static
+     *
+     */
+    public static function getOptionLabel( $id )
+    {
+        return CRM_Core_DAO::getFieldValue( 'CRM_Price_DAO_FieldValue', $id, 'label' );
     }
     
     /**

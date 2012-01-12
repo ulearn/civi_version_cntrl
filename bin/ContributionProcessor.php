@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -63,6 +63,8 @@ class CiviContributeProcessor {
                                      'l_name0'          => 'source',
                                      'ordertime'        => 'receive_date',
                                      'note'             => 'note',
+                                     'custom'           => 'note',
+                                     'l_number0'        => 'note',
                                      'is_test'          => 'is_test',
                                      'transactiontype'  => 'trxn_type',
                                      'recurrences'      => 'installments',
@@ -95,10 +97,18 @@ class CiviContributeProcessor {
                                      'total-charge-amount' => 'total_amount',
                                      'google-order-number' => 'trxn_id',
                                      'currency'            => 'currency',
-                                     'item-name'           => 'note',
+                                     'item-name'           => 'source',
+                                     'item-description'    => 'note',
                                      'timestamp'           => 'receive_date',
                                      'latest-charge-fee'   => 'fee_amount',
                                      'net-amount'          => 'net_amount',
+                                     'times'               => 'installments',
+                                     'period'              => 'frequency_unit',
+                                     'frequency_interval'  => 'frequency_interval',
+                                     'start_date'          => 'start_date',
+                                     'modified_date'       => 'modified_date',
+                                     'trxn_type'           => 'trxn_type',
+                                     'amount'              => 'amount',
                                      ),
               );
 
@@ -376,10 +386,6 @@ CRM_Utils_System::authenticateScript(true);
 
 //log the execution of script
 CRM_Core_Error::debug_log_message( 'ContributionProcessor.php');
-
-//load bootstrap to call hooks
-require_once 'CRM/Utils/System.php';
-CRM_Utils_System::loadBootStrap(  );
 
 require_once 'CRM/Core/Lock.php';
 $lock = new CRM_Core_Lock('CiviContributeProcessor');

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -56,10 +56,19 @@ class CRM_Case_Form_Activity_OpenCase
         require_once 'CRM/Case/XMLProcessor/Process.php';
         $xmlProcessorProcess = new CRM_Case_XMLProcessor_Process( );
         $form->_allowMultiClient = (bool)$xmlProcessorProcess->getAllowMultipleCaseClients( );
-        
+
         if ( $form->_context == 'caseActivity' ) {
-            return;
+            $contactID = CRM_Utils_Request::retrieve( 'cid', 'Positive', $form );
+            require_once 'CRM/Core/OptionGroup.php';
+            $atype = CRM_Core_OptionGroup::getValue( 'activity_type',
+                                                     'Change Case Start Date',
+                                                     'name' ); 
+            $form->assign( 'changeStartURL', CRM_Utils_System::url( 'civicrm/case/activity',
+                                                                    "action=add&reset=1&cid=$contactID&caseid={$form->_caseId}&atype=$atype" )
+                         );
+        	return;
         }
+
         $form->_context   = CRM_Utils_Request::retrieve( 'context', 'String', $form );
         $form->_contactID = CRM_Utils_Request::retrieve( 'cid', 'Positive', $form );
         $form->assign( 'context', $form->_context );
@@ -80,7 +89,7 @@ class CRM_Case_Form_Activity_OpenCase
         }
 
         require_once 'CRM/Utils/Date.php';
-        list( $defaults['start_date'] ) = CRM_Utils_Date::setDateDefaults( );
+        list( $defaults['start_date'], $defaults['start_date_time'] ) = CRM_Utils_Date::setDateDefaults( );
         
         // set case status to 'ongoing'
         $defaults['status_id'] = 1;
@@ -134,7 +143,7 @@ class CRM_Case_Form_Activity_OpenCase
             $form->assign( 'clientName', $displayName );
         }
         
-        $form->addDate( 'start_date', ts('Case Start Date'), true, array( 'formatType' => 'activityDate') );
+        $form->addDate( 'start_date', ts('Case Start Date'), true, array( 'formatType' => 'activityDateTime') );
         
         $form->add('select', 'medium_id',  ts( 'Medium' ), 
                    CRM_Case_PseudoConstant::encounterMedium( ), true );
@@ -142,8 +151,7 @@ class CRM_Case_Form_Activity_OpenCase
         // calling this field activity_location to prevent conflict with contact location fields
         $form->add('text', 'activity_location', ts('Location'), CRM_Core_DAO::getAttribute( 'CRM_Activity_DAO_Activity', 'location' ) );
         
-        $form->add('textarea', 'activity_details', ts('Details'), 
-                   CRM_Core_DAO::getAttribute( 'CRM_Activity_DAO_Activity', 'details' ) );
+        $form->addWysiwyg( 'activity_details', ts('Details'), array( 'rows' => 4, 'cols' => 60 ), false );
         
         $form->addButtons(array( 
                                 array ( 'type'      => 'upload', 
@@ -171,7 +179,7 @@ class CRM_Case_Form_Activity_OpenCase
         }
 
         // set the contact, when contact is selected
-        if ( $params['contact_select_id'][1] ) {
+        if ( isset( $params['contact_select_id'] ) && CRM_utils_Array::value( 1, $params['contact_select_id'] ) ) {
             $params['contact_id'] = $params['contact_select_id'][1];
             $form->_currentlyViewedContactId = $params['contact_id'];
         } elseif( $form->_allowMultiClient && $form->_context != 'case' ) {
@@ -180,7 +188,7 @@ class CRM_Case_Form_Activity_OpenCase
         }
 
         // for open case start date should be set to current date
-        $params['start_date'] = CRM_Utils_Date::processDate( $params['start_date'], date('Hi') );
+        $params['start_date'] = CRM_Utils_Date::processDate( $params['start_date'], $params['start_date_time'] );
         require_once 'CRM/Case/PseudoConstant.php';
         $caseStatus = CRM_Case_PseudoConstant::caseStatus( 'name' );
         // for resolved case the end date should set to now    
@@ -232,7 +240,6 @@ class CRM_Case_Form_Activity_OpenCase
             return;
         }
 
-
         require_once 'CRM/Case/XMLProcessor/Process.php';
         $xmlProcessorProcess = new CRM_Case_XMLProcessor_Process( );
         $isMultiClient = $xmlProcessorProcess->getAllowMultipleCaseClients( );
@@ -267,8 +274,6 @@ class CRM_Case_Form_Activity_OpenCase
             CRM_Case_BAO_Case::addCaseToContact( $contactParams );
             $client = $form->_currentlyViewedContactId;
         }
-
-
     
         // 2. initiate xml processor
         $xmlProcessor = new CRM_Case_XMLProcessor_Process( );

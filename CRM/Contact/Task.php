@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -40,8 +40,10 @@
  *
  */
 require_once 'CRM/Contact/BAO/ContactType.php';
-
-class CRM_Contact_Task {
+require_once 'CRM/Mailing/Info.php';
+ 
+class CRM_Contact_Task
+{
     const
         GROUP_CONTACTS        =     1,
         REMOVE_CONTACTS       =     2,
@@ -193,6 +195,16 @@ class CRM_Contact_Task {
                                                               ),
                                            'result' => false
                                            );
+            } elseif ( CRM_Mailing_Info::workflowEnabled( ) && 
+                       CRM_Core_Permission::check( 'create mailings' ) ) { 
+                self::$_tasks[20] = array( 'title'  => ts( 'Create a Mass Mailing' ),
+                                           'class'  => array( 'CRM_Mailing_Form_Group',
+                                                              'CRM_Mailing_Form_Settings',
+                                                              'CRM_Mailing_Form_Upload',
+                                                              'CRM_Mailing_Form_Test',
+                                                              ),
+                                           'result' => false
+                                           );
             }
             
             self::$_tasks += CRM_Core_Component::taskList( );
@@ -238,7 +250,8 @@ class CRM_Contact_Task {
         }
 
         // CRM-6806
-        if (!CRM_Core_Permission::check('access deleted contacts')) {
+        if ( !CRM_Core_Permission::check( 'access deleted contacts' ) || 
+             !CRM_Core_Permission::check( 'delete contacts' ) ) {
             unset($titles[self::DELETE_PERMANENTLY]);
         }
         asort( $titles );
@@ -259,21 +272,25 @@ class CRM_Contact_Task {
     {
         $tasks = array( );
         if ($deletedContacts) {
-            if (CRM_Core_Permission::check('access deleted contacts')) {
-                $tasks = array(
-                    self::RESTORE            => self::$_tasks[self::RESTORE           ]['title'],
-                    self::DELETE_PERMANENTLY => self::$_tasks[self::DELETE_PERMANENTLY]['title'],
-                );
+            if ( CRM_Core_Permission::check( 'access deleted contacts' ) ) {
+                $tasks = array( self::RESTORE => self::$_tasks[self::RESTORE]['title'] );
+                if ( CRM_Core_Permission::check( 'delete contacts' ) ) {
+                    $tasks[self::DELETE_PERMANENTLY] = self::$_tasks[self::DELETE_PERMANENTLY]['title'];
+                } 
             }
         } elseif ($permission == CRM_Core_Permission::EDIT) {
             $tasks = self::taskTitles( );
         } else {
             $tasks = array( 
                            5  => self::$_tasks[ 5]['title'],
-                           6  => self::$_tasks[ 6] ['title'],
+                           6  => self::$_tasks[ 6]['title'],
                            12 => self::$_tasks[12]['title'],
                            16 => self::$_tasks[16]['title'],
+                           20 => self::$_tasks[20]['title'],
                            );
+            if ( ! self::$_tasks[20]['title'] ) {
+                unset( $tasks[20] );
+            }
             if ( ! self::$_tasks[12]['title'] ) {
                 //usset it, No edit permission and Map provider info
                 //absent, drop down shows blank space

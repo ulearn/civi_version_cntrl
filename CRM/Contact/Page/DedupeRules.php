@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -129,6 +129,11 @@ class CRM_Contact_Page_DedupeRules extends CRM_Core_Page_Basic
         $this->assign('action', $action);
         $id = CRM_Utils_Request::retrieve('id', 'Positive', $this, false, 0);
 
+        $context = CRM_Utils_Request::retrieve('context', 'String', $this, false );
+        if ( $context == 'nonDupe' ) {
+            CRM_Core_Session::setStatus( ts('Selected contacts have been marked as not duplicates') );
+        }
+
         // assign permissions vars to template
         require_once 'CRM/Core/Permission.php';
         $this->assign('hasperm_administer_dedupe_rules', CRM_Core_Permission::check('administer dedupe rules'));
@@ -155,7 +160,7 @@ class CRM_Contact_Page_DedupeRules extends CRM_Core_Page_Basic
         $this->browse();
 
         // parent run
-        parent::run();
+        return parent::run();
     }
 
     /**

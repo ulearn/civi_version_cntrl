@@ -269,7 +269,6 @@ function civitest_civicrm_enableDisable( $recordBAO, $recordID, $isActive ) {
          $session =& CRM_Core_Session::singleton( );
          $uid     = $session->get('userID');
          if( $uid ) {
-             require_once 'api/v2/Activity.php';
              $params = array( 'activity_type_id'   => 1,
                               'source_contact_id'  => $uid,
                               'status_id'          => 2,
@@ -280,7 +279,7 @@ function civitest_civicrm_enableDisable( $recordBAO, $recordID, $isActive ) {
              } else {
                  $params['subject'] = ts('Disabled relationship type.');
              }
-             civicrm_activity_create($params);
+             civicrm_api('activity', 'create', $params);
          }
      }
  }
@@ -358,9 +357,8 @@ function civicrm_cck_event_field_values($field, $index = null) {
         if ( ! civicrm_initialize( ) ) {
             return;
         }
-        require_once 'api/v2/Event.php';
         $params    = array( );
-        $eventInfo = civicrm_event_search( $params );
+        $eventInfo = civicrm_api('event', 'get', $params );
     }
 
     if ( strpos($_GET['q'], 'edit') || 
@@ -918,12 +916,7 @@ function civitest_civicrm_config( &$config ) {
     // fix template path
     $templateDir = $civitestRoot . 'templates' . DIRECTORY_SEPARATOR;
     $template =& CRM_Core_Smarty::singleton( );
-    if ( is_array( $template->template_dir ) ) {
-        $template->template_dir = array( $templateDir ) + $template->template_dir;                            
-    } else {
-        $template->template_dir = array( $templateDir, $template->template_dir );
-    }
-
+    array_unshift( $template->template_dir, $templateDir );
 }
 
 function custom_ts( $string, $params = array( ) ) {  

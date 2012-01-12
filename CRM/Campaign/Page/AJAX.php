@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  *
  */
 
@@ -43,15 +43,21 @@ class CRM_Campaign_Page_AJAX
     
     static function registerInterview( )
     {
-        $voterId    = CRM_Utils_Array::value( 'voter_id',    $_POST );
-        $activityId = CRM_Utils_Array::value( 'activity_id', $_POST );
-        $params     = array( 'voter_id'         => $voterId,
-                             'activity_id'      => $activityId,
-                             'details'          => CRM_Utils_Array::value( 'note',             $_POST ),
-                             'result'           => CRM_Utils_Array::value( 'result',           $_POST ),
-                             'interviewer_id'   => CRM_Utils_Array::value( 'interviewer_id',   $_POST ),
-                             'activity_type_id' => CRM_Utils_Array::value( 'activity_type_id', $_POST ),
-                             'surveyTitle'      => CRM_Utils_Array::value( 'surveyTitle',      $_POST ) );
+        $fields = array( 'result',
+                         'voter_id',
+                         'survey_id',
+                         'activity_id',
+                         'surveyTitle',
+                         'interviewer_id',
+                         'activity_type_id' );
+        
+        $params = array( );
+        foreach ( $fields as $fld ) {
+            $params[$fld] =  CRM_Utils_Array::value( $fld, $_POST );
+        }
+        $params['details'] = CRM_Utils_Array::value( 'note', $_POST );
+        $voterId    = $params['voter_id'];
+        $activityId = $params['activity_id'];
         
         $customKey = "field_{$voterId}_custom";
         foreach ( $_POST as $key => $value ) {
@@ -61,20 +67,41 @@ class CRM_Campaign_Page_AJAX
             }
         }
         
-        if ( isset($_POST['field']) &&
-             CRM_Utils_Array::value( $voterId, $_POST['field']) ) {
+        if ( isset( $_POST['field'] ) &&
+             CRM_Utils_Array::value( $voterId, $_POST['field'] ) && 
+             is_array( $_POST['field'][$voterId] ) ) {
             foreach( $_POST['field'][$voterId] as $fieldKey => $value ) {
-                if ( !empty($value) ) {
-                    $params[$fieldKey] = $value;
-                }
+                $params[$fieldKey] = $value;
             }
         }
-
-        require_once 'CRM/Campaign/Form/Task/Interview.php';
-        $activityId = CRM_Campaign_Form_Task_Interview::registerInterview( $params );
-        $result = array( 'status'       => ( $activityId ) ? 'success' : 'fail',
+        
+        //lets pickup contat related fields.
+        foreach ( $_POST as $key => $value ) {
+            if ( strpos( $key, "field_{$voterId}_" ) !== false &&
+                 strpos( $key, "field_{$voterId}_custom" ) === false ) {
+                $key = substr( $key, strlen( "field_{$voterId}_" ) );
+                $params[$key] = $value;
+            }
+        }
+        
+        require_once "CRM/Utils/JSON.php";
+        $result = array( 'status'       => 'fail',
                          'voter_id'     => $voterId,
                          'activity_id'  => $params['interviewer_id'] );
+        
+        //time to validate custom data.
+        require_once 'CRM/Core/BAO/CustomField.php';
+        $errors = CRM_Core_BAO_CustomField::validateCustomData( $params );
+        if ( is_array( $errors ) && !empty( $errors )  ) {
+            $result['errors'] = $errors;
+            echo json_encode( $result );
+            CRM_Utils_System::civiExit( );
+        }
+        
+        //process the response/interview data.
+        require_once 'CRM/Campaign/Form/Task/Interview.php';
+        $activityId = CRM_Campaign_Form_Task_Interview::registerInterview( $params );
+        if ( $activityId ) $result['status'] = 'success'; 
         
         require_once "CRM/Utils/JSON.php";
         echo json_encode( $result );
@@ -83,7 +110,7 @@ class CRM_Campaign_Page_AJAX
     }
     
     static function loadOptionGroupDetails( ) {
-
+        
         $id       = CRM_Utils_Array::value( 'option_group_id', $_POST );
         $status   = 'fail';
         $opValues = array( );
@@ -125,20 +152,25 @@ class CRM_Campaign_Page_AJAX
     
     function voterList( ) 
     {
-        $searchParams = array( 'city',
-                               'sort_name', 
-                               'street_unit',
-                               'street_name',
-                               'street_number', 
-                               'street_address', 
-                               'survey_interviewer_id', 
-                               'campaign_survey_id',
-                               'campaign_search_voter_for' );
+        //get the search criteria params.
+        $searchParams = explode( ',', CRM_Utils_Array::value( 'searchCriteria', $_POST ) );
         
         $params = $searchRows = array( );
         foreach ( $searchParams as $param ) {
             if ( CRM_Utils_Array::value( $param, $_POST ) ) {
                 $params[$param] = $_POST[$param];
+            }
+        }
+        
+        //format multi-select group and contact types.
+        foreach ( array( 'group', 'contact_type' ) as $param ) {
+            $paramValue = CRM_Utils_Array::value( $param, $params );
+            if ( $paramValue ) {
+                unset( $params[$param] );
+                $paramValue = explode( ',', $paramValue );
+                foreach ( $paramValue as $key => $value ) {
+                    $params[$param][$value] = 1;
+                }
             }
         }
         
@@ -158,15 +190,24 @@ class CRM_Campaign_Page_AJAX
                 $survey->find( true );
                 $campaignId   = $survey->campaign_id;
                 $surveyTypeId = $survey->activity_type_id;
-                if ( $campaignId ) {
+                
+                //allow voter search in sub-part of given constituents,
+                //but make sure in case user does not select any group.
+                //get all associated campaign groups in where filter, CRM-7406
+                $groups = CRM_Utils_Array::value( 'group', $params );
+                if ( $campaignId && CRM_Utils_System::isNull( $groups ) ) {
                     require_once 'CRM/Campaign/BAO/Campaign.php';
                     $campaignGroups = CRM_Campaign_BAO_Campaign::getCampaignGroups($campaignId);
-                    foreach( $campaignGroups as $id => $group ) {
-                        if ( $group['entity_table'] == 'civicrm_group' ) {
-                            $params['group'][$group['entity_id']] = 1;
-                        }
-                    }
+                    foreach( $campaignGroups as $id => $group ) $params['group'][$id] = 1;
                 }
+                
+                //apply filter of survey contact type for search.
+                require_once 'CRM/Campaign/BAO/Survey.php';
+                $contactType = CRM_Campaign_BAO_Survey::getSurveyContactType( $surveyId );
+                if ( $contactType ) {
+                    $params['contact_type'][$contactType] = 1 ;
+                }
+                
                 unset( $params['campaign_survey_id'] );
             }
             unset( $params['survey_interviewer_id'] );
@@ -215,7 +256,8 @@ class CRM_Campaign_Page_AJAX
         $queryParams = CRM_Contact_BAO_Query::convertFormValues( $params );
         $query       = new CRM_Contact_BAO_Query( $queryParams,
                                                   null, null, false, false, 
-                                                  CRM_Contact_BAO_Query::MODE_CAMPAIGN );
+                                                  CRM_Contact_BAO_Query::MODE_CAMPAIGN,
+                                                  true );
         
         //get the voter clause to restrict and validate search.
         require_once 'CRM/Campaign/BAO/Query.php';
@@ -225,7 +267,9 @@ class CRM_Campaign_Page_AJAX
                                             true, false, 
                                             false, false, 
                                             false, 
-                                            $voterClause );
+                                            CRM_Utils_Array::value( 'whereClause', $voterClause ),
+                                            null,
+                                            CRM_Utils_Array::value( 'fromClause', $voterClause ) );
         
         $iTotal      = $searchCount;
         
@@ -248,8 +292,9 @@ class CRM_Campaign_Page_AJAX
                                            false, false,
                                            false, false, 
                                            false, 
-                                           $voterClause, 
-                                           $sortOrder );
+                                           CRM_Utils_Array::value( 'whereClause', $voterClause ), 
+                                           $sortOrder,
+                                           CRM_Utils_Array::value( 'fromClause', $voterClause ) );
             while( $result->fetch() ) {
                 $contactID  = $result->contact_id;
                 $typeImage  = CRM_Contact_BAO_Contact_Utils::getImage( $result->contact_sub_type ? 
@@ -341,20 +386,25 @@ class CRM_Campaign_Page_AJAX
                 $activityStatus    = CRM_Core_PseudoConstant::activityStatus( 'name' );
                 $scheduledStatusId = array_search( 'Scheduled', $activityStatus ); 
                 if ( $isReserved ) {
-                    $activityTypeId = CRM_Core_DAO::getFieldValue( 'CRM_Campaign_DAO_Survey',
-                                                                   $activityParams['source_record_id'],
-                                                                   'activity_type_id' );
+                    $surveyValues = array( );
+                    $surveyParams = array( 'id' => $activityParams['source_record_id'] );
+                    CRM_Core_DAO::commonRetrieve( 'CRM_Campaign_DAO_Survey',
+                                                  $surveyParams, 
+                                                  $surveyValues,
+                                                  array( 'title', 'activity_type_id', 'campaign_id' ) );
+                    
+                    $activityTypeId =  $surveyValues['activity_type_id'];
+                    
                     $surveytitle = CRM_Utils_Array::value( 'surveyTitle', $_POST );
-                    if ( !$surveytitle ) {
-                        $surveytitle = CRM_Core_DAO::getFieldValue( 'CRM_Campaign_DAO_Survey', 
-                                                                    $activityParams['source_record_id'], 'title' );
-                    }
+                    if ( !$surveytitle ) $surveytitle = $surveyValues['title'];
+                    
                     $subject =  ts( '%1', array( 1 => $surveytitle ) ). ' - ' . ts( 'Respondent Reservation' );
                     $activityParams['subject']            = $subject;
                     $activityParams['status_id']          = $scheduledStatusId;
                     $activityParams['skipRecentView']     = 1;
                     $activityParams['activity_date_time'] = date('YmdHis');
                     $activityParams['activity_type_id']   = $activityTypeId;
+                    $activityParams['campaign_id']        = $surveyValues['campaign_id'];
                     
                     require_once 'CRM/Activity/BAO/Activity.php';
                     $activity = CRM_Activity_BAO_Activity::create( $activityParams );
@@ -399,6 +449,320 @@ class CRM_Campaign_Page_AJAX
         }
 
         echo json_encode( array( 'status' => $status ) );
+        CRM_Utils_System::civiExit( );
+    }
+    
+    function allActiveCampaigns( ) 
+    {
+        require_once 'CRM/Utils/JSON.php';
+        require_once 'CRM/Campaign/BAO/Campaign.php';
+        $currentCampaigns = CRM_Campaign_BAO_Campaign::getCampaigns( );
+        $campaigns = CRM_Campaign_BAO_Campaign::getCampaigns( null, null, true, false, true );
+        $options   = array( array( 'value' => '',
+                                   'title'  => ts('- select -') ) );
+        foreach ( $campaigns as $value => $title ) {
+            $class = null;
+            if ( !array_key_exists( $value, $currentCampaigns ) ) {
+                $class = 'status-past';
+            }
+            $options[] = array( 'value' => $value,
+                                'title' => $title,
+                                'class' => $class );
+        }
+        $status = 'fail';
+        if ( count( $options ) > 1 ) $status = 'success';  
+        
+        $results = array( 'status'    => $status,
+                          'campaigns' => $options );
+        
+        echo json_encode( $results );
+        
+        CRM_Utils_System::civiExit( );
+    }
+
+    function campaignGroups( ) 
+    {
+        require_once 'CRM/Utils/JSON.php';
+        require_once 'CRM/Campaign/BAO/Campaign.php';
+        $surveyId = CRM_Utils_Request::retrieve( 'survey_id', 'Positive', 
+                                                 CRM_Core_DAO::$_nullObject, false, null, 'POST' );
+        $campGroups = array( );
+        if ( $surveyId ) {
+            $campaignId = CRM_Core_DAO::getFieldValue( 'CRM_Campaign_DAO_Survey', $surveyId, 'campaign_id' );
+            if ( $campaignId ) {
+                require_once 'CRM/Campaign/BAO/Campaign.php';
+                $campGroups = CRM_Campaign_BAO_Campaign::getCampaignGroups( $campaignId );
+            }
+        }
+        
+        //CRM-7406 --If there is no campaign or no group associated with
+        //campaign of given survey, lets allow to search across all groups.
+        if ( empty( $campGroups ) ) {
+            require_once 'CRM/Core/PseudoConstant.php';
+            $campGroups = CRM_Core_PseudoConstant::group( ); 
+        }
+        $groups = array( array( 'value' => '',
+                                'title'  => ts('- select -') ) );
+        foreach ( $campGroups as $grpId => $title ) {
+            $groups[] = array( 'value' => $grpId,
+                               'title' => $title );
+        }
+        $results = array( 'status' => 'success',
+                          'groups' => $groups );
+        
+        echo json_encode( $results );
+        
+        CRM_Utils_System::civiExit( );
+    }
+    
+    /**
+     * Retrieve campaigns as for campaign dashboard.
+     *
+     **/
+    function campaignList( ) 
+    {
+        //get the search criteria params.
+        $searchParams = explode( ',', CRM_Utils_Array::value( 'searchCriteria', $_POST ) );
+        
+        $params = $searchRows = array( );
+        foreach ( $searchParams as $param ) {
+            if ( CRM_Utils_Array::value( $param, $_POST ) ) {
+                $params[$param] = $_POST[$param];
+            }
+        }
+        
+        //this is sequence columns on datatable.
+        $selectorCols = array( 'id', 
+                               'name', 
+                               'title', 
+                               'description', 
+                               'start_date', 
+                               'end_date', 
+                               'campaign_type_id', 
+                               'campaign_type', 
+                               'status_id', 
+                               'status', 
+                               'is_active',
+                               'isActive',
+                               'action' );
+        
+        // get the data table params.
+        $dataTableParams = array( 'sEcho'     => array( 'name'    => 'sEcho',
+                                                        'type'    => 'Integer',
+                                                        'default' => 0                ), 
+                                  'offset'    => array( 'name'    => 'iDisplayStart',
+                                                        'type'    => 'Integer',
+                                                        'default' => 0                ),
+                                  'rowCount'  => array( 'name'    => 'iDisplayLength',
+                                                        'type'    => 'Integer',
+                                                        'default' => 25               ),
+                                  'sort'      => array( 'name'    => 'iSortCol_0',
+                                                        'type'    => 'Integer',
+                                                        'default' => 'start_date'      ),
+                                  'sortOrder' => array( 'name'    => 'sSortDir_0',
+                                                        'type'    => 'String', 
+                                                        'default' => 'desc'            ) );
+        foreach ( $dataTableParams as $pName => $pValues ) {
+            $$pName = $pValues['default'];
+            if ( CRM_Utils_Array::value( $pValues['name'], $_POST ) ) {
+                $$pName = CRM_Utils_Type::escape( $_POST[$pValues['name']], $pValues['type'] );
+                if ( $pName == 'sort' ) {
+                    $$pName = $selectorCols[$$pName];
+                }
+            }
+        }
+        foreach ( array( 'sort', 'offset', 'rowCount', 'sortOrder' ) as $sortParam ) {
+            $params[$sortParam] = $$sortParam;
+        }
+        
+        require_once 'CRM/Campaign/BAO/Campaign.php';
+        require_once 'CRM/Campaign/Page/DashBoard.php';
+        $searchCount = CRM_Campaign_BAO_Campaign::getCampaignSummary( $params, true );
+        $campaigns   = CRM_Campaign_Page_DashBoard::getCampaignSummary( $params );
+        $iTotal      = $searchCount;
+        
+        if ( $searchCount > 0 ) {
+            if ( $searchCount < $offset ) $offset = 0;
+            foreach ( $campaigns as $campaignID => $values ) {
+                foreach ( $selectorCols as $col ) {
+                    $searchRows[$campaignID][$col] = CRM_Utils_Array::value( $col, $values );
+                }
+            }
+        }
+        
+        require_once "CRM/Utils/JSON.php";
+        $selectorElements = $selectorCols;
+        
+        $iFilteredTotal = $iTotal;
+        
+        echo CRM_Utils_JSON::encodeDataTableSelector( $searchRows, $sEcho, $iTotal, $iFilteredTotal, $selectorElements );
+        CRM_Utils_System::civiExit( );
+    }
+    
+    /**
+     * Retrieve survey for survey dashboard.
+     *
+     **/
+    function surveyList( ) 
+    {
+        //get the search criteria params.
+        $searchParams = explode( ',', CRM_Utils_Array::value( 'searchCriteria', $_POST ) );
+        
+        $params = $searchRows = array( );
+        foreach ( $searchParams as $param ) {
+            if ( CRM_Utils_Array::value( $param, $_POST ) ) {
+                $params[$param] = $_POST[$param];
+            }
+        }
+        
+        //this is sequence columns on datatable.
+        $selectorCols = array( 'id',
+                               'title', 
+                               'campaign_id',
+                               'campaign',
+                               'activity_type_id',
+                               'activity_type',
+                               'release_frequency',
+                               'default_number_of_contacts',
+                               'max_number_of_contacts',
+                               'is_default',
+                               'is_active',
+                               'isActive',
+                               'result_id',
+                               'action',
+                               'voterLinks' );
+        
+        // get the data table params.
+        $dataTableParams = array( 'sEcho'     => array( 'name'    => 'sEcho',
+                                                        'type'    => 'Integer',
+                                                        'default' => 0                ), 
+                                  'offset'    => array( 'name'    => 'iDisplayStart',
+                                                        'type'    => 'Integer',
+                                                        'default' => 0                ),
+                                  'rowCount'  => array( 'name'    => 'iDisplayLength',
+                                                        'type'    => 'Integer',
+                                                        'default' => 25               ),
+                                  'sort'      => array( 'name'    => 'iSortCol_0',
+                                                        'type'    => 'Integer',
+                                                        'default' => 'created_date'   ),
+                                  'sortOrder' => array( 'name'    => 'sSortDir_0',
+                                                        'type'    => 'String', 
+                                                        'default' => 'desc'           ) );
+        foreach ( $dataTableParams as $pName => $pValues ) {
+            $$pName = $pValues['default'];
+            if ( CRM_Utils_Array::value( $pValues['name'], $_POST ) ) {
+                $$pName = CRM_Utils_Type::escape( $_POST[$pValues['name']], $pValues['type'] );
+                if ( $pName == 'sort' ) {
+                    $$pName = $selectorCols[$$pName];
+                }
+            }
+        }
+        foreach ( array( 'sort', 'offset', 'rowCount', 'sortOrder' ) as $sortParam ) {
+            $params[$sortParam] = $$sortParam;
+        }
+        
+        require_once 'CRM/Campaign/BAO/Survey.php';
+        require_once 'CRM/Campaign/Page/DashBoard.php';
+        $surveys     = CRM_Campaign_Page_DashBoard::getSurveySummary( $params );
+        $searchCount = CRM_Campaign_BAO_Survey::getSurveySummary( $params, true );
+        $iTotal      = $searchCount;
+        
+        if ( $searchCount > 0 ) {
+            if ( $searchCount < $offset ) $offset = 0;
+            foreach ( $surveys as $surveyID => $values ) {
+                foreach ( $selectorCols as $col ) {
+                    $searchRows[$surveyID][$col] = CRM_Utils_Array::value( $col, $values );
+                }
+            }
+        }
+        
+        require_once "CRM/Utils/JSON.php";
+        $selectorElements = $selectorCols;
+        
+        $iFilteredTotal = $iTotal;
+        
+        echo CRM_Utils_JSON::encodeDataTableSelector( $searchRows, $sEcho, $iTotal, $iFilteredTotal, $selectorElements );
+        CRM_Utils_System::civiExit( );
+    }
+    
+    /**
+     * Retrieve petitions for petition dashboard.
+     *
+     **/
+    function petitionList( ) 
+    {
+        //get the search criteria params.
+        $searchParams = explode( ',', CRM_Utils_Array::value( 'searchCriteria', $_POST ) );
+        
+        $params = $searchRows = array( );
+        foreach ( $searchParams as $param ) {
+            if ( CRM_Utils_Array::value( $param, $_POST ) ) {
+                $params[$param] = $_POST[$param];
+            }
+        }
+        
+        //this is sequence columns on datatable.
+        $selectorCols = array( 'id',
+                               'title', 
+                               'campaign_id',
+                               'campaign',
+                               'activity_type_id',
+                               'activity_type',
+                               'is_default',
+                               'is_active',
+                               'isActive',
+                               'action' );
+        
+        // get the data table params.
+        $dataTableParams = array( 'sEcho'     => array( 'name'    => 'sEcho',
+                                                        'type'    => 'Integer',
+                                                        'default' => 0                ), 
+                                  'offset'    => array( 'name'    => 'iDisplayStart',
+                                                        'type'    => 'Integer',
+                                                        'default' => 0                ),
+                                  'rowCount'  => array( 'name'    => 'iDisplayLength',
+                                                        'type'    => 'Integer',
+                                                        'default' => 25               ),
+                                  'sort'      => array( 'name'    => 'iSortCol_0',
+                                                        'type'    => 'Integer',
+                                                        'default' => 'created_date'   ),
+                                  'sortOrder' => array( 'name'    => 'sSortDir_0',
+                                                        'type'    => 'String', 
+                                                        'default' => 'desc'           ) );
+        foreach ( $dataTableParams as $pName => $pValues ) {
+            $$pName = $pValues['default'];
+            if ( CRM_Utils_Array::value( $pValues['name'], $_POST ) ) {
+                $$pName = CRM_Utils_Type::escape( $_POST[$pValues['name']], $pValues['type'] );
+                if ( $pName == 'sort' ) {
+                    $$pName = $selectorCols[$$pName];
+                }
+            }
+        }
+        foreach ( array( 'sort', 'offset', 'rowCount', 'sortOrder' ) as $sortParam ) {
+            $params[$sortParam] = $$sortParam;
+        }
+        
+        require_once 'CRM/Campaign/BAO/Petition.php';
+        require_once 'CRM/Campaign/Page/DashBoard.php';
+        $petitions   = CRM_Campaign_Page_DashBoard::getPetitionSummary( $params );
+        $searchCount = CRM_Campaign_BAO_Petition::getPetitionSummary( $params, true );
+        $iTotal      = $searchCount;
+        
+        if ( $searchCount > 0 ) {
+            if ( $searchCount < $offset ) $offset = 0;
+            foreach ( $petitions as $petitionID => $values ) {
+                foreach ( $selectorCols as $col ) {
+                    $searchRows[$petitionID][$col] = CRM_Utils_Array::value( $col, $values );
+                }
+            }
+        }
+        
+        require_once "CRM/Utils/JSON.php";
+        $selectorElements = $selectorCols;
+        
+        $iFilteredTotal = $iTotal;
+        
+        echo CRM_Utils_JSON::encodeDataTableSelector( $searchRows, $sEcho, $iTotal, $iFilteredTotal, $selectorElements );
         CRM_Utils_System::civiExit( );
     }
     

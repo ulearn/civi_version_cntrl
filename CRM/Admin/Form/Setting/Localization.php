@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -89,16 +89,10 @@ class CRM_Admin_Form_Setting_Localization extends  CRM_Admin_Form_Setting
             $warning = ts('WARNING: Enabling multiple languages changes the schema of your database, so make sure you know what you are doing when enabling this function; making a database backup is strongly recommended.');
             $this->assign('warning', $warning);
 
-            // test for create view and trigger permissions and if allowed, add the option to go multilingual
-            CRM_Core_Error::ignoreException();
-            $dao = new CRM_Core_DAO;
-            $dao->query('CREATE OR REPLACE VIEW civicrm_domain_view AS SELECT * FROM civicrm_domain');
-            $dao->query('CREATE TRIGGER civicrm_domain_trigger BEFORE INSERT ON civicrm_domain FOR EACH ROW BEGIN END');
-            $dao->query('DROP TRIGGER IF EXISTS civicrm_domain_trigger');
-            $dao->query('DROP VIEW IF EXISTS civicrm_domain_view');
-            CRM_Core_Error::setCallback();
+            $validTriggerPermission = CRM_Core_DAO::checkTriggerViewPermission( true );
 
-            if (!$dao->_lastError and !$config->logging) {
+            if ( $validTriggerPermission &&
+                 ! $config->logging ) {
                 $this->addElement('checkbox', 'makeMultilingual', ts('Enable Multiple Languages'),
                                   null, array('onChange' => "if (this.checked) alert('$warning')"));
             }
@@ -188,6 +182,11 @@ class CRM_Admin_Form_Setting_Localization extends  CRM_Admin_Form_Setting
              ! function_exists( trim( $fields['customTranslateFunction'] ) ) ) {
             $errors['customTranslateFunction'] = ts( 'Please define the custom translation function first.' );
         }
+        
+        if ( isset( $fields['defaultContactCountry'] ) && !isset( $fields['countryLimit'] ) || ( !in_array( $fields['defaultContactCountry'], $fields['countryLimit'] ) ) ) {
+            $errors['defaultContactCountry'] = ts( 'Please select a default country that is in the list of available countries.');
+        }
+
         return empty( $errors ) ? true : $errors;
     }
 

@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -41,6 +41,11 @@
             {$form.sort_name.html|crmReplace:class:big} {help id="id-create_sort_name"}
         </td>
     </tr>
+
+    {* campaign in mailing search *}
+    {include file="CRM/Campaign/Form/addCampaignToComponent.tpl" 
+    campaignContext="componentSearch" campaignTrClass='' campaignTdClass=''}
+
     <tr>
         <td>{$form.buttons.html}</td><td colspan="2"></td>
     </tr>

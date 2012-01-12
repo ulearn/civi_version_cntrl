@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -241,6 +241,36 @@ WHERE id = %2
     }
 
 
+    function upgrade_3_3_beta3( $rev ) 
+    {
+        // get the duplicate Ids of line item entries
+        $dupeLineItemIds = array( );
+        $fields = array( 'entity_table', 'entity_id', 'price_field_id', 'price_field_value_id' );
+        require_once 'CRM/Price/BAO/LineItem.php';
+        $mainLineItem = new CRM_Price_BAO_LineItem( );
+        $mainLineItem->find( true );
+        while ( $mainLineItem->fetch( ) ) {
+            $dupeLineItem = new CRM_Price_BAO_LineItem( );
+            foreach ( $fields as $fld ) $dupeLineItem->$fld = $mainLineItem->$fld; 
+            $dupeLineItem->find( true );
+            $dupeLineItem->addWhere( "id != $mainLineItem->id" );
+            while ( $dupeLineItem->fetch( ) ) {
+                $dupeLineItemIds[$dupeLineItem->id] = $dupeLineItem->id;
+            }
+            $dupeLineItem->free( );
+        }
+        $mainLineItem->free( );
+        
+        //clean line item table.
+        if ( !empty( $dupeLineItemIds ) ) {
+            $sql = 'DELETE FROM civicrm_line_item WHERE id IN ( '. implode( ', ', $dupeLineItemIds ) .' )';
+            CRM_Core_DAO::executeQuery( $sql );
+        }
+
+        $upgrade =& new CRM_Upgrade_Form( );
+        $upgrade->processSQL( $rev );
+    }
+     
     function upgrade_3_3_0( $rev ) 
     {        
         $upgrade =& new CRM_Upgrade_Form( );
@@ -276,6 +306,55 @@ INNER JOIN  civicrm_option_group grp ON ( grp.id = val.option_group_id )
                                         array( 1 => array( 'languages', 'String' ) ), 
                                         true, null, false, false );
         }
+    }
+
+    function upgrade_3_3_2( $rev ) 
+    {    
+        $dropMailingIndex = false;
+        $indexes = CRM_Core_DAO::executeQuery( 'SHOW INDEXES FROM civicrm_mailing_job' );
+        while ( $indexes->fetch( ) ) {
+            if( $indexes->Key_name == 'parent_id' ){
+                $dropMailingIndex = true;
+                break;
+            }
+        }
+        //CRM-7137
+        require_once 'CRM/Member/DAO/MembershipBlock.php';
+        // get membership type for each membership block.
+        $sql = "SELECT id, membership_types FROM civicrm_membership_block ";
+        $dao = CRM_Core_DAO::executeQuery( $sql );
+        while( $dao->fetch( ) ){
+            $memType = explode(',', $dao->membership_types );
+            
+            $memTypeSerialize = array();
+            foreach( $memType as $k => $v ) {
+                $memTypeSerialize[$v] = 0;
+            }
+            
+            // save membership type as an serialized array along w/ auto_renew defalt value zero.
+            $memBlock = new CRM_Member_DAO_MembershipBlock();
+            $memBlock->id = $dao->id;
+            $memBlock->membership_types = serialize( $memTypeSerialize );
+            $memBlock->save( );
+        }
+                
+        //CRM-7172
+        require_once 'CRM/Mailing/Info.php';
+        if ( CRM_Mailing_Info::workflowEnabled( ) ) {
+
+            // CRM-7896
+            $roles = user_roles(false, 'access CiviMail');
+            if ( !empty($roles) ) {
+                foreach( array_keys($roles) as $rid ) {
+                    user_role_grant_permissions($rid, array('create mailings', 'approve mailings', 'schedule mailings'));
+                }
+            }
+            
+        }
+
+        $upgrade =& new CRM_Upgrade_Form( );
+        $upgrade->assign( 'dropMailingIndex', $dropMailingIndex );
+        $upgrade->processSQL( $rev );
     }
     
   }

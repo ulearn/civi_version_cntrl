@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -92,9 +92,10 @@ class CRM_Contribute_Form_ContributionPage_Amount extends CRM_Contribute_Form_Co
         $this->addElement('checkbox', 'is_monetary', ts('Execute real-time monetary transactions') );
         
         $paymentProcessor =& CRM_Core_PseudoConstant::paymentProcessor( );
+        $recurringPaymentProcessor = array( );
+
         if ( !empty( $paymentProcessor ) ) {
             $paymentProcessorIds = implode( ',', array_keys( $paymentProcessor ) );
-            $recurringPaymentProcessor = array( );
             $query = "
 SELECT id
   FROM civicrm_payment_processor
@@ -347,6 +348,11 @@ SELECT id
         // get the submitted form values.
         $params = $this->controller->exportValues( $this->_name );
        
+        if ( CRM_Utils_Array::value( 'payment_processor_id', $params) == 
+             CRM_Core_DAO::getFieldValue( 'CRM_Core_DAO_PaymentProcessor', 'AuthNet', 
+                                          'id', 'payment_processor_type') ) {
+            CRM_Core_Session::setStatus( ts( ' Please note that the Authorize.net payment processor only allows recurring contributions and auto-renew memberships with payment intervals from 7-365 days or 1-12 months (i.e. not greater than 1 year).' ) );
+        }
         // check for price set.
         $priceSetID = CRM_Utils_Array::value( 'price_set_id', $params );
         
@@ -386,7 +392,7 @@ SELECT id
         if ( $params['is_recur'] ) {
             require_once 'CRM/Core/BAO/CustomOption.php';
             $params['recur_frequency_unit'] = 
-                implode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR, 
+                implode( CRM_Core_DAO::VALUE_SEPARATOR,
                          array_keys( $params['recur_frequency_unit'] ) );
             $params['is_recur_interval'] = CRM_Utils_Array::value( 'is_recur_interval', $params ,false );
         }
@@ -477,6 +483,7 @@ SELECT id
                 CRM_Core_OptionGroup::deleteAssoc( "civicrm_contribution_page.amount.{$contributionPageID}" );
             }
         }
+        parent::endPostProcess( );
     }
     
     /** 

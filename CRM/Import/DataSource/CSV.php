@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -59,7 +59,7 @@ class CRM_Import_DataSource_CSV extends CRM_Import_DataSource
         $uploadFileSize = $config->maxImportFileSize >= 8388608 ? 8388608 : $config->maxImportFileSize;
         $uploadSize = round(($uploadFileSize / (1024*1024)), 2);
         $form->assign('uploadSize', $uploadSize);
-        $form->add('file', 'uploadFile', ts('Import Data File'), 'size=30 maxlength=60', true);
+        $form->add('file', 'uploadFile', ts('Import Data File'), 'size=30 maxlength=255', true);
 
         $form->setMaxFileSize($uploadFileSize);
         $form->addRule('uploadFile', ts('File size should be less than %1 MBytes (%2 bytes)', array(1 => $uploadSize, 2 => $uploadFileSize)), 'maxfilesize', $uploadFileSize);
@@ -73,7 +73,8 @@ class CRM_Import_DataSource_CSV extends CRM_Import_DataSource
     {
         $file = $params['uploadFile']['name'];
         
-        $result = self::_CsvToTable( $db, $file, $params['skipColumnHeader'],
+        $result = self::_CsvToTable( $db, $file, 
+                                     CRM_Utils_Array::value( 'skipColumnHeader', $params, false ),
                                      CRM_Utils_Array::value( 'import_table_name', $params ) );
         
         $this->set('originalColHeader', CRM_Utils_Array::value( 'original_col_header', $result ) );

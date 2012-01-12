@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -155,6 +155,11 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
         //reset values for all options those are full.
         if ( !empty( $unsetSubmittedOptions ) && empty( $_POST ) ) {
             $this->resetElementValue( $unsetSubmittedOptions );
+        }
+
+        //load default campaign from page.
+        if ( array_key_exists( 'participant_campaign_id', $this->_fields ) ) {
+            $defaults['participant_campaign_id'] = CRM_Utils_Array::value( 'campaign_id', $this->_values['event'] );
         }
         
         return $defaults;
@@ -389,13 +394,24 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
             //take the participant instance.
             $addParticipantNum = substr( $self->_name, 12 );
             
-            if ( is_array( $params ) &&
-                 $self->_values['event']['allow_same_participant_emails'] != 1 ) {
+            if ( is_array( $params ) ) {
                 foreach ( $params as $key => $value ) {
-                    if ( ( $value["email-{$self->_bltID}"] == $fields["email-{$self->_bltID}"] ) &&
-                         $key != $addParticipantNum  ) {
-                        $errors["email-{$self->_bltID}"] = ts( 'The email address must be unique for each participant.' );
-                        break;
+                    if ( $key != $addParticipantNum ) {
+                        if ( !$self->_values['event']['allow_same_participant_emails'] ) {
+                            if ( $value["email-{$self->_bltID}"] == $fields["email-{$self->_bltID}"] ) {
+                                $errors["email-{$self->_bltID}"] =
+                                    ts( 'The email address must be unique for each participant.' );
+                                break;
+                            }
+                        } else {
+                            // check with first_name and last_name for additional participants
+                            if ( ( $value['first_name'] == $fields['first_name'] ) && 
+                                 ( $value['last_name']  == $fields['last_name'] ) ) {
+                                $errors['first_name'] = 
+                                    ts( 'The first name and last name must be unique for each participant.' );
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -450,8 +466,81 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
             }
         }
         
+        
+        if ( $button != 'skip' && 
+             $self->_values['event']['is_monetary'] && 
+             !isset($errors['_qf_default']) && 
+             !$self->validatePaymentValues($self, $fields)  ) {
+            $errors['_qf_default'] = ts("Your payement information looks incomplete. Please go back to the main registration page, to complete payment information.");
+            $self->set( 'forcePayement', true ) ;
+        } else if ( $button == 'skip' )  {
+            $self->set( 'forcePayement', true ) ;
+        }
+
         return $errors;
         
+    }
+
+    function validatePaymentValues( $self, $fields ) {
+        
+        if ( CRM_Utils_Array::value( 'bypass_payment', $self->_params[0] ) ||
+             $self->_allowWaitlist ||
+             empty( $self->_fields ) ||
+             CRM_Utils_Array::value( 'amount', $self->_params[0] ) > 0 ) {
+            return true;
+        }
+        
+        $validatePayement = false;
+        if ( CRM_Utils_Array::value( 'priceSetId', $fields ) ) {
+            require_once 'CRM/Price/BAO/Set.php';
+            $lineItem = array( );
+            CRM_Price_BAO_Set::processAmount( $self->_values['fee'], $fields, $lineItem );
+            if ( $fields['amount'] > 0 ) {
+                $validatePayement =  true;
+                // $self->_forcePayement = true;
+                // return false;
+            }
+        } else if ( CRM_Utils_Array::value( 'amount', $fields ) &&
+                    ( CRM_Utils_Array::value( 'value',  $self->_values['fee'][$fields['amount']] ) > 0 ) ) {
+            $validatePayement =  true;
+        }
+            
+        if ( !$validatePayement ) return true;
+ 
+        foreach ( $self->_fields as $name => $fld ) {
+            if ( $fld['is_required'] &&
+                 CRM_Utils_System::isNull( CRM_Utils_Array::value( $name, $fields ) ) ) {
+                return false;
+            }
+        }
+        
+        // make sure that credit card number and cvv are valid
+        require_once 'CRM/Utils/Rule.php';
+        require_once 'CRM/Core/OptionGroup.php';
+        if ( CRM_Utils_Array::value( 'credit_card_type', $self->_params[0] ) ) {
+            if ( CRM_Utils_Array::value( 'credit_card_number', $self->_params[0] ) &&
+                 !CRM_Utils_Rule::creditCardNumber( $self->_params[0]['credit_card_number'], $self->_params[0]['credit_card_type'] ) ) {
+                return false;
+            }
+            
+            if ( CRM_Utils_Array::value( 'cvv2', $self->_params[0] ) &&
+                 ! CRM_Utils_Rule::cvv( $self->_params[0]['cvv2'], $self->_params[0]['credit_card_type'] ) ) {
+                return false;
+            }
+        }
+        
+        $elements = array( 'email_greeting'  => 'email_greeting_custom', 
+                           'postal_greeting' => 'postal_greeting_custom',
+                           'addressee'       => 'addressee_custom' ); 
+        foreach ( $elements as $greeting => $customizedGreeting ) {
+            if( $greetingType = CRM_Utils_Array::value($greeting, $self->_params[0]) ) {
+                $customizedValue = CRM_Core_OptionGroup::getValue( $greeting, 'Customized', 'name' ); 
+                if( $customizedValue  == $greetingType && 
+                    ! CRM_Utils_Array::value( $customizedGreeting, $self->_params[0] ) ) {
+                    return false;
+                }
+            }
+        }
     }
 
     /**
@@ -470,6 +559,18 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
         
         //user submitted params.
         $params = $this->controller->exportValues( $this->_name );
+
+        if ( !$this->_allowConfirmation ) {
+            // check if the participant is already registered
+            $params['contact_id'] = CRM_Event_Form_Registration_Register::checkRegistration( $params, $this, true, true );
+        }
+        
+        //carry campaign to partcipants.
+        if ( array_key_exists( 'participant_campaign_id', $params ) ) {
+            $params['campaign_id'] = $params['participant_campaign_id'];
+        } else {
+            $params['campaign_id'] = CRM_Utils_Array::value( 'campaign_id', $this->_values['event'] );
+        }
         
         // if waiting is enabled
         if ( !$this->_allowConfirmation && 

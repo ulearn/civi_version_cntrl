@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -105,7 +105,7 @@
         }
         
         cj('.delete-dashlet').click( function( ) {
-            var message = {/literal}"{ts}Do you want to remove this dashlet as an 'Available Dashlet', AND delete it from all users' dashboards?{/ts}"{literal};
+            var message = {/literal}"{ts}Do you want to remove this dashlet as an 'Available Dashlet', AND delete it from all user dashboards?{/ts}"{literal};
             if ( confirm( message) ) {
                 var dashletID = cj(this).parent().attr('id');
                 var idState = dashletID.split('-')

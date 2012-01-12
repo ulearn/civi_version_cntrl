@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -327,23 +327,24 @@ class CRM_Campaign_Form_Petition_Signature extends CRM_Core_Form
      */
     public function postProcess() 
     {		
-    
+       
 		if (defined('CIVICRM_TAG_UNCONFIRMED')) {
 			// Check if contact 'email confirmed' tag exists, else create one
 			// This should be in the petition module initialise code to create a default tag for this
-			require_once 'api/v2/Tag.php';	
 			$tag_params['name'] = CIVICRM_TAG_UNCONFIRMED;
-			$tag = civicrm_tag_get($tag_params); 
-			if ($tag['is_error'] == 1) {				
+			$tag_params['version'] = 3;
+			$tag = civicrm_api('tag','get',$tag_params); 
+			if ($tag['count'] == 0) {				
 				//create tag
 				$tag_params['description'] = CIVICRM_TAG_UNCONFIRMED;
 				$tag_params['is_reserved'] = 1;
 				$tag_params['used_for'] = 'civicrm_contact';
-				$tag = civicrm_tag_create($tag_params); 
+				$tag = civicrm_api('tag', 'create', $tag_params); 
 				$this->_tagId = $tag['tag_id'];
 			} else {
 				$this->_tagId = $tag['id'];
 			}
+
 		}
 		
 		// export the field values to be used for saving the profile form
@@ -457,11 +458,12 @@ class CRM_Campaign_Form_Petition_Signature extends CRM_Core_Form
 
 			require_once 'CRM/Core/Transaction.php';
 			$transaction = new CRM_Core_Transaction( );
-				
-			$this->_contactId = CRM_Contact_BAO_Contact::createProfileContact($params, $this->_contactProfileFields,
-																	   $this->_contactId, $this->_addToGroupID,
-																	   $this->_contactProfileId, $this->_ctype,
-																	   true );
+			
+            $addToGroupID = isset($this->_addToGroupID) ? $this->_addToGroupID : null;
+			$this->_contactId = CRM_Contact_BAO_Contact::createProfileContact( $params, $this->_contactProfileFields,
+                                                                               $this->_contactId, $addToGroupID,
+                                                                               $this->_contactProfileId, $this->_ctype,
+                                                                               true );
 
 			// get additional custom activity profile field data 
 			// to save with new signature activity record
@@ -500,12 +502,11 @@ class CRM_Campaign_Form_Petition_Signature extends CRM_Core_Form
 				
 				case self::EMAIL_CONFIRM:
 					// set 'Unconfirmed' tag for this new contact
-					if (defined('CIVICRM_TAG_UNCONFIRMED')) {	
-						require_once 'api/v2/EntityTag.php';
+					if (defined('CIVICRM_TAG_UNCONFIRMED')) {
 						unset($tag_params);
 						$tag_params['contact_id'] = $this->_contactId;
 						$tag_params['tag_id'] = $this->_tagId;
-						$tag_value = civicrm_entity_tag_add($tag_params);					
+						$tag_value = civicrm_api('entity_tag', 'create', $tag_params);					
 					}
 					break;
 			}
@@ -537,8 +538,8 @@ class CRM_Campaign_Form_Petition_Signature extends CRM_Core_Form
             require_once 'CRM/Profile/Form.php';
             $session = CRM_Core_Session::singleton( );
             $this->assign( "petition" , $this->petition );
-            //$contactID = $this->_contactId;	   
-            $this->assign( contact_id, $this->_contactId );
+            $contactID = null; //$contactID = $this->_contactId;	   
+            $this->assign( 'contact_id', $this->_contactId );
 
             $fields = null;
             if ( $contactID ) { //TODO: contactID is never set (commented above)
@@ -592,13 +593,13 @@ class CRM_Campaign_Form_Petition_Signature extends CRM_Core_Form
     }
        
 
-  function getTemplateFileName() {
-    if ($this->thankyou) {
-       return('CRM/Campaign/Page/Petition/ThankYou.tpl');
-    } else {
+    function getTemplateFileName() {
+        if ( isset($this->thankyou) ) {
+            return('CRM/Campaign/Page/Petition/ThankYou.tpl');
+        } else {
+        }
+        return parent::getTemplateFileName();
     }
-      return parent::getTemplateFileName();
-  }
  
     // check if user has already signed this petition    
 	function redirectIfSigned( $params )

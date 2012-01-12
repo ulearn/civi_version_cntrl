@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -287,13 +287,6 @@ class CRM_Price_BAO_Field extends CRM_Price_DAO_Field
         case 'Radio':
             $choice = array();
 
-            if ( !$field->is_required ) {
-                // add "none" option
-                $choice[] = $qf->createElement('radio', null, '', '-none-', '0', 
-                                                array('price' => json_encode( array( $elementName, "0" ) ) ) 
-                                              );
-            }
-            
             foreach ($customOption as $opId => $opt) {
                 if ($field->is_display_amounts) {
                     $opt['label'] .= '&nbsp;-&nbsp;';
@@ -312,6 +305,14 @@ class CRM_Price_BAO_Field extends CRM_Price_DAO_Field
                     $choice[$opId]->freeze( );
                 }
             }
+
+            if ( !$field->is_required ) {
+                // add "none" option
+                $choice[] = $qf->createElement('radio', null, '', '-none-', '0', 
+                                                array('price' => json_encode( array( $elementName, "0" ) ) ) 
+                                              );
+            }
+
             $element =& $qf->addGroup($choice, $elementName, $label);
             
             if ( $useRequired && $field->is_required ) {

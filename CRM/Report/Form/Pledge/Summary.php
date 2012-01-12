@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -40,14 +40,15 @@ class CRM_Report_Form_Pledge_Summary extends CRM_Report_Form {
 
     protected $_summary = null;
     protected $_totalPaid = false;
-    
+    protected $_customGroupExtends = array( 'Pledge' );
+
     function __construct( ) {
         $this->_columns = 
             array(
                   'civicrm_contact'  =>
                   array( 'dao'       => 'CRM_Contact_DAO_Contact',
                          'fields'    =>
-                         array( 'display_name' => 
+                         array( 'sort_name' => 
                                 array( 'title'     => ts( 'Contact Name' ),
                                        'required'  => true,
                                        'no_repeat' => true ),
@@ -221,6 +222,10 @@ class CRM_Report_Form_Pledge_Summary extends CRM_Report_Form {
         }
     }
 
+    function orderBy( ) {
+        $this->_orderBy = "ORDER BY {$this->_aliases['civicrm_contact']}.sort_name, {$this->_aliases['civicrm_contact']}.id";
+    }
+
     function where( ) {
         $clauses = array( );
         foreach ( $this->_columns as $tableName => $table ) {
@@ -275,11 +280,13 @@ class CRM_Report_Form_Pledge_Summary extends CRM_Report_Form {
         // get the acl clauses built before we assemble the query
         $this->buildACLClause( $this->_aliases['civicrm_contact'] );
         $this->select ( );
-        $this->from   ( null, true );
+        $this->from   ( );
+        $this->orderBy( );
+        $this->customDataFrom( );
         $this->where  ( ); 
         $this->limit( );  
         
-        $sql   = "{$this->_select} {$this->_from} {$this->_where} {$this->_limit}";
+        $sql   = "{$this->_select} {$this->_from} {$this->_where} {$this->_orderBy} {$this->_limit}";
         
         $rows  = $payment = array();
         $count = $due = $paid = 0;
@@ -387,10 +394,10 @@ class CRM_Report_Form_Pledge_Summary extends CRM_Report_Form {
         // Displaying entire data on the form
         if( ! empty( $display ) ) {
             foreach( $display as $key => $value ) {                
-                $row = array( );  
+                $row = array( );
                 foreach ( $this->_columnHeaders as $columnKey => $columnValue ) {
-                    if ( CRM_Utils_Array::value( $columnKey, $value ) ) {
-                        $row[ $columnKey ] = $value [ $columnKey ];
+                    if ( array_key_exists( $columnKey, $value ) ) {
+                        $row[$columnKey] = CRM_Utils_Array::value( $columnKey, $value )? $value[$columnKey] : '';
                     }
                 } 
                 $rows[ ] = $row;
@@ -442,13 +449,13 @@ class CRM_Report_Form_Pledge_Summary extends CRM_Report_Form {
             }
             
             // convert display name to links
-            if ( array_key_exists('civicrm_contact_display_name', $row) && 
+            if ( array_key_exists('civicrm_contact_sort_name', $row) && 
                  array_key_exists('civicrm_pledge_contact_id', $row) ) {
                 $url = CRM_Utils_System::url( "civicrm/contact/view"  , 
                                               'reset=1&cid=' . $row['civicrm_pledge_contact_id'], 
                                               $this->_absoluteUrl );
-                $rows[$rowNum]['civicrm_contact_display_name_link' ] = $url;
-                $rows[$rowNum]['civicrm_contact_display_name_hover'] =  
+                $rows[$rowNum]['civicrm_contact_sort_name_link' ] = $url;
+                $rows[$rowNum]['civicrm_contact_sort_name_hover'] =  
                     ts("View Contact Summary for this Contact.");
                 $entryFound = true;
             }

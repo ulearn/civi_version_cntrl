@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 3.3                                                |
+| CiviCRM version 4.0                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2010                                |
+| Copyright CiviCRM LLC (c) 2004-2011                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -176,10 +176,12 @@ class CRM_Core_DAO_Phone extends CRM_Core_DAO
                 'location_type_id' => array(
                     'name' => 'location_type_id',
                     'type' => CRM_Utils_Type::T_INT,
+                    'title' => ts('Phone Location Type') ,
                 ) ,
                 'is_primary' => array(
                     'name' => 'is_primary',
                     'type' => CRM_Utils_Type::T_BOOLEAN,
+                    'title' => ts('Is Phone Primary?') ,
                 ) ,
                 'is_billing' => array(
                     'name' => 'is_billing',
@@ -204,6 +206,7 @@ class CRM_Core_DAO_Phone extends CRM_Core_DAO
                 'phone_type_id' => array(
                     'name' => 'phone_type_id',
                     'type' => CRM_Utils_Type::T_INT,
+                    'title' => ts('Phone Type') ,
                 ) ,
             );
         }

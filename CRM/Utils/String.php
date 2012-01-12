@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -131,10 +131,11 @@ class CRM_Utils_String {
      * @static
      */
     static function getClassName( $string, $char = '_' ) {
+        $names = array( );
         if( !is_array( $string ) ) {
             $names = explode( $char, $string );
         }
-        if( is_array( $names ) )  return array_pop( $names ); 
+        if( !empty( $names ) )  return array_pop( $names ); 
     }
     
     /**
@@ -185,7 +186,7 @@ class CRM_Utils_String {
      * @static
      */
     static function isAscii( $str, $utf8 = true ) {
-        if( ! function_exists( mb_detect_encoding ) ) {
+        if( ! function_exists( 'mb_detect_encoding' ) ) {
             $str = preg_replace( '/\s+/', '', $str ); // eliminate all white space from the string
             /* FIXME:  This is a pretty brutal hack to make utf8 and 8859-1 work.
              */
@@ -444,6 +445,74 @@ class CRM_Utils_String {
         } else {
             return $full;
         }
+    }
+
+    /** 
+     * strip leading, trailing, double spaces from string
+     * used for postal/greeting/addressee
+     * @param string  $string input string to be cleaned
+     *
+     * @return string the cleaned string
+     * @access public
+     * @static
+     */
+	static function stripSpaces( $string ) 
+	{
+        if ( empty($string) ) {
+            return $string;
+        }
+        
+        $pat = array( 0 => "/^\s+/",
+                      1 =>  "/\s{2,}/", 
+                      2 => "/\s+\$/" );
+        
+        $rep = array( 0 => "",
+                      1 => " ",
+                      2 => "" );
+        
+        return preg_replace( $pat, $rep, $string );
+	}
+
+    /**
+     * This function is used to clean the URL 'path' variable that we use 
+     * to construct CiviCRM urls by removing characters from the path variable
+     *
+     * @param string $string  the input string to be sanitized
+     * @param array  $search  the characters to be sanitized
+     * @param string $replace the character to replace it with
+     *
+     * @return string the sanitized string
+     * @access public
+     * @static
+     */
+    static function stripPathChars( $string,
+                                    $search  = null,
+                                    $replace = null ) {
+        static $_searchChars  = null;
+        static $_replaceChar  = null;
+
+        if ( empty( $string ) ) {
+            return $string;
+        }
+        
+        if ( $_searchChars == null ) {
+            $_searchChars = array( '&', ';', ',', '=', '$',
+                                   '"', "'", '\\',
+                                   '<', '>', '(', ')',
+                                   ' ', "\r", "\r\n", "\n", "\t" );
+            $_replaceChar = '_';
+        }
+                                   
+        
+        if ( $search == null ) {
+            $search = $_searchChars;
+        }
+
+        if ( $replace == null ) {
+            $replace = $_replaceChar;
+        }
+
+        return str_replace( $search, $replace, $string );
     }
 }
 

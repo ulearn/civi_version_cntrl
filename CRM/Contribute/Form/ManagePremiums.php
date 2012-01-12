@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -82,7 +82,7 @@ class CRM_Contribute_Form_ManagePremiums extends CRM_Contribute_Form
                 $this->assign('imageURL',$tempDefaults['image']);
             }
             if ( isset ($tempDefaults['period_type'] )  ) {
-                $this->assign("showSubscriptions" , true );
+                $this->assign('showSubscriptions' , true );
             }
             
         }
@@ -204,10 +204,10 @@ class CRM_Contribute_Form_ManagePremiums extends CRM_Contribute_Form
         if ( isset ( $params['imageOption'] ) ) {
             if ( $params['imageOption'] == 'thumbnail' ) {
                 if ( ! $params['imageUrl']) {
-                    $errors ['imageUrl']= "Image URL is Reqiured ";
+                    $errors ['imageUrl']= 'Image URL is Required ';
                 }
                 if ( ! $params['thumbnailUrl']) {
-                    $errors ['thumbnailUrl']= "Thumbnail URL is Reqiured ";
+                    $errors ['thumbnailUrl']= 'Thumbnail URL is Required ';
                 }
             }
         }

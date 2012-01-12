@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -608,6 +608,8 @@ WHERE  $whereCond
         if ( CRM_Utils_Array::value('receipt_from_email', $params ) ) {
             $userName  = CRM_Utils_Array::value('receipt_from_name', $params );
             $userEmail = CRM_Utils_Array::value('receipt_from_email', $params );
+        } else if ( CRM_Utils_Array::value( 'from_email_id', $params ) )  {
+            $receiptFrom = $params['from_email_id'];
         } else if ( $userID = $session->get( 'userID' ) )  {
             //check for loged in user.
             list( $userName, $userEmail ) = CRM_Contact_BAO_Contact_Location::getEmailDetails( $userID );
@@ -616,7 +618,10 @@ WHERE  $whereCond
             $userName  = CRM_Utils_Array::value('name', $domainValues );
             $userEmail = CRM_Utils_Array::value('email', $domainValues );
         }
-        $receiptFrom = "$userName <$userEmail>";
+
+        if ( !isset( $receiptFrom ) ) {
+            $receiptFrom = "$userName <$userEmail>";
+        }
 
         require_once 'CRM/Core/BAO/MessageTemplates.php';
         list ($sent, $subject, $message, $html) = CRM_Core_BAO_MessageTemplates::sendTemplate(
@@ -655,10 +660,17 @@ WHERE  $whereCond
                                      'activity_date_time' => CRM_Utils_Date::isoToMysql( $params['acknowledge_date'] ),
                                      'is_test'            => $params['is_test'],
                                      'status_id'          => 2,
-                                     'details'            => $details
+                                     'details'            => $details,
+                                     'campaign_id'        => CRM_Utils_Array::value( 'campaign_id', $params )
                                      );
-            require_once 'api/v2/Activity.php';
-            if ( is_a( civicrm_activity_create( $activityParams ), 'CRM_Core_Error' ) ) {
+            
+            //lets insert assignee record.
+            if ( CRM_Utils_Array::value( 'contact_id', $params ) ) {
+                $activityParams['assignee_contact_id'] = $params['contact_id'];
+            }
+            
+            require_once 'CRM/Activity/BAO/Activity.php';
+            if (is_a(CRM_Activity_BAO_Activity::create($activityParams), 'CRM_Core_Error')) {
                 CRM_Core_Error::fatal("Failed creating Activity for acknowledgment");
             }
         }
@@ -679,6 +691,11 @@ WHERE  $whereCond
             
             require_once 'CRM/Pledge/DAO/Pledge.php';
             $fields = CRM_Pledge_DAO_Pledge::export( );
+            
+            //export campaign title.
+            if ( isset( $fields['pledge_campaign_id'] ) ) {
+                $fields['pledge_campaign'] = array( 'title' => ts( 'Campaign Title' ) ); 
+            }
             
             require_once 'CRM/Pledge/DAO/Payment.php';
             $fields = array_merge( $fields, CRM_Pledge_DAO_Payment::export( ) );

@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -42,6 +42,11 @@
        {/foreach}
     </tbody>
 </table>
+<div class="clear"><br /></div>
+<div class="action-link">
+    <a href="{crmURL p="civicrm/contact/deduperules" q="reset=1"}" class="button"><span>{ts}Done{/ts}</span></a>
+</div>
+
 
 {literal}
 <script type="text/javascript">

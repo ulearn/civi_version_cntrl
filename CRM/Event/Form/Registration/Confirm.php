@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -291,7 +291,13 @@ class CRM_Event_Form_Registration_Confirm extends CRM_Event_Form_Registration
                     if ( count( $values ) ) {
                         $formattedValues[$count]['additionalCustomPost'] = $values;
                     }
-                    $formattedValues[$count]['additionalCustomPost'] = array_diff_assoc( $formattedValues[$count]['additionalCustomPost'], $formattedValues[$count]['additionalCustomPre'] );
+
+                    if ( isset( $formattedValues[$count]['additionalCustomPre'] ) ) {
+                        $formattedValues[$count]['additionalCustomPost'] = 
+                            array_diff_assoc( $formattedValues[$count]['additionalCustomPost'],
+                                              $formattedValues[$count]['additionalCustomPre'] );
+                    }
+
                     $formattedValues[$count]['additionalCustomPostGroupTitle'] = CRM_Utils_Array::value( 'groupTitle', $groupName );
                 }
                 $count++; 
@@ -302,10 +308,9 @@ class CRM_Event_Form_Registration_Confirm extends CRM_Event_Form_Registration
             $this->assign( 'addParticipantProfile' , $formattedValues );
         }
         
-        if( $this->_params[0]['amount'] == 0 ) {
-            $this->assign( 'isAmountzero', 1 );
-        }
-
+        //cosider total amount.
+        $this->assign( 'isAmountzero', ( $this->_totalAmount <= 0 ) ? true : false );
+        
         if ( $this->_paymentProcessor['payment_processor_type'] == 'Google_Checkout' && 
              ! CRM_Utils_Array::value( 'is_pay_later', $this->_params[0] ) && ! ( $this->_params[0]['amount'] == 0 ) &&
              !$this->_allowWaitlist && !$this->_requireApproval ) {
@@ -394,8 +399,12 @@ class CRM_Event_Form_Registration_Confirm extends CRM_Event_Form_Registration
         $now           = date( 'YmdHis' );
         $config        = CRM_Core_Config::singleton( );
         $session       = CRM_Core_Session::singleton( );
-        $contactID     = parent::getContactID( );
         $this->_params = $this->get( 'params' );
+        if ( CRM_Utils_Array::value( 'contact_id', $this->_params[0] ) ) {
+            $contactID = $this->_params[0]['contact_id'];
+        } else {
+            $contactID = parent::getContactID( );
+        }
         
         // if a discount has been applied, lets now deduct it from the amount
         // and fix the fee level
@@ -608,7 +617,9 @@ class CRM_Event_Form_Registration_Confirm extends CRM_Event_Form_Registration
             // handle register date CRM-4320
             if ( $this->_allowConfirmation ) {
                 $registerDate = $params['participant_register_date'];
-            } else if ( is_array( $params['participant_register_date'] ) && !empty( $params['participant_register_date'] ) ) {
+            } else if ( CRM_Utils_Array::value( 'participant_register_date', $params ) && 
+                        is_array( $params['participant_register_date'] ) && 
+                        !empty( $params['participant_register_date'] ) ) {
                 $registerDate = CRM_Utils_Date::format( $params['participant_register_date'] ); 
             } else {
                 $registerDate =  date( 'YmdHis' );
@@ -798,7 +809,7 @@ class CRM_Event_Form_Registration_Confirm extends CRM_Event_Form_Registration
         }
         //CRM-4196        
         if ( $isAdditionalAmount ) {
-            $params['amount_level'] = $params['amount_level'].ts(' (multiple participants)'). CRM_Core_BAO_CustomOption::VALUE_SEPERATOR;
+            $params['amount_level'] = $params['amount_level'].ts(' (multiple participants)'). CRM_Core_DAO::VALUE_SEPARATOR;
         }
 
         $contribParams = array(
@@ -812,6 +823,7 @@ class CRM_Event_Form_Registration_Confirm extends CRM_Event_Form_Registration
                                'currency'              => $params['currencyID'],
                                'source'                => $params['description'],
                                'is_pay_later'          => CRM_Utils_Array::value( 'is_pay_later', $params, 0 ),
+                               'campaign_id'           => CRM_Utils_Array::value( 'campaign_id', $params )
                                );
         
         if ( ! CRM_Utils_Array::value( 'is_pay_later', $params ) ) {
@@ -991,31 +1003,7 @@ class CRM_Event_Form_Registration_Confirm extends CRM_Event_Form_Registration
                                                                          null,
                                                                          $ctype );
         } else {
-            // when we have allow_same_participant_emails = 1
-            // don't take email address in dedupe params - CRM-4886
-            // here we are making dedupe weak - so to make dedupe
-            // more effective please update individual 'Strict' rule.
-            $allowSameEmailAddress = CRM_Utils_Array::value( 'allow_same_participant_emails', $this->_values['event'] );
-            require_once 'CRM/Dedupe/Finder.php';
-            //suppress "email-Primary" when allow_same_participant_emails = 1
-            if ( $allowSameEmailAddress && 
-                 ( $email = CRM_Utils_Array::value( 'email-Primary', $params ) ) &&
-                 ( CRM_Utils_Array::value( 'registered_by_id', $params ) ) ) {
-                //skip dedupe check only for additional participants
-                unset($params['email-Primary']);
-            }
-            $dedupeParams = CRM_Dedupe_Finder::formatParams($params, 'Individual');
-            // disable permission based on cache since event registration is public page/feature.
-            $dedupeParams['check_permission'] = false;
-            $ids = CRM_Dedupe_Finder::dupesByParams($dedupeParams, 'Individual');
-            
-            // if we find more than one contact, use the first one
-            $contact_id  = $ids[0];
-            if ( isset( $email ) ) {
-                $params['email-Primary'] = $email;
-            }
-            
-            $contactID =& CRM_Contact_BAO_Contact::createProfileContact( $params, $fields, $contact_id, $addToGroups );
+            $contactID = CRM_Contact_BAO_Contact::createProfileContact( $params, $fields, null, $addToGroups );
             $this->set( 'contactID', $contactID );
         }
 

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,7 +32,7 @@
  *
  * @package CiviCRM_APIv2
  * @subpackage API_Mailer
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -249,10 +249,15 @@ function civicrm_mailer_event_confirm($params)
  */
 function civicrm_mailer_event_reply($params)
 {
-    $errors = _civicrm_mailer_check_params( $params, array('job_id', 'event_queue_id', 'hash', 'bodyTxt', 'replyTo') ) ;
+    $errors = _civicrm_mailer_check_params( $params, array('job_id', 'event_queue_id', 'hash', 'replyTo') ) ;
   
     if ( !empty( $errors ) ) {
         return $errors;
+    }
+
+    // CRM-7333: we can’t require fullEmail for backwards compatibility, but we should require either it or bodyTxt
+    if (empty($params['fullEmail']) and empty($params['bodyTxt'])) {
+        return civicrm_create_error('Required parameter missing: either "fullEmail" or "bodyTxt" is required');
     }
           
     $job       = $params['job_id']; 

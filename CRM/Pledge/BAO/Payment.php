@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -199,6 +199,13 @@ WHERE     pledge_id = %1
      */
     static function add( $params )
     {
+        require_once 'CRM/Utils/Hook.php';
+        if ( CRM_Utils_Array::value( 'id', $params ) ) {
+            CRM_Utils_Hook::pre( 'edit',  'PledgePayment', $params['id'], $params );
+        } else {
+            CRM_Utils_Hook::pre( 'create',  'PledgePayment', null, $params ); 
+        }
+        
         require_once 'CRM/Pledge/DAO/Payment.php';
         $payment = new CRM_Pledge_DAO_Payment( );
         $payment->copyValues( $params );
@@ -210,7 +217,14 @@ WHERE     pledge_id = %1
         }
         
         $result = $payment->save( );
+
+        if ( CRM_Utils_Array::value( 'id', $params ) ) {
+            CRM_Utils_Hook::post( 'edit', 'PledgePayment', $payment->id, $payment);
+        } else {
+            CRM_Utils_Hook::post( 'create', 'PledgePayment', $payment->id, $payment );
+        }
         
+    
         return $result;
     }
 
@@ -333,12 +347,14 @@ WHERE     pledge_id = %1
                                         $adjustTotalAmount = false,
                                         $isScriptUpdate = false )
     {
+        $totalAmountClause = '';
         //get all status
         require_once 'CRM/Contribute/PseudoConstant.php';
         $allStatus = CRM_Contribute_PseudoConstant::contributionStatus( null, 'name' );
         
         // if we get do not get contribution id means we are editing the scheduled payment.
         if ( !empty( $paymentIDs ) ) {
+            $editScheduled = false;
             $payments = implode( ',', $paymentIDs );
             $paymentContributionId  =  CRM_Core_DAO::getFieldValue( 'CRM_Pledge_DAO_Payment', 
                                                                     $payments,
@@ -351,7 +367,7 @@ WHERE     pledge_id = %1
         }
         
         // if payment ids are passed, we update payment table first, since payments statuses are not dependent on pledge status
-        if ( ( !empty( $paymentIDs ) || $pledgeStatusID == array_search( 'Cancelled', $allStatus ) ) && !$editScheduled ) {
+        if ( ( !empty( $paymentIDs ) || $pledgeStatusID == array_search( 'Cancelled', $allStatus ) ) && ( !$editScheduled || $isScriptUpdate) ) {
             if ( $pledgeStatusID == array_search( 'Cancelled', $allStatus ) ) {
                 $paymentStatusID = $pledgeStatusID ;
             }
@@ -374,6 +390,7 @@ WHERE     pledge_id = %1
                                                                'id'
                                                                );
             //  while editing scheduled  we need to check if we are editing last pending
+            $lastPending = false;
             if ( !$paymentContributionId ) {
                 $checkPendingCount = self::getOldestPledgePayment( $pledgeID, 2 );
                 if ( $checkPendingCount['count'] == 1 ) {

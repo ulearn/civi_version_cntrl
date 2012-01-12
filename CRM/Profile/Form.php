@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -289,14 +289,15 @@ class CRM_Profile_Form extends CRM_Core_Form
                     $url = CRM_Core_BAO_CustomField::getFileURL( $this->_id, $customFieldID );
                     
                     if ( $url ) {
-                        $customFiles[$field['name']]['displayURL'] = "Attached File : {$url['file_url']}";
+                        $customFiles[$field['name']]['displayURL'] = ts("Attached File") . ": {$url['file_url']}";
                         
-                        $deleteExtra = "Are you sure you want to delete attached file ?";
+                        $deleteExtra = ts("Are you sure you want to delete attached file?");
                         $fileId      = $url['file_id'];
                         $deleteURL   = CRM_Utils_System::url( 'civicrm/file',
                                                               "reset=1&id={$fileId}&eid=$this->_id&fid={$customFieldID}&action=delete" );
+                        $text = ts("Delete Attached File");
                         $customFiles[$field['name']]['deleteURL'] =
-                            "<a href=\"{$deleteURL}\" onclick = \"if (confirm( ' $deleteExtra ' )) this.href+='&amp;confirmed=1'; else return false;\">Delete Attached File</a>";
+                            "<a href=\"{$deleteURL}\" onclick = \"if (confirm( ' $deleteExtra ' )) this.href+='&amp;confirmed=1'; else return false;\">$text</a>";
                     }
                 } 
             }
@@ -330,6 +331,8 @@ class CRM_Profile_Form extends CRM_Core_Form
         $return = false;
         $statusMessage = null;
         
+        require_once 'CRM/Core/BAO/Address.php';
+        CRM_Core_BAO_Address::checkContactSharedAddressFields( $this->_fields, $this->_id );
         //we should not allow component and mix profiles in search mode
         if ( $this->_mode != self::MODE_REGISTER ) {
             //check for mix profile fields (eg:  individual + other contact type)
@@ -447,7 +450,7 @@ class CRM_Profile_Form extends CRM_Core_Form
             }
             
             list( $prefixName, $index ) = CRM_Utils_System::explode( '-', $name, 2 );
-            if ( $prefixName == 'state_province' || $prefixName == 'country' ) {
+            if ( $prefixName == 'state_province' || $prefixName == 'country' || $prefixName == 'county' ) {
                 if ( ! array_key_exists( $index, $stateCountryMap ) ) {
                     $stateCountryMap[$index] = array( );
                 }
@@ -800,14 +803,16 @@ class CRM_Profile_Form extends CRM_Core_Form
         //if the profile double option in is enabled
         $mailingType = array( );
         $config = CRM_Core_Config::singleton( );
-        if ( $config->profileDoubleOptIn && CRM_Utils_Array::value( 'group', $params ) ) {
-            $result = null;
-            foreach ( $params as $name => $values ) {
-                if ( substr( $name, 0, 6 ) == 'email-' ) {
-                    $result['email'] = $values ;
-                }
+
+        $result = null;
+        foreach ( $params as $name => $values ) {
+            if ( substr( $name, 0, 6 ) == 'email-' ) {
+                $result['email'] = $values ;
             }
-            $groupSubscribed = array( );
+        }
+
+        if ( $config->profileDoubleOptIn && CRM_Utils_Array::value( 'group', $params ) ) {
+           $groupSubscribed = array( );
             if ( CRM_Utils_Array::value( 'email' , $result ) ) {
                 require_once 'CRM/Contact/DAO/Group.php';
                 //array of group id, subscribed by contact
@@ -830,7 +835,7 @@ class CRM_Profile_Form extends CRM_Core_Form
                     }
                     $groupTypes = CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_Group',
                                                                $key, 'group_type', 'id' );
-                    $groupType = explode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR, 
+                    $groupType = explode( CRM_Core_DAO::VALUE_SEPARATOR, 
                                           substr( $groupTypes, 1, -1 ) );
                     //filter group of mailing type and unset it from params
                     if ( in_array( 2, $groupType ) ) {
@@ -845,26 +850,32 @@ class CRM_Profile_Form extends CRM_Core_Form
             }
         }
         
+        $addToGroupId = null;
         if ( CRM_Utils_Array::value( 'add_to_group', $params ) ) {
             $addToGroupId = $params['add_to_group'];
 
-            // since we are directly adding contact to group lets unset it from mailing
-            if ( $key = array_search( $addToGroupId, $mailingType ) ) {
-                unset( $mailingType[$key] );
+            if ( !$config->profileAddToGroupDoubleOptIn ) {   
+                // since we are directly adding contact to group lets unset it from mailing
+                if ( $key = array_search( $addToGroupId, $mailingType ) ) {
+                    unset( $mailingType[$key] );
+                }
+            } else {
+                $mailingType[] = $addToGroupId;
+                $addToGroupId = null;
             }            
         }
         
         if ( $this->_grid ){
             $params['group'] = $groupSubscribed;
         }
-        
+
         // commenting below code, since we potentially
         // triggered maximum name field formatting cases during CRM-4430.
         // CRM-4343
         // $params['preserveDBName'] = true;
 
         $this->_id = CRM_Contact_BAO_Contact::createProfileContact($params, $this->_fields,
-                                                                   $this->_id, $this->_addToGroupID,
+                                                                   $this->_id, $addToGroupId,
                                                                    $this->_gid, $this->_ctype,
                                                                    true );
         //mailing type group

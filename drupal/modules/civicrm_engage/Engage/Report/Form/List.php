@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * @copyright DharmaTech  (c) 2009
  * $Id$
  *
@@ -36,7 +36,6 @@
 
 require_once 'CRM/Report/Form.php';
 require_once 'CRM/Core/DAO.php';
-require_once 'api/v2/Group.php';
 
 /**
  *  Generate a walk list
@@ -436,8 +435,8 @@ ORDER BY ov.label
                         }
                         
                         $select[] = "{$table['alias']}.{$fieldName} as {$tableName}_{$fieldName}";
-                        $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = $field['title'];
-                        $this->_columnHeaders["{$tableName}_{$fieldName}"]['type']  = $field['type'];
+                        $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = CRM_Utils_Array::value( 'title', $field );
+                        $this->_columnHeaders["{$tableName}_{$fieldName}"]['type']  = CRM_Utils_Array::value( 'type', $field );
                     }
                 }
             }
@@ -545,7 +544,7 @@ ORDER BY ov.label
             $age = $nowYear - $dobYear;
         } elseif ( $dobMonth == $nowMonth ) {
             //  Born in this month
-            if ( $dobday <= $nowDay ) {
+            if ( $dobDay <= $nowDay ) {
                 // Born before or on this day
                 $age = $nowYear - $dobYear;
             } else {

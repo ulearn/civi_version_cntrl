@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -314,7 +314,7 @@ AND        v.name = %1
                 $profileGroup = new CRM_Core_DAO_UFGroup( );
                 $this->copyData( $profileGroup, $profileGroupXML, true, 'title' );
                 $idMap['profile_group'][$profileGroup->name] = $profileGroup->id;
-                $idMap['profile_group'][$profileGroup->name]  = $profileGroup->id;
+                $idMap['profile_group'][$profileGroup->title]  = $profileGroup->id;
             }
         }
     }

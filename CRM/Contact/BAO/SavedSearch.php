@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -182,7 +182,15 @@ WHERE  $where";
                 return array( $from, $where );
             }
         } else {
-            CRM_Core_Error::fatal( 'No contactID clause' );
+            // fix for CRM-7240
+            $from = "
+FROM      civicrm_contact contact_a 
+LEFT JOIN civicrm_email ON (contact_a.id = civicrm_email.contact_id AND civicrm_email.is_primary = 1)
+";
+            $where = " ( 1 ) ";
+            $tables['civicrm_contact'] = $whereTables['civicrm_contact'] = 1;
+            $tables['civicrm_email'] = $whereTables['civicrm_email'] = 1;
+            return array( $from, $where );
         }
     }
 

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -82,7 +82,7 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form
         
         $htmlMessage = null;
         if ( $mailingID  ) {
-            require_once "CRM/Mailing/DAO/Mailing.php";
+            require_once 'CRM/Mailing/DAO/Mailing.php';
             $dao = new  CRM_Mailing_DAO_Mailing();
             $dao->id = $mailingID; 
             $dao->find(true);
@@ -119,8 +119,7 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form
             //set default from email address.
             require_once 'CRM/Core/OptionGroup.php';
             if ( CRM_Utils_Array::value( 'from_name', $defaults ) && CRM_Utils_Array::value( 'from_email', $defaults ) ) {
-                
-                $defaults['from_email_address'] = array_search( '"' . $defaults['from_name'] . '"<' . $defaults['from_email'] . '>', 
+                $defaults['from_email_address'] = array_search( '"' . $defaults['from_name'] . '" <' . $defaults['from_email'] . '>', 
                                                                 CRM_Core_OptionGroup::values( 'from_email_address' ) );                
             } else {
                 //get the default from email address.
@@ -190,7 +189,7 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form
         $session = CRM_Core_Session::singleton();
         
         require_once 'CRM/Core/PseudoConstant.php';
-        $formEmailAddress = CRM_Core_PseudoConstant::fromEmailAddress( "from_email_address" );
+        $formEmailAddress = CRM_Core_PseudoConstant::fromEmailAddress( 'from_email_address' );
         if ( empty( $formEmailAddress ) ) {
             //redirect user to enter from email address. 
             $url = CRM_Utils_System::url( 'civicrm/admin/options/from_email_address', 'group=from_email_address&action=add&reset=1' );
@@ -383,7 +382,7 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form
         
         //handle mailing from name & address.
         $formEmailAddress = CRM_Utils_Array::value( $formValues['from_email_address'],
-                                                    CRM_Core_PseudoConstant::fromEmailAddress( "from_email_address" ) );
+                                                    CRM_Core_PseudoConstant::fromEmailAddress( 'from_email_address' ) );
         
         //get the from email address
         require_once 'CRM/Utils/Mail.php';
@@ -396,7 +395,8 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form
         require_once 'CRM/Mailing/BAO/Mailing.php';
         CRM_Mailing_BAO_Mailing::create($params, $ids);
      
-        if ( $this->_submitValues['_qf_Upload_upload_save'] == 'Save & Continue Later' ) {
+        if ( isset($this->_submitValues['_qf_Upload_upload_save']) &&
+             $this->_submitValues['_qf_Upload_upload_save'] == 'Save & Continue Later' ) {
             //when user perform mailing from search context 
             //redirect it to search result CRM-3711.
             $ssID    = $this->get( 'ssID' );
@@ -467,9 +467,8 @@ class CRM_Mailing_Form_Upload extends CRM_Core_Form
         $mailing->find(true);
 
         $session = CRM_Core_Session::singleton();
-        $values = array('contact_id' => $session->get('userID'));
-        require_once 'api/v2/Contact.php';
-        $contact =& civicrm_contact_get( $values );
+        $values = array('contact_id' => $session->get('userID'), 'version' => 3);
+        $contact =& civicrm_api('contact', 'get', $values);
         
         //CRM-4524
         $contact = reset( $contact );

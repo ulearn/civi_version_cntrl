@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -291,7 +291,7 @@ class CRM_Core_BAO_Note extends CRM_Core_DAO_Note
      * @static
      * 
      */
-    static function del( $id ) 
+    static function del( $id, $showStatus = true ) 
     {
         $return   = null;
         $recent   = array( $id );
@@ -314,7 +314,9 @@ class CRM_Core_BAO_Note extends CRM_Core_DAO_Note
         }
         
         $return   = $note->delete( );
-        CRM_Core_Session::setStatus( $status );
+        if ( $showStatus ) {
+            CRM_Core_Session::setStatus( $status );
+        }
         
         // delete the recently created Note
         require_once 'CRM/Utils/Recent.php';
@@ -367,13 +369,15 @@ class CRM_Core_BAO_Note extends CRM_Core_DAO_Note
         $viewNote = array();
         
         $query = "
-SELECT   id, note FROM civicrm_note
-WHERE    entity_table=\"{$entityTable}\"
-  AND    entity_id = %1
-  AND    note is not null
-ORDER BY modified_date desc";
+  SELECT  id, 
+          note 
+    FROM  civicrm_note
+   WHERE  entity_table=\"{$entityTable}\"
+     AND  entity_id = %1
+     AND  note is not null
+ORDER BY  modified_date desc";
         $params = array( 1 => array( $id, 'Integer' ) );
-
+        
         $dao =& CRM_Core_DAO::executeQuery( $query, $params );
 
         while ( $dao->fetch() ) {
@@ -449,7 +453,7 @@ ORDER BY modified_date desc";
      */
     private static function buildNoteTree( $parentId, $maxDepth = 0, $snippet = FALSE, &$tree = array(), $depth = 0 )
     {
-        if ( $maxDepth && $depth > $max_depth ) {
+        if ( $maxDepth && $depth > $maxDepth  ) {
             return;
         }
 
@@ -468,7 +472,7 @@ ORDER BY modified_date desc";
                 require_once 'CRM/Contact/DAO/Contact.php';
                 require_once 'CRM/Core/Smarty/plugins/modifier.mb_truncate.php';
                 $contact =  new CRM_Contact_DAO_Contact( );
-                $createdById = CRM_Core_DAO::getFieldValue( 'CRM_Core_DAO_Note', $parentId, 'entity_id' );
+                $createdById = $note->contact_id;
                 $contact->id = $createdById;
                 $contact->find( );
                 $contact->fetch( );

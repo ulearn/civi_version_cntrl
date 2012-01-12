@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -64,6 +64,11 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form
             $values = array_merge( $values, $softContribution );
         } 
         CRM_Contribute_BAO_Contribution::resolveDefaults( $values );
+        
+        if ( CRM_Utils_Array::value( 'contribution_page_id', $values ) ){
+            $contribPages = CRM_Contribute_PseudoConstant::contributionPage( );
+            $values["contribution_page_title"] = CRM_Utils_Array::value( CRM_Utils_Array::value( 'contribution_page_id', $values ) , $contribPages );
+        }
         
         if ( CRM_Utils_Array::value( 'honor_contact_id', $values ) ) {
             $sql    = "SELECT display_name FROM civicrm_contact WHERE id = %1";
@@ -146,8 +151,15 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form
         $this->assign( 'lineItem', empty( $lineItems ) ? false : $lineItems );
         $values['totalAmount'] = $values['total_amount'];
         
+        //do check for campaigns
+        if ( $campaignId = CRM_Utils_Array::value( 'campaign_id', $values ) ) {
+            require_once 'CRM/Campaign/BAO/Campaign.php';
+            $campaigns = CRM_Campaign_BAO_Campaign::getCampaigns( $campaignId );
+            $values['campaign'] = $campaigns[$campaignId];
+        }
+        
 		// assign values to the template
-        $this->assign( $values ); 
+        $this->assign( $values );
         
         // add viewed contribution to recent items list
         require_once 'CRM/Utils/Recent.php';

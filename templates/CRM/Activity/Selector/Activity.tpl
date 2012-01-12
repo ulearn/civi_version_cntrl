@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -79,7 +79,7 @@
                     {assign var="showTarget" value=$showTarget+1}
                 {/if}
             {/foreach}
-            {if count($row.target_contact_name) > 5}({ts}more{/ts}){/if}
+            {if count($row.target_contact_name) > 5} ({ts}more{/ts}){/if}
         {/if}
         </td>
 

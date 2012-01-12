@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -104,16 +104,12 @@ class CRM_Core_BAO_Location extends CRM_Core_DAO
         if ( $locId ) {
             $locBlock['id'] = $locId;
         }
-
-        $locBlock['phone_id']     = $location['phone'  ][0]->id;
-        $locBlock['phone_2_id']   = CRM_Utils_Array::value(1,$location['phone'])? $location['phone'][1]->id : null;
-        $locBlock['email_id']     = $location['email'  ][0]->id;
-        $locBlock['email_2_id']   = CRM_Utils_Array::value(1,$location['email']) ? $location['email'][1]->id : null;
-        $locBlock['im_id']        = $location['im'     ][0]->id;
-        $locBlock['im_2_id ']     = CRM_Utils_Array::value(1,$location['im']) ? $location['im'][1]->id : null;
-        $locBlock['address_id']   = $location['address'][0]->id;
-        $locBlock['address_2_id'] = CRM_Utils_Array::value(1,$location['address']) ? $location['address'][1]->id : null;
-       
+        
+        foreach( array( 'phone', 'email', 'im', 'address' )  as $loc ) {
+            $locBlock["{$loc}_id"]   = CRM_Utils_Array::value(0, $location["$loc"]) ? $location["$loc"][0]->id : null;
+            $locBlock["{$loc}_2_id"] = CRM_Utils_Array::value(1, $location["$loc"]) ? $location["$loc"][1]->id : null;
+        }
+        
         $countNull = 0;
         foreach( $locBlock as $key => $block) {
             if ( empty($locBlock[$key] ) ) {

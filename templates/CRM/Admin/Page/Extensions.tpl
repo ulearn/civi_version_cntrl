@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -27,16 +27,19 @@
 {if $action eq 1 or $action eq 2 or $action eq 8}
    {include file="CRM/Admin/Form/Extensions.tpl"}
 {else}
+    {capture assign='adminURL'}{crmURL p='civicrm/admin/setting/path' q="reset=1&destination=$returnURL"}{/capture}
     {if not $extEnabled}
       <div class="crm-content-block crm-block">
         <div class="messages status">
              <div class="icon inform-icon"></div>
              {capture assign='returnURL'}{crmURL p='civicrm/admin/extensions' q='reset=1'}{/capture}
-             {capture assign='adminURL'}{crmURL p='civicrm/admin/setting/path' q="reset=1&destination=$returnURL"}{/capture}
              {ts 1=$adminURL}Your extensions directory is not set. Click <a href='%1'>here</a> to set the extension directory.{/ts}
         </div>
       </div>
     {else} {* extEnabled *}
+
+
+
       {if $action ne 1 and $action ne 2}
           <div class="action-link">
               <a href="{crmURL q="reset=1"}" id="new" class="button"><span><div class="icon refresh-icon"></div>{ts}Refresh{/ts}</span></a>
@@ -44,21 +47,21 @@
       {/if}
 
       <div class="messages help">
-        <p>{ts}CiviCRM extensions mechanism allow you to install small functional additions. They provide new functionality in three areas: Custom Searches, Report Templates and Payment Processors. In order to install the extension, you need to upload it manually to Extensions Directory, reload this page and click Install. It will also become available on Custom Reports, Report Templates and Payment Processor Types management screens.{/ts}</p>
-        <strong>{ts}Please note that extensions functionality are in testing period in 3.3 release cycle. Get in touch with CiviCRM core team on project forums if you want to provide the community with your extension.{/ts}</strong>
+        <p>{ts 1=$adminURL}CiviCRM extensions allow you to install additional features for your site. They can provide new functionality in three areas: Custom Searches, Report Templates and Payment Processors. In order to install an extension, you need to upload it manually to your <a href="%1">Extensions Directory</a>, reload this page and click Install. Once installed, extensions become available under the Custom Searches, Report Templates or Payment Processor Types administrative screens.{/ts}</p>
+        <strong>{ts 1="http://forum.civicrm.org"}Please note that extensions are in a testing period during the 3.3 release cycle. Get in touch with the CiviCRM core team on the <a href="%1">community forum</a> if you've developed an extension which you want to share with the community.{/ts}</strong>
       </div>
 
-      <h3>{ts}Installed extensions{/ts}</h3>
       {include file="CRM/common/enableDisable.tpl"}
       {include file="CRM/common/jsortable.tpl"}
-      {if $rows}
+      {if $extensionRows}
         <div id="extensions">
           {strip}
           {* handle enable/disable actions*} 
-          <table id="installed-extensions" class="display">
+          <table id="extensions" class="display">
             <thead>
               <tr>
-                <th>{ts}Extension name{/ts}</th>
+                <th>{ts}Extension name (key){/ts}</th>
+		<th>{ts}Status{/ts}</th>
                 <th>{ts}Version{/ts}</th>
                 <th>{ts}Enabled?{/ts}</th>
                 <th>{ts}Type{/ts}</th>
@@ -66,21 +69,22 @@
               </tr>
             </thead>
             <tbody>
-              {foreach from=$rows item=row}
-              <tr id="row_{$row.id}" class="crm-installed-extensions crm-installed-extensions_{$row.id}{if NOT $row.is_active} disabled{/if}">
-                <td class="crm-installed-extensions-label">
-                    <a class="collapsed" href="#"></a>&nbsp;{$row.label} ( {$row.key} )
+              {foreach from=$extensionRows item=row}
+              <tr id="row_{$row.id}" class="crm-extensions crm-extensions_{$row.id}{if NOT $row.is_active} disabled{/if}{if $row.upgradable} extension-upgradable{elseif $row.status eq 'installed'} extension-installed{/if}">
+                <td class="crm-extensions-label">
+                    <a class="collapsed" href="#"></a>&nbsp;<strong>{$row.label}</strong><br/>({$row.key})
                 </td>
-                <td class="crm-installed-extensions-label">{$row.version}</td>
-                <td class="crm-installed-extensions-is_active" id="row_{$row.id}_status">{if $row.is_active eq 1} {ts}Yes{/ts} {else} {ts}No{/ts} {/if}</td>
-                <td class="crm-installed-extensions-description">{$row.type|capitalize}</td>
+		<td class="crm-extensions-label">{$row.statusLabel} {if $row.upgradable}<br/>({ts}Outdated{/ts}){/if}</td>
+                <td class="crm-extensions-label">{$row.version} {if $row.upgradable}<br/>({$row.upgradeVersion}){/if}</td>
+                <td class="crm-extensions-is_active" id="row_{$row.id}_status">{if $row.is_active eq 1} {ts}Yes{/ts} {else} {ts}No{/ts} {/if}</td>
+                <td class="crm-extensions-description">{$row.type|capitalize}</td>
                 <td>{$row.action|replace:'xx':$row.id}</td>
               </tr>
-              <tr class="hiddenElement" id="crm-installed-extensions-details-{$row.id}">
+              <tr class="hiddenElement" id="crm-extensions-details-{$row.id}">
                   <td>
                       {include file="CRM/Admin/Page/ExtensionDetails.tpl" extension=$row}
                   </td>
-                  <td></td><td></td><td></td><td></td>
+                  <td></td><td></td><td></td><td></td><td></td>
               </tr>
               {/foreach}
             </tbody>
@@ -91,55 +95,10 @@
       {else}
         <div class="messages status">
              <div class="icon inform-icon"></div>
-            {ts}You have not installed any extensions.{/ts}
+            {ts}You have no locally aavailable extensions and didn't download any information about publically available extensions from our server. Please click "Refresh" to update information about available extensions.{/ts}
         </div>    
       {/if}
-    <br/>
-    <h3>{ts}Uploaded extensions{/ts}</h3>
-          {if $rowsUploaded}
-            <div id="extensionsUploaded">
-              {strip}
-              {* handle enable/disable actions*} 
-              <table id="uploaded-extensions" class="display">
-                <thead>
-                  <tr>
-                    <th>{ts}Extension name{/ts}</th>
-                    <th>{ts}Version{/ts}</th>
-                    <th>{ts}Enabled?{/ts}</th>
-                    <th>{ts}Type{/ts}</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>                
-                  {assign var='rowCount' value = 1}    
-                  {foreach from=$rowsUploaded item=row}
-                  <tr id="uploaded-row_{$rowCount}" class="crm-uploaded-extensions crm-uploaded-extensions_{$rowCount}">
-                    <td class="crm-uploaded-extensions-label"> <a class="collapsed" href="#"></a>&nbsp;{$row.label} ( {$row.key} )
-                        <span class="hiddenElement description"><br/><br/>{$row.description}</span>
-                    </td>
-                    <td class="crm-uploaded-extensions-label">{$row.version}</td>	
-                    <td class="crm-uploaded-extensions-is_active" id="uploaded-row_{$rowCount}_status">{if $row.is_active eq 1} {ts}Yes{/ts} {else} {ts}No{/ts} {/if}</td>
-                    <td class="crm-uploaded-extensions-description">{$row.type|capitalize}</td>
-                    <td>{$row.action|replace:'xx':$rowCount}</td>
-                  </tr>
-                  <tr class="hiddenElement" id="crm-uploaded-extensions-details-{$row.id}">
-                      <td>
-                          {include file="CRM/Admin/Page/ExtensionDetails.tpl" extension=$row}
-                      </td>
-                      <td></td><td></td><td></td><td></td>
-                  </tr>                  
-                  {assign var='rowCount' value = $rowCount+1} 
-                  {/foreach}
-                </tbody>
-              </table>
-              {/strip}
-            </div>
-          {else}
-              <div class="messages status">
-                   <div class="icon inform-icon"></div>
-                  {ts}There are no uploaded extensions to be installed.{/ts}
-              </div>    
-          {/if}
+
 
           {if $action ne 1 and $action ne 2}
               <div class="action-link">

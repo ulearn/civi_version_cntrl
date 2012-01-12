@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 4.0                                                |
+| CiviCRM version 3.3                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -163,12 +163,6 @@ class CRM_Event_DAO_Participant extends CRM_Core_DAO
      */
     public $fee_currency;
     /**
-     * The campaign for which this participant has been registered.
-     *
-     * @var int unsigned
-     */
-    public $campaign_id;
-    /**
      * class constructor
      *
      * @access public
@@ -193,7 +187,6 @@ class CRM_Event_DAO_Participant extends CRM_Core_DAO
                 'status_id' => 'civicrm_participant_status_type:id',
                 'registered_by_id' => 'civicrm_participant:id',
                 'discount_id' => 'civicrm_discount:id',
-                'campaign_id' => 'civicrm_campaign:id',
             );
         }
         return self::$_links;
@@ -360,17 +353,6 @@ class CRM_Event_DAO_Participant extends CRM_Core_DAO
                     'dataPattern' => '/^[A-Z]{3}$/i',
                     'export' => true,
                     'default' => 'UL',
-                ) ,
-                'participant_campaign_id' => array(
-                    'name' => 'campaign_id',
-                    'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Campaign ID') ,
-                    'import' => true,
-                    'where' => 'civicrm_participant.campaign_id',
-                    'headerPattern' => '',
-                    'dataPattern' => '',
-                    'export' => true,
-                    'FKClassName' => 'CRM_Campaign_DAO_Campaign',
                 ) ,
             );
         }

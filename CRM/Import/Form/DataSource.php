@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -295,9 +295,7 @@ class CRM_Import_Form_DataSource extends CRM_Core_Form {
             $parser->run( $importTableName, $mapper,
                           CRM_Import_Parser::MODE_MAPFIELD, $contactType,
                           $fieldNames['pk'], $fieldNames['status'], 
-                          CRM_Import_Parser::DUPLICATE_SKIP, 
-                          null, null, false,
-                          CRM_Import_Parser::DEFAULT_TIMEOUT, $contactSubType );
+                          DUPLICATE_SKIP, null, null, false, CRM_Import_Parser::DEFAULT_TIMEOUT, $contactSubType );
                           
             // add all the necessary variables to the form
             $parser->set( $this );

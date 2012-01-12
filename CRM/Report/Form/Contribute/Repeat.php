@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -45,7 +45,7 @@ class CRM_Report_Form_Contribute_Repeat extends CRM_Report_Form {
                    array( 'dao'       => 'CRM_Contact_DAO_Contact',
                           'grouping'  => 'contact-fields',
                           'fields'    =>
-                          array( 'sort_name'      => 
+                          array( 'display_name'      => 
                                  array( 'title'      => ts( 'Contact Name' ),
                                         'no_repeat'  => true,
                                         'default'    => true ),
@@ -390,7 +390,7 @@ LEFT  JOIN (
         
         $errors = $checkDate = $errorCount = array( );
         
-        $rules = array( 'id'                  => array( 'sort_name', 'email', 'phone',
+        $rules = array( 'id'                  => array( 'display_name', 'email', 'phone',
                                                         'state_province_id','country_id' ),
                         'country_id'          => array( 'country_id' ),
                         'state_province_id'   => array( 'country_id', 'state_province_id' ),
@@ -402,7 +402,7 @@ LEFT  JOIN (
                             'state_province_id'   => 'State/Province',
                             'contribution_source' => 'Contribution Source',
                             'contribution_type'   => 'Contribution Type',
-                            'sort_name'           => 'Contact Name',
+                            'display_name'        => 'Contact Name',
                             'email'               => 'Email',
                             'phone'               => 'Phone' );
         
@@ -643,13 +643,13 @@ LEFT  JOIN (
             }
 
             // convert display name to links
-            if ( array_key_exists('contact_civireport_sort_name', $row) && 
+            if ( array_key_exists('contact_civireport_display_name', $row) && 
                  array_key_exists('contact_civireport_id', $row) ) {
                 $url = CRM_Report_Utils_Report::getNextUrl( 'contribute/detail', 
                                                             'reset=1&force=1&id_op=eq&id_value=' . $row['contact_civireport_id'],
                                                             $this->_absoluteUrl, $this->_id );
-                $rows[$rowNum]['contact_civireport_sort_name_link' ] = $url;
-                $rows[$rowNum]['contact_civireport_sort_name_hover'] = 
+                $rows[$rowNum]['contact_civireport_display_name_link' ] = $url;
+                $rows[$rowNum]['contact_civireport_display_name_hover'] = 
                     ts("View Contribution details for this contact");
                 $entryFound = true;
             }

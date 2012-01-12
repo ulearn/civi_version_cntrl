@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  * add static functions to include some common functionality
@@ -140,7 +140,7 @@ class CRM_Core_BAO_Block
     static function dataExists( $blockFields, &$params ) 
     {
         foreach ( $blockFields as $field ) {
-            if ( CRM_Utils_System::isNull( CRM_Utils_Array::value( $field, $params ) ) ) {
+            if ( CRM_Utils_System::isNull( $params[$field] ) ) {
                 return false;
             }
         }
@@ -227,7 +227,6 @@ class CRM_Core_BAO_Block
 
         //lets allow user to update block w/ the help of id, CRM-6170
         $resetPrimaryId  = null;
-        $primaryId       = false;
         foreach ( $params[$blockName] as  $count => $value ) {
             $blockId = CRM_Utils_Array::value( 'id', $value );
             if ( $blockId  ) {
@@ -241,7 +240,6 @@ class CRM_Core_BAO_Block
             //lets allow to update primary w/ more cleanly.
             if ( !$resetPrimaryId && 
                  CRM_Utils_Array::value( 'is_primary', $value ) ) {
-                $primaryId = true;
                 if ( is_array( $blockIds ) ) {
                     foreach ( $blockIds as $blockId => $blockValue ) {
                         if ( CRM_Utils_Array::value( 'is_primary', $blockValue ) ) {
@@ -267,7 +265,7 @@ class CRM_Core_BAO_Block
         foreach ( $params[$blockName] as $count => $value ) {
             if ( !is_array( $value ) ) continue;
             $contactFields = array( 'contact_id'       => $contactId,
-                                    'location_type_id' => CRM_Utils_Array::value( 'location_type_id', $value ) );
+                                    'location_type_id' => $value['location_type_id'] );
             
             //check for update 
             if ( !CRM_Utils_Array::value( 'id', $value ) && 
@@ -280,29 +278,10 @@ class CRM_Core_BAO_Block
                         }
                     } else {
                         if ( $blockValue['locationTypeId'] == $value['location_type_id'] ) {
-                            $valueId = false;
-                            
-                            if ( $blockName == 'phone' ) {
-                                if ( $blockValue['phoneTypeId'] == $value['phone_type_id'] ) {
-                                    $valueId = true;
-                                }
-                            } else if ( $blockName == 'im' ) {
-                                if ( $blockValue['providerId'] == $value['provider_id'] ) {
-                                    $valueId = true;
-                                }
-                            } else {
-                                $valueId = true;
-                            }
- 	 	 		            
-                            if ( $valueId ) {
-                                //assigned id as first come first serve basis 
-                                $value['id'] = $blockValue['id'];
-                                if ( !$primaryId && CRM_Utils_Array::value( 'is_primary', $blockValue ) ) {
-                                    $value['is_primary'] = $blockValue['is_primary'];
-                                }
-                                unset( $blockIds[$blockId] );
-                                break;
-                            }
+                            //assigned id as first come first serve basis 
+                            $value['id'] = $blockValue['id'];
+                            unset( $blockIds[$blockId] );
+                            break;
                         }
                     }
                 }

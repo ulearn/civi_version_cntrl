@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -96,6 +96,10 @@ class CRM_Mailing_Page_Report extends CRM_Core_Page_Basic
         require_once 'CRM/Mailing/BAO/Mailing.php';
         $report =& CRM_Mailing_BAO_Mailing::report( $this->_mailing_id );
 	
+        // #6835 Email Mutithreading
+        //if ( count($report['jobs']) > 1 ) {
+        //    CRM_Core_Error::statusBounce(ts('Selected Mailing has more than one live job.'));
+        //}   
         //get contents of mailing
         CRM_Mailing_BAO_Mailing::getMailingContent( $report, $this ); 
         
@@ -124,7 +128,7 @@ class CRM_Mailing_Page_Report extends CRM_Core_Page_Basic
         CRM_Utils_System::setTitle( ts( 'CiviMail Report: %1',
                                         array( 1 => $report['mailing']['name'] ) ) );
 
-        return parent::run();
+        parent::run();
     }
 
 }

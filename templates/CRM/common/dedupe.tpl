@@ -69,7 +69,9 @@ function saveProcessDupes( cid, oid, oper, context ) {
 
 		    if ( oper == 'dupe-nondupe' && 
 		         context == 'dupe-listing' ) {
-		      	  oTable.fnDraw();
+		      	  cj( "#dupeRow_" + cid + '_' + oid ).addClass( "disabled" );    
+		          cj( "#dupeRow_" + cid + '_' + oid + ' td').addClass( "disabled" ); 
+			  cj( "#dupeRow_" + cid + '_' + oid + ' td:last').html('');
 		    } else if ( oper == 'nondupe-dupe' ) {
 		          cj( "#dupeRow_" + cid + '_' + oid ).hide( ); 
 		    }

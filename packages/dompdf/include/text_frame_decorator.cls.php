@@ -28,16 +28,16 @@
  * the case, you can obtain a copy at http://www.php.net/license/3_0.txt.
  *
  * The latest version of DOMPDF might be available at:
- * http://www.dompdf.com/
+ * http://www.digitaljunkies.ca/dompdf
  *
- * @link http://www.dompdf.com/
+ * @link http://www.digitaljunkies.ca/dompdf
  * @copyright 2004 Benj Carson
  * @author Benj Carson <benjcarson@digitaljunkies.ca>
  * @package dompdf
-
+ * @version 0.5.1
  */
 
-/* $Id: text_frame_decorator.cls.php 216 2010-03-11 22:49:18Z ryan.masten $ */
+/* $Id: text_frame_decorator.cls.php,v 1.4 2006/07/07 21:31:04 benjcarson Exp $ */
 
 /**
  * Decorates Frame objects for text layout
@@ -51,7 +51,7 @@ class Text_Frame_Decorator extends Frame_Decorator {
   protected $_text_spacing;
   
   function __construct(Frame $frame, DOMPDF $dompdf) {
-    if ( $frame->get_node()->nodeName !== "#text" )
+    if ( $frame->get_node()->nodeName != "#text" )
       throw new DOMPDF_Exception("Text_Decorator can only be applied to #text nodes.");
     
     parent::__construct($frame, $dompdf);
@@ -76,15 +76,7 @@ class Text_Frame_Decorator extends Frame_Decorator {
       $this->_frame->get_node()->data = $this->_frame->get_style()->content;
       $this->_frame->get_style()->content = "normal";
     }
-
-//      pre_r("---");
-//      $style = $this->_frame->get_style();
-//      var_dump($text = $this->_frame->get_node()->data);
-//      var_dump($asc = utf8_decode($text));
-//      for ($i = 0; $i < strlen($asc); $i++)
-//        pre_r("$i: " . $asc[$i] . " - " . ord($asc[$i]));
-//      pre_r("width: " . Font_Metrics::get_text_width($text, $style->font_family, $style->font_size));
-
+    
     return $this->_frame->get_node()->data;
   }
 
@@ -106,21 +98,13 @@ class Text_Frame_Decorator extends Frame_Decorator {
     $font = $style->font_family;
     $size = $style->font_size;
 
-    /*
-    pre_r('-----');
-    pre_r($style->line_height);
-    pre_r($style->font_size);
-    pre_r(Font_Metrics::get_font_height($font, $size));
-    pre_r(($style->line_height / $size) * Font_Metrics::get_font_height($font, $size));
-    */
-
     return ($style->line_height / $size) * Font_Metrics::get_font_height($font, $size);
     
   }
 
   function get_padding_box() {
     $pb = $this->_frame->get_padding_box();
-    $pb[3] = $pb["h"] = $this->_frame->get_style()->height;
+    $pb["h"] = $this->_frame->get_style()->height;
     return $pb;
   }
   //........................................................................
@@ -136,19 +120,6 @@ class Text_Frame_Decorator extends Frame_Decorator {
 
   //........................................................................
 
-  // Recalculate the text width
-  function recalculate_width() {
-    $style = $this->get_style();
-    $text = $this->get_text();
-    $size = $style->font_size;
-    $font = $style->font_family;
-    $word_spacing = $style->length_in_pt($style->word_spacing);
-
-    $style->width = Font_Metrics::get_text_width($text, $font, $size, $word_spacing);
-  }
-  
-  //........................................................................
-
   // Text manipulation methods
   
   // split the text in this frame at the offset specified.  The remaining
@@ -156,7 +127,7 @@ class Text_Frame_Decorator extends Frame_Decorator {
   function split_text($offset) {
     if ( $offset == 0 )
       return;
-
+    
     $split = $this->_frame->get_node()->splitText($offset);
     $deco = $this->copy($split);
 
@@ -181,3 +152,4 @@ class Text_Frame_Decorator extends Frame_Decorator {
   }
 
 }
+?>

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -137,8 +137,7 @@ class CRM_Friend_BAO_Friend extends CRM_Friend_DAO_Friend
                                   'subject'            => ts( 'Tell a Friend' ) . ": {$params['title']}",
                                   'details'            => $params['suggested_message'],
                                   'status_id'          => 2,
-                                  'is_test'            => $params['is_test'],
-                                  'campaign_id'        => CRM_Utils_Array::value( 'campaign_id', $params ) );
+                                  'is_test'            => $params['is_test'] );
         
         //activity creation
         $activity = CRM_Activity_BAO_Activity::create( $activityParams );

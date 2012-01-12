@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -36,7 +36,7 @@ require_once 'CRM/Core/Extensions/ExtensionType.php';
  * information on single extension's operations.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -117,12 +117,8 @@ class CRM_Core_Extensions
             $tmp = $this->_extDir . DIRECTORY_SEPARATOR . 'tmp';
             $cache = $this->_extDir . DIRECTORY_SEPARATOR . 'cache';
             require_once 'CRM/Utils/File.php';
-            if( is_writable( $this->_extDir ) ) {
-                if( !file_exists( $tmp ) ) { CRM_Utils_File::createDir( $tmp ); }
-                if( !file_exists( $cache ) ) { CRM_Utils_File::createDir( $cache ); }
-            } else {
-                CRM_Core_Error::fatal( 'Your extensions directory is not web server writable.' );
-            }
+            if( !file_exists( $tmp ) ) { CRM_Utils_File::createDir( $tmp ); }
+            if( !file_exists( $cache ) ) { CRM_Utils_File::createDir( $cache ); }
         }
     }
 
@@ -601,34 +597,23 @@ class CRM_Core_Extensions
      */
     public function grabRemoteKeyList( ) {
 
-        require_once 'CRM/Utils/VersionCheck.php';
-        ini_set('default_socket_timeout', CRM_Utils_VersionCheck::CHECK_TIMEOUT);
-        set_error_handler(array('CRM_Utils_VersionCheck', 'downloadError'));
+        $handl = fopen ( self::PUBLIC_EXTENSIONS_REPOSITORY , "r");
 
-        $extdir = file_get_contents( self::PUBLIC_EXTENSIONS_REPOSITORY );
-
-        if( $extdir === FALSE ) {
-            CRM_Core_Error::fatal('Public directory down or too slow - please contact CiviCRM team on forums.');
-        }
-
-        $lines = explode( "\n", $extdir );
-        
-        foreach( $lines as $ln ) {
+        while (!feof ($handl)) {
+            $ln = fgets ($handl, 2048);
             if (preg_match ("@\<li\>(.*)\</li\>@i", $ln, $out)) {
                 $extsRaw[] = $out;// success
                 $key = strip_tags($out[1]);
                 if( substr( $key, -4 ) == '.xml' ) {
                     $exts[] = array( 'key' => trim( $key, '.xml' ) );
                 }
+                
+            } else {
+                //fail
             }
         }
 
-        if( empty( $exts ) ) {
-            CRM_Core_Error::fatal('Malformed extensions list on public directory - please contact CiviCRM team on forums.');
-        }
-
-        ini_restore('default_socket_timeout');
-        restore_error_handler();
+        fclose($handl);
         
         return $exts;
     }

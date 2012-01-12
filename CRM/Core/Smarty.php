@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -130,12 +130,7 @@ class CRM_Core_Smarty extends Smarty {
         $this->assign('tsLocale',   $tsLocale);
         
         // CRM-7163 hack: we don’t display langSwitch on upgrades anyway
-        $displayLangSwitch = true;
-        if ( CRM_Utils_Array::value( $config->userFrameworkURLVar, $_GET ) == 'civicrm/upgrade' ||
-             CRM_Utils_Array::value( $config->userFrameworkURLVar, $_REQUEST ) == 'civicrm/upgrade' ) {
-            $displayLangSwitch = false;
-        }
-        if ( $displayLangSwitch ) {
+        if ( CRM_Utils_Array::value( $config->userFrameworkURLVar, $_REQUEST ) != 'civicrm/upgrade' ) {
             $this->assign('langSwitch', CRM_Core_I18n::languages(true));
         }
         
@@ -155,6 +150,8 @@ class CRM_Core_Smarty extends Smarty {
 
         $this->register_function ( 'crmURL' , array( 'CRM_Utils_System', 'crmURL' ) );
 
+        $printerFriendly = CRM_Utils_System::makeURL( 'snippet', false, false ) . '2';
+        $this->assign ( 'printerFriendly', $printerFriendly );
     }
 
     /**

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -163,7 +163,7 @@ class CRM_Core_BAO_Preferences extends CRM_Core_DAO_Preferences {
         
         if ( $optionValue && !empty( $groupValues ) ) {
             require_once 'CRM/Core/BAO/CustomOption.php';
-            $dbValues = explode( CRM_Core_DAO::VALUE_SEPARATOR,
+            $dbValues = explode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR,
                                  substr( $optionValue, 1, -1 ) ); 
             
             if ( !empty( $dbValues ) ) { 
@@ -203,10 +203,10 @@ class CRM_Core_BAO_Preferences extends CRM_Core_DAO_Preferences {
 
             if ( ! empty( $cbValues ) ) {
                 $object->$name = 
-                    CRM_Core_DAO::VALUE_SEPARATOR .
-                    implode( CRM_Core_DAO::VALUE_SEPARATOR,
+                    CRM_Core_BAO_CustomOption::VALUE_SEPERATOR .
+                    implode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR,
                              array_keys( $cbValues ) ) .
-                    CRM_Core_DAO::VALUE_SEPARATOR;
+                    CRM_Core_BAO_CustomOption::VALUE_SEPERATOR;
             } else {
                 $object->$name = 'NULL';
             }
@@ -314,3 +314,5 @@ AND    v.is_active = 1
         }
     }
 }
+
+

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -77,8 +77,7 @@ class CRM_Profile_Form_Edit extends CRM_Profile_Form
         if ( $this->_blockNo ) {
             $this->assign( 'blockNo', $this->_blockNo );
         }
-        $this->assign( 'createCallback', CRM_Utils_Request::retrieve( 'createCallback', 'String', $this ) );
-        
+
         if ( $this->get( 'skipPermission' ) ) {
             $this->_skipPermission = true;
         }

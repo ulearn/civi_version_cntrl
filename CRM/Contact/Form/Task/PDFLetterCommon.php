@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -173,6 +173,7 @@ class CRM_Contact_Form_Task_PDFLetterCommon
 
         require_once 'dompdf/dompdf_config.inc.php';
         $html = '<html><head><style>body { margin: 56px; }</style></head><body>';
+        require_once 'api/v2/Contact.php';
         require_once 'CRM/Utils/Token.php';
 
         $tokens = array( );
@@ -195,7 +196,6 @@ class CRM_Contact_Form_Task_PDFLetterCommon
             }
         }
                     
-        require_once 'api/v2/utils.php';
         require_once 'CRM/Mailing/BAO/Mailing.php';
         $mailing = new CRM_Mailing_BAO_Mailing();
         if ( defined( 'CIVICRM_MAIL_SMARTY' ) ) {
@@ -203,13 +203,13 @@ class CRM_Contact_Form_Task_PDFLetterCommon
             civicrm_smarty_register_string_resource( );
         }
 
-        $first        = TRUE;
-        $skipOnHold   = isset( $form->skipOnHold ) ? $form->skipOnHold : false;
-        $skipDeceased = isset( $form->skipDeceased ) ? $form->skipDeceased : true;
+        $first = TRUE;
+
         foreach ($form->_contactIds as $item => $contactId) {
             $params  = array( 'contact_id'  => $contactId );
+
+			list( $contact ) = $mailing->getDetails($params, $returnProperties, false );
             
-			list( $contact ) = $mailing->getDetails($params, $returnProperties, $skipOnHold, $skipDeceased );
             if ( civicrm_error( $contact ) ) {
                 $notSent[] = $contactId;
                 continue;

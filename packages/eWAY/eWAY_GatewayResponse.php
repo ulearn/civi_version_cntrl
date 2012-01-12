@@ -2,7 +2,7 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -52,12 +52,11 @@ class GatewayResponse
 	var $txStatus              = "";
 	var $txAuthCode            = "";
 	var $txError               = "";
-    var $txBeagleScore         = "";
 
 	function GatewayResponse()
 	{
 	   // Empty Constructor
-    }
+   }
    
 	function ProcessResponse($Xml)
 	{
@@ -86,7 +85,7 @@ class GatewayResponse
       $amount                    = self::GetNodeValue("ewayReturnAmount", $Xml);
       $this->txAuthCode          = self::GetNodeValue("ewayAuthCode", $Xml);
       $this->txInvoiceReference  = self::GetNodeValue("ewayTrxnReference", $Xml);
-      $this->txBeagleScore       = self::GetNodeValue("ewayBeagleScore", $Xml);
+      
       $this->txAmount = (int) $amount;
    }
    
@@ -160,11 +159,6 @@ class GatewayResponse
    function Status()
    {
       return $this->txStatus;
-   }
-
-   function BeagleScore ()
-   {
-       return $this->txBeagleScore ;
    }
 }
 

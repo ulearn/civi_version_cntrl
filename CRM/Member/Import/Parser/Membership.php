@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,13 +29,14 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
 
 
 require_once 'CRM/Member/Import/Parser.php';
+require_once 'api/v2/Membership.php';
 
 /**
  * class to parse membership csv files
@@ -255,8 +256,6 @@ class CRM_Member_Import_Parser_Membership extends CRM_Member_Import_Parser
      */
     function import( $onDuplicate, &$values) 
     {
-        civicrm_api_include('membership', false, 2);
-    
         // first make sure this is a valid line
         $response = $this->summary( $values );
         if ( $response != CRM_Member_Import_Parser::VALID ) {
@@ -494,7 +493,7 @@ class CRM_Member_Import_Parser_Membership extends CRM_Member_Import_Parser
             }
             
         } else {
-            if ( CRM_Utils_Array::value( 'external_identifier', $formatValues ) ) {
+            if ( $formatValues['external_identifier'] ) {
                 $checkCid = new CRM_Contact_DAO_Contact();
                 $checkCid->external_identifier = $formatValues['external_identifier'];
                 $checkCid->find(true);
@@ -525,7 +524,7 @@ class CRM_Member_Import_Parser_Membership extends CRM_Member_Import_Parser
                                                                                       $joinDate,
                                                                                       'today',
                                                                                       $excludeIsAdmin );
-            if ( ! CRM_Utils_Array::value( 'status_id', $formatted ) ) {
+            if ( ! $formatted['status_id']) {
                 $formatted['status_id'] = $calcStatus['id'];
             } else if ( !CRM_Utils_Array::value('is_override', $formatted ) ) {
                 if ( empty( $calcStatus ) ) {

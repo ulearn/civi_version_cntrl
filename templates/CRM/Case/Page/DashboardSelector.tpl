@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,6 @@
   <tr class="columnheader">
     <th></th>
     <th>{ts}Client{/ts}</th>
-    <th>{ts}Subject{/ts}</th>
     <th>{ts}Status{/ts}</th>
     <th>{ts}Type{/ts}</th>
     <th>{ts}My Role{/ts}</th>
@@ -56,7 +55,6 @@
 	</td>
 
     <td class="crm-case-phone"><a href="{crmURL p='civicrm/contact/view' q="reset=1&cid=`$row.contact_id`"}">{$row.sort_name}</a>{if $row.phone}<br /><span class="description">{$row.phone}</span>{/if}<br /><span class="description">{ts}Case ID{/ts}: {$row.case_id}</span></td>
-    <td class="crm-case-case_subject">{$row.case_subject}</td>
     <td class="{$row.class} crm-case-case_status">{$row.case_status}</td>
     <td class="crm-case-case_type">{$row.case_type}</td>
     <td class="crm-case-case_role">{if $row.case_role}{$row.case_role}{else}---{/if}</td>
@@ -89,7 +87,7 @@
 	 </td>   
     {/if}
 
-    <td>{$row.action}{$row.moreActions}</td>
+    <td>{$row.action}</td>
    </tr>
    <tr id="{$list}{$row.case_id}_hide" class="crm-case_{$row.case_id}">
      <td>
@@ -126,16 +124,16 @@
 var widgetId = '';
 var fullscrn = '';
 cj(document).ready( function( ) {
-   setTimeout( 'getWidgetId()',500 );
+
+cj(window).bind("ajaxComplete", function() { 
+  cj('div.widget-controls').children('a.fullscreen-icon').each(function(){
+     cj(this).click(function(){
+        widgetId = cj(this).parents('li').attr('id'); 
+     });
+  });
 });
 
-function getWidgetId( ) {
- cj('div.widget-controls').children('a.fullscreen-icon').each( function( ){
-       cj(this).one( 'click', function( ){
-       widgetId = cj(this).parents('li').attr('id'); 
-    });
- });
-}
+});
 
 function {/literal}{$list}{literal}CaseDetails( caseId, contactId, type )
 {

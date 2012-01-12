@@ -181,7 +181,6 @@ class Validate_Finance_CreditCard
             $regex = '5[1-5][0-9]{14}';
             break;
         case 'VISA':
-        case 'VISA / VISA DEBIT':
             $regex = '4([0-9]{12}|[0-9]{15})';
             break;
         case 'AMEX':
@@ -266,7 +265,6 @@ class Validate_Finance_CreditCard
         case 'EUROCARD':
         case 'EUROCARD/MASTERCARD':
         case 'VISA':
-        case 'VISA / VISA DEBIT':
         case 'DISCOVER':
         case 'LASER':
         case 'SWITCH':

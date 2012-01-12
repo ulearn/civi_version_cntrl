@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -54,8 +54,8 @@ class CRM_Report_Form_Case_TimeSpent extends CRM_Report_Form {
                                                     'no_display' => true, 
                                                     'required'   => true, 
                                                     ),
-                                             'sort_name'    =>
-                                              array( 'title'     => ts('Contact Name') ,
+                                             'display_name'    =>
+                                              array( 'title'     => ts('Display Name') ,
                                                      'required'  => true,
                                                      'no_repeat' => true ),
                                               ),
@@ -268,11 +268,7 @@ $this->_groupBy .= "civicrm_activity_activity_date_time
 ";
         }
     }
-
-    function orderBy( ) {
-        $this->_orderBy = "ORDER BY {$this->_aliases['civicrm_contact']}.sort_name, {$this->_aliases['civicrm_contact']}.id";
-    }
-
+    
     function postProcess( ) {
         parent::postProcess();
     }
@@ -293,29 +289,33 @@ $this->_groupBy .= "civicrm_activity_activity_date_time
         $entryFound     = false;
         foreach ( $rows as $rowNum => $row ) {
             
-            if ( isset($row['civicrm_activity_activity_type_id']) ) {
+            if ( array_key_exists('civicrm_activity_activity_type_id', $row ) ) {
                 $entryFound = true;
-                $val = $row['civicrm_activity_activity_type_id'];
-                $rows[$rowNum]['civicrm_activity_activity_type_id'] =
-                  isset($this->activityTypes[$val]) ? $this->activityTypes[$val] : '';
+                if ( $value = $row['civicrm_activity_activity_type_id'] ) {
+                    $rows[$rowNum]['civicrm_activity_activity_type_id'] = $this->activityTypes[$value];
+                }
             }
             
-            if ( isset($row['civicrm_activity_status_id']) ) {
+            if ( array_key_exists('civicrm_activity_status_id', $row ) ) {
                 $entryFound = true;
-                $val = $row['civicrm_activity_status_id'];
-                $rows[$rowNum]['civicrm_activity_status_id'] =
-                  isset($this->activityStatuses[$val]) ? $this->activityStatuses[$val] : '';
+                if ( $value = $row['civicrm_activity_status_id'] ) {
+                    $rows[$rowNum]['civicrm_activity_status_id'] = $this->activityStatuses[$value];
+                }
             }
 
             // The next two make it easier to make pivot tables after exporting to Excel
-            if ( isset($row['civicrm_activity_duration']) ) {
+            if ( array_key_exists('civicrm_activity_duration', $row ) ) {
                 $entryFound = true;
-                $rows[$rowNum]['civicrm_activity_duration'] = (int) $row['civicrm_activity_duration'];
+                if ( $row['civicrm_activity_duration'] == '' ) {
+                    $rows[$rowNum]['civicrm_activity_duration'] = '0';
+                }
             }
 
-            if ( isset($row['civicrm_case_activity_case_id']) ) {
+            if ( array_key_exists('civicrm_case_activity_case_id', $row ) ) {
                 $entryFound = true;
-                $rows[$rowNum]['civicrm_case_activity_case_id'] = (int) $row['civicrm_case_activity_case_id'];
+                if ( $row['civicrm_case_activity_case_id'] == '' ) {
+                    $rows[$rowNum]['civicrm_case_activity_case_id'] = '0';
+                }
             }
             
             if ( !$entryFound ) {

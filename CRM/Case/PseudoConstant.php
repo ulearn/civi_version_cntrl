@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -247,9 +247,9 @@ class CRM_Case_PseudoConstant extends CRM_Core_PseudoConstant
             $caseTypeIds = CRM_Core_DAO::getFieldValue( 'CRM_Case_DAO_Case',
                                                         $caseId,
                                                         'case_type_id' );
-            $caseTypeId  = explode( CRM_Core_DAO::VALUE_SEPARATOR,
+            $caseTypeId  = explode( CRM_Case_BAO_Case::VALUE_SEPERATOR, 
                                     trim($caseTypeIds, 
-                                         CRM_Core_DAO::VALUE_SEPARATOR ) );
+                                         CRM_Case_BAO_Case::VALUE_SEPERATOR) );
             $caseTypeId  = $caseTypeId[0];
             
             self::$caseTypePair[$caseId][$column] = array( 'id'   => $caseTypeId,

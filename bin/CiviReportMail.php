@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -73,6 +73,10 @@ require_once 'CRM/Utils/Wrapper.php';
 $config = CRM_Core_Config::singleton();
 
 CRM_Utils_System::authenticateScript(true);
+
+// load bootstrap to call hooks
+require_once 'CRM/Utils/System.php';
+CRM_Utils_System::loadBootStrap(  );
 
 require_once 'CRM/Core/Lock.php';
 $lock = new CRM_Core_Lock('CiviReportMail');

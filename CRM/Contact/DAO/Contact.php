@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 4.0                                                |
+| CiviCRM version 3.3                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -675,12 +675,10 @@ class CRM_Contact_DAO_Contact extends CRM_Core_DAO
                 'prefix_id' => array(
                     'name' => 'prefix_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Individual Prefix') ,
                 ) ,
                 'suffix_id' => array(
                     'name' => 'suffix_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Individual Suffix') ,
                 ) ,
                 'email_greeting_id' => array(
                     'name' => 'email_greeting_id',
@@ -766,7 +764,6 @@ class CRM_Contact_DAO_Contact extends CRM_Core_DAO
                 'gender_id' => array(
                     'name' => 'gender_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Gender') ,
                 ) ,
                 'birth_date' => array(
                     'name' => 'birth_date',
@@ -862,15 +859,10 @@ class CRM_Contact_DAO_Contact extends CRM_Core_DAO
                     'dataPattern' => '',
                     'FKClassName' => 'CRM_Contact_DAO_Contact',
                 ) ,
-                'contact_is_deleted' => array(
+                'is_deleted' => array(
                     'name' => 'is_deleted',
                     'type' => CRM_Utils_Type::T_BOOLEAN,
-                    'title' => ts('Contact is in Trash') ,
                     'required' => true,
-                    'export' => true,
-                    'where' => 'civicrm_contact.is_deleted',
-                    'headerPattern' => '',
-                    'dataPattern' => '',
                 ) ,
             );
         }
@@ -884,7 +876,8 @@ class CRM_Contact_DAO_Contact extends CRM_Core_DAO
      */
     function getTableName()
     {
-        return self::$_tableName;
+        global $dbLocale;
+        return self::$_tableName . $dbLocale;
     }
     /**
      * returns if this table needs to be logged

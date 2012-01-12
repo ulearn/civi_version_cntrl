@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -56,14 +56,7 @@ class CRM_Contribute_PseudoConstant extends CRM_Core_PseudoConstant
      * @var array
      * @static
      */
-    private static $contributionPageActive = null;
-
-    /**
-     * contribution pages
-     * @var array
-     * @static
-     */
-    private static $contributionPageAll = null;
+    private static $contributionPage;
 
     /**
      * payment instruments
@@ -127,31 +120,22 @@ class CRM_Contribute_PseudoConstant extends CRM_Core_PseudoConstant
     /**
      * Get all the contribution pages
      *
-     * @param integer $id  id of the contribution page
-     * @param boolean $all do we want all pages or only active pages
-     *
      * @access public
      * @return array - array reference of all contribution pages if any
      * @static
      */
-    public static function &contributionPage($id = null, $all = false)
+    public static function &contributionPage($id = null, $isActive = false)
     {
-        if ( $all ) { 
-            $cacheVarToUse =& self::$contributionPageAll;
-        } else {
-            $cacheVarToUse =& self::$contributionPageActive;
-        }
-
-        if ( ! $cacheVarToUse ) {
-            CRM_Core_PseudoConstant::populate( $cacheVarToUse,
+        if ( ! self::$contributionPage ) {
+            CRM_Core_PseudoConstant::populate( self::$contributionPage,
                                                'CRM_Contribute_DAO_ContributionPage',
-                                               $all, 'title' );
+                                               $isActive, 'title' );
         }
         if ( $id ) {
-            $pageTitle = CRM_Utils_Array::value( $id, $cacheVarToUse );
+            $pageTitle = CRM_Utils_Array::value( $id, self::$contributionPage );
             return $pageTitle;
         }
-        return $cacheVarToUse;
+        return self::$contributionPage;
     }
 
     /**

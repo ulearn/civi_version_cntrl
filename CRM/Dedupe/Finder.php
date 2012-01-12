@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -182,19 +182,6 @@ class CRM_Dedupe_Finder
         $flat = array();
         CRM_Utils_Array::flatten($fields, $flat);
 
-        $replace_these = array (
-                       'individual_prefix'     => 'prefix_id',
-                       'individual_suffix'     => 'suffix_id',
-                       'gender'                => 'gender_id',
-        );         
-        //handle for individual_suffix, individual_prefix, gender
-        foreach(array('individual_suffix','individual_prefix','gender') as $name) {
-            if ( CRM_Utils_Array::value( $name, $fields ) ) {
-                $flat[$replace_these[$name]] = $flat[$name];
-                unset($flat[$name]);
-            }
-        }
-    
         // handle {birth,deceased}_date
         foreach(array('birth_date', 'deceased_date') as $date) {
             if ( CRM_Utils_Array::value( $date, $fields ) ) {

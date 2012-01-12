@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -132,8 +132,8 @@ class CRM_Event_Form_Task_Delete extends CRM_Event_Form_Task
         if( $additionalCount ) $deletedParticipants += $additionalCount;
         
         $status = array(
-                        ts( 'Participant(s) Deleted: %1',        array( 1 => $deletedParticipants ) ),
-                        ts( 'Total Selected Participant(s): %1', array( 1 => $deletedParticipants) ) );
+                        ts( 'Deleted Participation(s): %1',        array( 1 => $deletedParticipants ) ),
+                        ts( 'Total Selected Participation(s): %1', array( 1 => $deletedParticipants) ) );
             
     
     if ( !empty( $participantLinks ) ) {

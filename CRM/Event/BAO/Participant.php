@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +31,7 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -618,7 +618,7 @@ GROUP BY  participant.event_id
             
             require_once 'CRM/Core/DAO/Note.php';
             $tmpFields         = CRM_Event_DAO_Participant::import( );
-            
+
             $note              = array( 'participant_note'   => array( 'title'         => 'Participant Note',
                                                                        'name'          => 'participant_note',
                                                                        'headerPattern' => '/(participant.)?note$/i' ) );
@@ -649,11 +649,6 @@ GROUP BY  participant.event_id
                 
                 if( is_array($fieldsArray) ) {
                     foreach ( $fieldsArray as $value) {
-                        $customFieldId = CRM_Core_DAO::getFieldValue( 'CRM_Core_DAO_CustomField',
-                                                                      $value,
-                                                                      'id',
-                                                                      'column_name' );
-                        $value =  $customFieldId ? 'custom_'.$customFieldId : $value;
                         $tmpContactField[trim($value)] = CRM_Utils_Array::value(trim($value),$contactFields);
                         if (!$status) {
                             $title = $tmpContactField[trim($value)]['title']." (match to contact)" ;
@@ -668,12 +663,7 @@ GROUP BY  participant.event_id
             $tmpContactField['external_identifier'] = CRM_Utils_Array::value('external_identifier',$contactFields);
             $tmpContactField['external_identifier']['title'] = $contactFields['external_identifier']['title'] . " (match to contact)";
             $tmpFields['participant_contact_id']['title']    = $tmpFields['participant_contact_id']['title'] . " (match to contact)";
-            
-            //campaign fields.
-            if ( isset( $tmpFields['participant_campaign_id'] ) ) {
-                $tmpFields['participant_campaign'] = array( 'title' => ts( 'Campaign Title' ) );
-            }
-            
+
             $fields = array_merge($fields, $tmpContactField);
             $fields = array_merge($fields, $tmpFields);
             $fields = array_merge($fields, $note, $participantStatus, $participantRole, $eventType );
@@ -712,12 +702,7 @@ GROUP BY  participant.event_id
 
             $participantRole   = array( 'participant_role'   => array( 'title' => 'Participant Role',
                                                                        'name'  => 'participant_role' ) );
-            
-            //campaign fields.
-            if ( isset( $participantFields['participant_campaign_id'] ) ) {
-                $participantFields['participant_campaign'] = array( 'title' => ts( 'Campaign Title' ) );
-            }
-            
+
             require_once 'CRM/Core/DAO/Discount.php';
             $discountFields  = CRM_Core_DAO_Discount::export( );
 
@@ -935,18 +920,18 @@ WHERE  civicrm_participant.id = {$participantId}
     static function fixEventLevel( &$eventLevel )
     {
         require_once 'CRM/Core/BAO/CustomOption.php';
-        if ( ( substr( $eventLevel, 0, 1) == CRM_Core_DAO::VALUE_SEPARATOR ) &&
-             ( substr( $eventLevel, -1, 1) == CRM_Core_DAO::VALUE_SEPARATOR ) ) {
-            $eventLevel = implode( ', ', explode( CRM_Core_DAO::VALUE_SEPARATOR, 
+        if ( ( substr( $eventLevel, 0, 1) == CRM_Core_BAO_CustomOption::VALUE_SEPERATOR ) &&
+             ( substr( $eventLevel, -1, 1) == CRM_Core_BAO_CustomOption::VALUE_SEPERATOR ) ) {
+            $eventLevel = implode( ', ', explode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR, 
                                                   substr( $eventLevel, 1, -1) ) );
             if ($pos = strrpos($eventLevel, "(multiple participants)", 0) ) {
                 $eventLevel = substr_replace($eventLevel, "", $pos-3, 1) ;
             }
-        } elseif ( ( substr( $eventLevel, 0, 1) == CRM_Core_DAO::VALUE_SEPARATOR ) ) {
-            $eventLevel = implode( ', ', explode( CRM_Core_DAO::VALUE_SEPARATOR, 
+        } elseif ( ( substr( $eventLevel, 0, 1) == CRM_Core_BAO_CustomOption::VALUE_SEPERATOR ) ) {
+            $eventLevel = implode( ', ', explode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR, 
                                                   substr( $eventLevel, 0, 1) ) );
-        } elseif ( ( substr( $eventLevel, -1, 1) == CRM_Core_DAO::VALUE_SEPARATOR ) ) {
-            $eventLevel = implode( ', ', explode( CRM_Core_DAO::VALUE_SEPARATOR, 
+        } elseif ( ( substr( $eventLevel, -1, 1) == CRM_Core_BAO_CustomOption::VALUE_SEPERATOR ) ) {
+            $eventLevel = implode( ', ', explode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR, 
                                                   substr( $eventLevel, 0, -1) ) );            
         }
     }
@@ -1475,8 +1460,8 @@ UPDATE  civicrm_participant
                                          'status_id'          => 2
                                          );
                 
-                require_once 'CRM/Activity/BAO/Activity.php';
-                if (is_a(CRM_Activity_BAO_Activity::create($activityParams), 'CRM_Core_Error')) {
+                require_once 'api/v2/Activity.php';
+                if ( is_a( civicrm_activity_create( $activityParams ), 'CRM_Core_Error' ) ) {
                     CRM_Core_Error::fatal("Failed creating Activity for expiration mail");
                 }
             }

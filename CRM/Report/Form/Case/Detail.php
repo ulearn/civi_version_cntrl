@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -102,14 +102,14 @@ class CRM_Report_Form_Case_Detail extends CRM_Report_Form {
                   array( 'dao'       => 'CRM_Contact_DAO_Contact',
                          'fields'    =>
                          array( 
-                               'sort_name' => array( 'title'      => ts('Client Name'),
+                               'display_name' => array( 'title'      => ts('Client Name'),
                                                         'required'   => true, ),
                                'id'           => array( 'no_display' => true,
                                                         'required'   => true, ),
                                 ),
                          'filters'   =>  
                          array( 
-                               'sort_name' => array( 'title' => ts( 'Client Name' ) ),
+                               'display_name' => array( 'title' => ts( 'Client Name' ) ),
                                 ),
                          ),
                   
@@ -232,7 +232,7 @@ class CRM_Report_Form_Case_Detail extends CRM_Report_Form {
                         }elseif ( $tableName == 'civicrm_relationship' ) {
                             $this->_relField = true;
                         }
-                        if( $fieldName == 'sort_name' ) {
+                        if( $fieldName == 'display_name' ) {
                             $select[] = "GROUP_CONCAT({$field['dbAlias']}  ORDER BY {$field['dbAlias']} ) 
                                          as {$tableName}_{$fieldName}";
                         } else {
@@ -337,17 +337,9 @@ class CRM_Report_Form_Case_Detail extends CRM_Report_Form {
                         
                         $op = CRM_Utils_Array::value( "{$fieldName}_op", $this->_params );
                         if( $fieldName =='case_type_id' ) {
-                            foreach( $this->_params['case_type_id_value'] as $key => $value ) {
-                                if ( strpos( $value, CRM_Core_DAO::VALUE_SEPARATOR ) === false ) {
-                                    $value = 
-                                        CRM_Core_DAO::VALUE_SEPARATOR .
-                                        $value .
-                                        CRM_Core_DAO::VALUE_SEPARATOR;
-                                    
-                                    $this->_params['case_type_id_value'][$key]  = "'{$value}'";
-                                } else {
-                                    $this->_params['case_type_id_value'][$key]  = $value;
-                                }
+                            foreach( $this->_params['case_type_id_value'] as $key =>$value ) {
+                                $value = CRM_Case_BAO_Case::VALUE_SEPERATOR.$value .CRM_Case_BAO_Case::VALUE_SEPERATOR;
+                                $this->_params['case_type_id_value'][$key]  = "'{$value}'";
                             }
                         } 
                         if ( $op ) {
@@ -460,7 +452,7 @@ class CRM_Report_Form_Case_Detail extends CRM_Report_Form {
                 }
             }
             if ( array_key_exists('civicrm_case_case_type_id', $row ) ) {
-                if ( $value = str_replace( CRM_Core_DAO::VALUE_SEPARATOR, '', $row['civicrm_case_case_type_id'] )) {
+                if ( $value = str_replace( CRM_Case_BAO_Case::VALUE_SEPERATOR, '', $row['civicrm_case_case_type_id'] )) {
                     $rows[$rowNum]['civicrm_case_case_type_id'] = $this->case_types[$value];
                     
                     $entryFound = true;

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  * This class contains functions for managing Tag(tag) for a contact
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -94,13 +94,6 @@ class CRM_Core_BAO_EntityTag extends CRM_Core_DAO_EntityTag
         // dont save the object if it already exists, CRM-1276
         if ( ! $entityTag->find( true ) ) {
             $entityTag->save( );
-			
-			//invoke post hook on entityTag
-        	require_once 'CRM/Utils/Hook.php';
-            // we are using this format to keep things consistent between the single and bulk operations
-            // so a bit different from other post hooks
-        	$object = array( 0 => array( 0 => $params['entity_id'] ), 1 => $params['entity_table'] );
-        	CRM_Utils_Hook::post( 'create', 'EntityTag', $params['tag_id'], $object );
         }
 
         return $entityTag;
@@ -134,14 +127,8 @@ class CRM_Core_BAO_EntityTag extends CRM_Core_DAO_EntityTag
     {
         $entityTag = new CRM_Core_BAO_EntityTag( );
         $entityTag->copyValues( $params );
-        if ( $entityTag->find( true ) ) {
-            $entityTag->delete( );
-		
-            //invoke post hook on entityTag
-            require_once 'CRM/Utils/Hook.php';
-            $object = array( 0 => array( 0 => $params['entity_id'] ), 1 => $params['entity_table'] );
-            CRM_Utils_Hook::post( 'delete', 'EntityTag', $params['tag_id'], $object );
-        }
+        $entityTag->delete( );
+        //return $entityTag;
     }
 
     /**
@@ -158,8 +145,6 @@ class CRM_Core_BAO_EntityTag extends CRM_Core_DAO_EntityTag
     static function addEntitiesToTag( &$entityIds, $tagId, $entityTable = 'civicrm_contact' ) {
         $numEntitiesAdded    = 0;
         $numEntitiesNotAdded = 0;
-		$entityIdsAdded      = array();
-		
         foreach ( $entityIds as $entityId ) {
             $tag = new CRM_Core_DAO_EntityTag( );
 
@@ -168,7 +153,6 @@ class CRM_Core_BAO_EntityTag extends CRM_Core_DAO_EntityTag
             $tag->entity_table  = $entityTable;
             if ( ! $tag->find( ) ) {
                 $tag->save( );
-				$entityIdsAdded[] = $entityId;
                 $numEntitiesAdded++;
             } else {
                 $numEntitiesNotAdded++;
@@ -177,7 +161,7 @@ class CRM_Core_BAO_EntityTag extends CRM_Core_DAO_EntityTag
 
         //invoke post hook on entityTag
         require_once 'CRM/Utils/Hook.php';
-        $object = array( $entityIdsAdded, $entityTable );
+        $object = array( $entityIds, $entityTable );
         CRM_Utils_Hook::post('create', 'EntityTag', $tagId, $object );
 
         // reset the group contact cache for all groups
@@ -203,8 +187,6 @@ class CRM_Core_BAO_EntityTag extends CRM_Core_DAO_EntityTag
     {
         $numEntitiesRemoved    = 0;
         $numEntitiesNotRemoved = 0;
-		$entityIdsRemoved      = array();
-		
         foreach ( $entityIds as $entityId ) {
             $tag = new CRM_Core_DAO_EntityTag( );
             
@@ -213,7 +195,6 @@ class CRM_Core_BAO_EntityTag extends CRM_Core_DAO_EntityTag
             $tag->entity_table = $entityTable;
             if (  $tag->find( ) ) {
                 $tag->delete( );
-				$entityIdsRemoved[] = $entityId;
                 $numEntitiesRemoved++;
             } else {
                 $numEntitiesNotRemoved++;
@@ -222,7 +203,7 @@ class CRM_Core_BAO_EntityTag extends CRM_Core_DAO_EntityTag
         
         //invoke post hook on entityTag
         require_once 'CRM/Utils/Hook.php';
-        $object = array( $entityIdsRemoved, $entityTable );
+        $object = array( $entityIds, $entityTable );
         CRM_Utils_Hook::post( 'delete', 'EntityTag', $tagId, $object );
         
         // reset the group contact cache for all groups

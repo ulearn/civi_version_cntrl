@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 name = CiviCRM
 description = Constituent Relationship Management CRM - v4.0. Allows sites to manage contacts, relationships and groups, and track contact activities, contributions, memberships and events. 
 version = 4.0
@@ -107,3 +108,11 @@ files[] = modules/views/civicrm/views_handler_field_civicrm_country.inc
 files[] = modules/views/civicrm/views_handler_field_civicrm_county.inc
 files[] = modules/views/civicrm/views_handler_field_civicrm_state.inc
 
+=======
+name = CiviCRM
+description = Constituent Relationship Management CRM - v3.3. Allows sites to manage contacts, relationships and groups, and track contact activities, contributions, memberships and events. 
+version = 3.3
+package = CiviCRM
+core = 6.x
+php = 5.2
+>>>>>>> 9b665e700dc440d9c08362550834b1dbe1d9b7b2

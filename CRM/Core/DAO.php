@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  * Our base DAO class. All DAO classes should inherit from this class.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -275,7 +275,7 @@ class CRM_Core_DAO extends DB_DataObject
 
     function save( ) 
     {
-        if (!empty($this->id)) {
+        if ($this->id) {
             $this->update();
         } else {
             $this->insert();
@@ -494,12 +494,11 @@ class CRM_Core_DAO extends DB_DataObject
      *
      * @param string $tableName
      * @param string $columnName
-     * @param bool   $i18nRewrite  whether to rewrite the query on multilingual setups
      * 
      * @return boolean true if exists, else false
      * @static
      */
-    function checkFieldExists($tableName, $columnName, $i18nRewrite = true)
+    function checkFieldExists( $tableName, $columnName ) 
     {
         $query = "
 SHOW COLUMNS
@@ -507,7 +506,7 @@ FROM $tableName
 LIKE %1
 ";
         $params = array( 1 => array( $columnName, 'String' ) );
-        $dao = CRM_Core_DAO::executeQuery($query, $params, true, null, false, $i18nRewrite);
+        $dao = CRM_Core_DAO::executeQuery( $query, $params );
         $result = $dao->fetch( ) ? true : false;
         $dao->free( );
         return $result;
@@ -1245,14 +1244,7 @@ SELECT contact_id
                     default:
                         if ( isset( $value['enumValues'] ) ) {
                             if (isset($value['default'])) $object->$dbName=$value['default'];
-                            else {
-                                if ( is_array($value['enumValues']) ) {
-                                    $object->$dbName=$value['enumValues'][0];
-                                } else {
-                                    $defaultValues = explode( ',', $value['enumValues'] );
-                                    $object->$dbName = $defaultValues[0];
-                                }
-                            }
+                            else $object->$dbName=$value['enumValues'][0];
                         } else {
                             $object->$dbName=$dbName.'_'.$counter;
                             $maxlength = CRM_Utils_Array::value( 'maxlength', $value );
@@ -1306,24 +1298,20 @@ SELECT contact_id
         $object->delete();
     }
 
-    static function createTempTableName( $prefix = 'civicrm', $addRandomString = true, $string = null ) {
+    static function createTempTableName( $prefix = 'civicrm', $addRandomString = true ) {
         $tableName = $prefix . "_temp";
 
         if ( $addRandomString ) {
-            if ( $string ) {
-                $tableName .= "_" . $string;
-            } else {
-                $tableName .= "_" . md5( uniqid( '', true ) );
-            }
+            $tableName .="_" . md5( uniqid( '', true ) );
         }
         return $tableName;
-   }
+    }
 
     static function checkTriggerViewPermission( $view = true ) {
         // test for create view and trigger permissions and if allowed, add the option to go multilingual
         // and logging
         CRM_Core_Error::ignoreException();
-        $dao = new CRM_Core_DAO( );
+        $dao = new CRM_Core_DAO;
         if ( $view ) {
             $dao->query('CREATE OR REPLACE VIEW civicrm_domain_view AS SELECT * FROM civicrm_domain');
             if ( PEAR::getStaticProperty('DB_DataObject','lastError') ) {
@@ -1336,18 +1324,12 @@ SELECT contact_id
 
         if ( PEAR::getStaticProperty('DB_DataObject','lastError') ) {
             CRM_Core_Error::setCallback();
-            if ( $view ) {
-                $dao->query('DROP VIEW IF EXISTS civicrm_domain_view');
-            }
             return false;
         }
 
         $dao->query('DROP TRIGGER IF EXISTS civicrm_domain_trigger');
         if ( PEAR::getStaticProperty('DB_DataObject','lastError') ) {
             CRM_Core_Error::setCallback();
-            if ( $view ) {
-                $dao->query('DROP VIEW IF EXISTS civicrm_domain_view');
-            }
             return false;
         }
 

@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 4.0                                                |
+| CiviCRM version 3.3                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -162,12 +162,6 @@ class CRM_Member_DAO_Membership extends CRM_Core_DAO
      */
     public $contribution_recur_id;
     /**
-     * The campaign for which this membership is attached.
-     *
-     * @var int unsigned
-     */
-    public $campaign_id;
-    /**
      * class constructor
      *
      * @access public
@@ -192,7 +186,6 @@ class CRM_Member_DAO_Membership extends CRM_Core_DAO
                 'status_id' => 'civicrm_membership_status:id',
                 'owner_membership_id' => 'civicrm_membership:id',
                 'contribution_recur_id' => 'civicrm_contribution_recur:id',
-                'campaign_id' => 'civicrm_campaign:id',
             );
         }
         return self::$_links;
@@ -345,17 +338,6 @@ class CRM_Member_DAO_Membership extends CRM_Core_DAO
                     'name' => 'contribution_recur_id',
                     'type' => CRM_Utils_Type::T_INT,
                     'FKClassName' => 'CRM_Contribute_DAO_ContributionRecur',
-                ) ,
-                'member_campaign_id' => array(
-                    'name' => 'campaign_id',
-                    'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Campaign ID') ,
-                    'import' => true,
-                    'where' => 'civicrm_membership.campaign_id',
-                    'headerPattern' => '',
-                    'dataPattern' => '',
-                    'export' => true,
-                    'FKClassName' => 'CRM_Campaign_DAO_Campaign',
                 ) ,
             );
         }

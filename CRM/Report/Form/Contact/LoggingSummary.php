@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,33 +29,40 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
 
-require_once 'CRM/Logging/ReportSummary.php';
+require_once 'CRM/Report/Form.php';
 
-class CRM_Report_Form_Contact_LoggingSummary extends CRM_Logging_ReportSummary
+class CRM_Report_Form_Contact_LoggingSummary extends CRM_Report_Form
 {
+    private $loggingDB;
+
     function __construct()
     {
+        $this->_add2groupSupported = false; // don’t display the ‘Add these Contacts to Group’ button
+
+        $dsn = defined('CIVICRM_LOGGING_DSN') ? DB::parseDSN(CIVICRM_LOGGING_DSN) : DB::parseDSN(CIVICRM_DSN);
+        $this->loggingDB = $dsn['database'];
+
         $this->_columns = array(
             'log_civicrm_contact' => array(
                 'dao' => 'CRM_Contact_DAO_Contact',
                 'fields' => array(
                     'id' => array(
                         'no_display' => true,
-                        'required'   => true,
+                        'required'   => true
                     ),
                     'log_user_id' => array(
                         'no_display' => true,
-                        'required'   => true,
+                        'required'   => true
                     ),
                     'log_date' => array(
                         'default'  => true,
                         'required' => true,
-                        'type'     => CRM_Utils_Type::T_TIME,
+                        'type' => CRM_Utils_Type::T_TIME,
                         'title'    => ts('When'),
                     ),
                     'altered_contact' => array(
@@ -63,7 +70,7 @@ class CRM_Report_Form_Contact_LoggingSummary extends CRM_Logging_ReportSummary
                         'name'    => 'display_name',
                         'title'   => ts('Altered Contact'),
                     ),
-                    'log_conn_id' => array(
+                   'log_conn_id' => array(
                        'no_display' => true,
                        'required'   => true
                     ),
@@ -93,11 +100,6 @@ class CRM_Report_Form_Contact_LoggingSummary extends CRM_Logging_ReportSummary
                         'title'        => ts('Action'),
                         'type'         => CRM_Utils_Type::T_STRING,
                     ),
-                    'id' => array(
-                        'no_display' => true,
-                        'type'       => CRM_Utils_Type::T_INT,
-                    ),
-
                 ),
             ),
             'civicrm_contact' => array(
@@ -144,8 +146,6 @@ class CRM_Report_Form_Contact_LoggingSummary extends CRM_Logging_ReportSummary
 
             if ($row['log_civicrm_contact_log_action'] == 'Update') {
                 $q = "reset=1&log_conn_id={$row['log_civicrm_contact_log_conn_id']}&log_date={$row['log_civicrm_contact_log_date']}";
-                if ( $this->cid ) $q .= '&cid='.$this->cid;
-
                 $url = CRM_Report_Utils_Report::getNextUrl('logging/contact/detail', $q, false, true);
                 $row['log_civicrm_contact_log_action_link'] = $url;
                 $row['log_civicrm_contact_log_action_hover'] = ts("View details for this update");
@@ -157,6 +157,27 @@ class CRM_Report_Form_Contact_LoggingSummary extends CRM_Logging_ReportSummary
         }
     }
 
+    function select( ) {
+        $select = array( );
+        $this->_columnHeaders = array( );
+        foreach ( $this->_columns as $tableName => $table ) {
+            if ( array_key_exists('fields', $table) ) {
+                foreach ( $table['fields'] as $fieldName => $field ) {
+                    if ( CRM_Utils_Array::value( 'required', $field ) ||
+                        CRM_Utils_Array::value( $fieldName, $this->_params['fields'] ) ) {
+                            $select[] = "{$field['dbAlias']} as {$tableName}_{$fieldName}";
+                            $this->_columnHeaders["{$tableName}_{$fieldName}"]['type']  = CRM_Utils_Array::value( 'type', $field );
+                            $this->_columnHeaders["{$tableName}_{$fieldName}"]['no_display']  = CRM_Utils_Array::value( 'no_display', $field );
+ 
+                            $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = $field['title'];
+                        }
+                }
+            }
+        }
+
+        $this->_select = "SELECT " . implode( ', ', $select ) . " ";
+    }
+
     function from()
     {
         $this->_from = "
@@ -164,5 +185,53 @@ class CRM_Report_Form_Contact_LoggingSummary extends CRM_Logging_ReportSummary
             JOIN civicrm_contact     {$this->_aliases['civicrm_contact']}
             ON ({$this->_aliases['log_civicrm_contact']}.log_user_id = {$this->_aliases['civicrm_contact']}.id)
         ";
+    }
+
+    function groupBy()
+    {
+        $this->_groupBy = 'GROUP BY log_conn_id, log_user_id, EXTRACT(DAY_MINUTE FROM log_date)';
+    }
+
+    function orderBy()
+    {
+        $this->_orderBy = 'ORDER BY log_date DESC';
+    }
+
+    function where()
+    {
+        parent::where();
+        $this->_where .= " AND (log_action != 'Initialization')";
+        $clauses = array( );
+        foreach ( $this->_columns as $tableName => $table ) {
+            if ( array_key_exists('filters', $table) ) { 
+                foreach ( $table['filters'] as $fieldName => $field ) {                    
+                    $clause = null;
+                    if ( CRM_Utils_Array::value( 'type', $field ) & CRM_Utils_Type::T_DATE ) {
+                        $relative = CRM_Utils_Array::value( "{$fieldName}_relative", $this->_params );
+                        $from     = CRM_Utils_Array::value( "{$fieldName}_from"    , $this->_params );
+                        $to       = CRM_Utils_Array::value( "{$fieldName}_to"      , $this->_params );
+                        
+                        if ( $relative || $from || $to ) {
+                            $clause = $this->dateClause( $field['name'], $relative, $from, $to, $field['type'] );
+                        }
+                    } else { 
+                        $op = CRM_Utils_Array::value( "{$fieldName}_op", $this->_params );
+                        if ( $op ) {
+                            $clause = 
+                                $this->whereClause( $field,
+                                                    $op,
+                                                    CRM_Utils_Array::value( "{$fieldName}_value", $this->_params ),
+                                                    CRM_Utils_Array::value( "{$fieldName}_min", $this->_params ),
+                                                    CRM_Utils_Array::value( "{$fieldName}_max", $this->_params ) );
+                        }
+                    }
+                    if ( ! empty( $clause ) ) {
+                        $clauses[] = $clause;
+                        $this->_where = "WHERE " . implode( ' AND ', $clauses ); 
+                    }
+                    
+                }
+            }
+        } 
     }
 }

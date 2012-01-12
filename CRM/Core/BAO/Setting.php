@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -81,7 +81,7 @@ class CRM_Core_BAO_Setting
         $skipVars = array( 'dsn', 'templateCompileDir',
                            'userFrameworkDSN', 
                            'userFrameworkBaseURL', 'userFrameworkClass', 'userHookClass',
-                           'userPermissionClass', 'userFrameworkURLVar', 'userFrameworkVersion',
+                           'userPermissionClass', 'userFrameworkURLVar',
                            'newBaseURL', 'newBaseDir', 'newSiteName', 'configAndLogDir',
                            'qfKey', 'gettextResourceDir', 'cleanURL',
                            'locale_custom_strings', 'localeCustomStrings' );
@@ -98,28 +98,7 @@ class CRM_Core_BAO_Setting
                 unset( $params[$name] );
             }
         }
-        
-        //keep user preferred language upto date, CRM-7746
-        $session = CRM_Core_Session::singleton( );
-        $lcMessages = CRM_Utils_Array::value( 'lcMessages', $params );
-        if ( $lcMessages && $session->get('userID') ) {
-            $languageLimit = CRM_Utils_Array::value( 'languageLimit', $params );
-            if ( is_array( $languageLimit ) &&
-                 !in_array( $lcMessages, array_keys( $languageLimit ) ) ) {
-                $lcMessages = $session->get( 'lcMessages' );
-            }
-            
-            require_once 'CRM/Core/DAO/UFMatch.php';
-            $ufm = new CRM_Core_DAO_UFMatch();
-            $ufm->contact_id = $session->get('userID');
-            if ( $lcMessages && $ufm->find( true ) ) {
-                $ufm->language = $lcMessages;
-                $ufm->save( );
-                $session->set( 'lcMessages', $lcMessages );
-                $params['lcMessages'] = $lcMessages;
-            }
-        }
-        
+
         $domain->config_backend = serialize($params);
         $domain->save();
     }
@@ -190,17 +169,10 @@ class CRM_Core_BAO_Setting
     {
         require_once "CRM/Core/DAO/Domain.php";
         $domain = new CRM_Core_DAO_Domain();
-        
-        //we are initializing config, really can't use, CRM-7863
-        $urlVar = 'q';
-        if ( defined( 'CIVICRM_UF' ) && CIVICRM_UF == 'Joomla' ) {
-            $urlVar = 'task';
-        }
+        $domain->selectAdd( );
 
-        if ( CRM_Utils_Array::value( $urlVar, $_GET ) == 'civicrm/upgrade' ) {
+        if ( CRM_Utils_Array::value( 'q', $_GET ) == 'civicrm/upgrade' ) {
             $domain->selectAdd( 'config_backend' );
-        } else if ( CRM_Utils_Array::value( $urlVar, $_GET ) == 'admin/modules/list/confirm' ) {
-            $domain->selectAdd( 'config_backend', 'locales' );
         } else {
             $domain->selectAdd( 'config_backend, locales, locale_custom_strings' );
         }
@@ -218,7 +190,7 @@ class CRM_Core_BAO_Setting
             $skipVars = array( 'dsn', 'templateCompileDir',
                                'userFrameworkDSN', 
                                'userFrameworkBaseURL', 'userFrameworkClass', 'userHookClass',
-                              'userPermissionClass', 'userFrameworkURLVar', 'userFrameworkVersion',
+                               'userPermissionClass', 'userFrameworkURLVar',
                                'newBaseURL', 'newBaseDir', 'newSiteName', 'configAndLogDir',
                                'qfKey', 'gettextResourceDir', 'cleanURL',
                                'locale_custom_strings', 'localeCustomStrings' );
@@ -309,8 +281,7 @@ class CRM_Core_BAO_Setting
                 require_once 'CRM/Utils/System.php';
                 $lcMessages = CRM_Utils_System::getUFLocale();
                 require_once 'CRM/Core/BAO/CustomOption.php';
-                if ($domain->locales and !in_array($lcMessages, explode(CRM_Core_DAO::VALUE_SEPARATOR,
-                                                                        $domain->locales))) {
+                if ($domain->locales and !in_array($lcMessages, explode(CRM_Core_BAO_CustomOption::VALUE_SEPERATOR, $domain->locales))) {
                     $lcMessages = null;
                 }
             }

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,7 +32,7 @@
  * it need to be defined here first.
  * 
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -238,7 +238,7 @@ class CRM_Core_Config_Variables extends CRM_Core_Config_Defaults
      * Default user framework
      */
     public $userFramework               = 'Drupal';
-    public $userFrameworkVersion        = 'Unknown';
+    public $userFrameworkVersion        = 6.3;
     public $userFrameworkUsersTableName = 'users';
     public $userFrameworkClass          = 'CRM_Utils_System_Drupal';
     public $userHookClass               = 'CRM_Utils_Hook_Drupal';

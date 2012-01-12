@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -271,21 +271,18 @@ class CRM_Import_Form_Preview extends CRM_Core_Form {
         $importJob = new CRM_Import_ImportJob( $tableName );
         $importJob->setJobParams( $importJobParams );
                
-        // If ACL applies to the current user, update cache before running the import.
-        if ( ! CRM_Core_Permission::check( 'view all contacts' ) ) {
-          $session =& CRM_Core_Session::singleton( );
-          $userID  = $session->get( 'userID' );
-          require_once 'CRM/ACL/BAO/Cache.php';
-          CRM_ACL_BAO_Cache::updateEntry( $userID );
-        }
+        // update cache before starting with runImport
+        $session =& CRM_Core_Session::singleton( );
+        $userID  = $session->get( 'userID' );
+        require_once 'CRM/ACL/BAO/Cache.php';
+        CRM_ACL_BAO_Cache::updateEntry( $userID );
 
         // run the import
         $importJob->runImport($this);
                
         // update cache after we done with runImport
-        if ( ! CRM_Core_Permission::check( 'view all contacts' ) ) {
-          CRM_ACL_BAO_Cache::updateEntry( $userID );
-        }
+        require_once 'CRM/ACL/BAO/Cache.php';
+        CRM_ACL_BAO_Cache::updateEntry( $userID );
 
         // add all the necessary variables to the form
         $importJob->setFormVariables( $this );

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,7 +32,7 @@
  * PEAR_ErrorStack and use that framework
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -215,27 +215,6 @@ class CRM_Core_Error extends PEAR_ErrorStack {
         self::abend(1);
     }
 
-    // this function is used to trap and print errors
-    // during system initialization time. Hence the error
-    // message is quite ugly
-    public function simpleHandler( $pearError ) {
-
-        // create the error array
-        $error = array();
-        $error['callback']    = $pearError->getCallback();
-        $error['code']        = $pearError->getCode();
-        $error['message']     = $pearError->getMessage();
-        $error['mode']        = $pearError->getMode();
-        $error['debug_info']  = $pearError->getDebugInfo();
-        $error['type']        = $pearError->getType();
-        $error['user_info']   = $pearError->getUserInfo();
-        $error['to_string']   = $pearError->toString();
-
-        $errorDetails = CRM_Core_Error::debug( 'Initialization Error', $error );
-        CRM_Core_Error::backtrace( );
-        exit( 0 );
-    }
-
     /**
      * Handle errors raised using the PEAR Error Stack.
      *
@@ -297,12 +276,8 @@ class CRM_Core_Error extends PEAR_ErrorStack {
         CRM_Core_Error::debug_var( 'Fatal Error Details', $vars );
         CRM_Core_Error::backtrace( 'backTrace', true );
         $content = $template->fetch( $config->fatalErrorTemplate );
-        if ( $config->userFramework == 'Joomla' ) {
-            JError::raiseError( 'CiviCRM-001', $content );
-        } else {
-            echo CRM_Utils_System::theme( 'page', $content );
-        }
-
+        echo CRM_Utils_System::theme( 'page', $content );
+        // print $content;
         self::abend( CRM_Core_Error::FATAL_ERROR );
     }
 
@@ -511,6 +486,7 @@ class CRM_Core_Error extends PEAR_ErrorStack {
 
     /* used for the API, rise the exception instead of catching/fatal it */
     public static function setRaiseException( ) {
+        //deprecated        PEAR::setErrorHandling( PEAR_ERROR_EXCEPTION);
         PEAR::setErrorHandling( PEAR_ERROR_CALLBACK,  array( 'CRM_Core_Error', 'exceptionHandler' ) );
     }
 
@@ -524,6 +500,15 @@ class CRM_Core_Error extends PEAR_ErrorStack {
     }
     
     public static function exceptionHandler ($pearError) {
+        $error = array();
+        $error['code']        = $pearError->getCode();
+        $error['message']     = $pearError->getMessage();
+        $error['mode']        = $pearError->getMode();
+        $error['debug_info']  = $pearError->getDebugInfo();
+        $error['type']        = $pearError->getType();
+        $error['user_info']   = $pearError->getUserInfo();
+        $error['to_string']   = $pearError->toString();
+
         throw new PEAR_Exception($pearError->getMessage(),$pearError);   
     }
     

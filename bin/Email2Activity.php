@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -108,7 +108,7 @@ class bin_Email2Activity {
 
     function process( $file ) {
         if ( $this->_context == 'activity' ) {
-            civicrm_api_include('activity');
+            require_once 'api/v2/Activity.php';
             $result = civicrm_activity_process_email( $this->_mailDir . DIRECTORY_SEPARATOR . $file,
                                                       EMAIL_ACTIVITY_TYPE_ID );
         } elseif ( $this->_context == 'case' ) {
@@ -148,6 +148,10 @@ function run( $supportedArgs, $context ) {
     //log the execution of script
     CRM_Core_Error::debug_log_message( 'Email2Activity.php' );
     
+    // load bootstrap to call hooks
+    require_once 'CRM/Utils/System.php';
+    CRM_Utils_System::loadBootStrap(  );
+
     $mailDir = MAIL_DIR_DEFAULT;
     if ( isset( $_GET['mailDir'] ) ) {
         $mailDir = $_GET['mailDir'];

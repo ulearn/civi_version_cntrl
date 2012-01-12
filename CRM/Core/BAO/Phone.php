@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -100,8 +100,7 @@ class CRM_Core_BAO_Phone extends CRM_Core_DAO_Phone
 
         $query = "
    SELECT phone, civicrm_location_type.name as locationType, civicrm_phone.is_primary as is_primary,
-     civicrm_phone.id as phone_id, civicrm_phone.location_type_id as locationTypeId,
-     civicrm_phone.phone_type_id as phoneTypeId
+     civicrm_phone.id as phone_id, civicrm_phone.location_type_id as locationTypeId
      FROM civicrm_contact
 LEFT JOIN civicrm_phone ON ( civicrm_contact.id = civicrm_phone.contact_id )
 LEFT JOIN civicrm_location_type ON ( civicrm_phone.location_type_id = civicrm_location_type.id )
@@ -118,8 +117,7 @@ ORDER BY civicrm_phone.is_primary DESC,  phone_id ASC ";
                              'is_primary'     => $dao->is_primary,
                              'id'             => $dao->phone_id,
                              'phone'          => $dao->phone,
-                             'locationTypeId' => $dao->locationTypeId,
-                             'phoneTypeId'    => $dao->phoneTypeId );
+                             'locationTypeId' => $dao->locationTypeId );
             
             if ( $updateBlankLocInfo ) {
                 $numbers[$count++] = $values;

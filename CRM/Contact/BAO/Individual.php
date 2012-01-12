@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -64,7 +64,7 @@ class CRM_Contact_BAO_Individual extends CRM_Contact_DAO_Contact
             return;
         }
 
-        $sortName   = $displayName = '';
+        $sortName   = $displayName = "";
         $firstName  = CRM_Utils_Array::value('first_name'   , $params, '');
         $middleName = CRM_Utils_Array::value('middle_name'  , $params, '');
         $lastName   = CRM_Utils_Array::value('last_name'    , $params, '');

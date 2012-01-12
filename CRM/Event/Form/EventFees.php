@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -82,7 +82,7 @@ class CRM_Event_Form_EventFees
  
         if ( $form->_eventId ) {
             //get receipt text and contribution type
-            $returnProperities = array( 'confirm_email_text', 'contribution_type_id', 'campaign_id' );
+            $returnProperities = array( 'confirm_email_text', 'contribution_type_id' );
             $details = array( );
             CRM_Core_DAO::commonRetrieveAll( 'CRM_Event_DAO_Event', 'id', $form->_eventId, $details, $returnProperities );
             if ( CRM_Utils_Array::value( 'contribution_type_id', $details[$form->_eventId] ) ) {
@@ -165,12 +165,6 @@ class CRM_Event_Form_EventFees
             if ( !CRM_Utils_Array::value("billing_country_id-{$form->_bltID}", $defaults[$form->_pId] ) ) { 
                 $defaults[$form->_pId]["billing_country_id-{$form->_bltID}"] = $config->defaultContactCountry;
             }
-            
-//             // hack to simplify credit card entry for testing
-//             $defaults[$form->_pId]['credit_card_type']     = 'Visa';
-//             $defaults[$form->_pId]['credit_card_number']   = '4807731747657838';
-//             $defaults[$form->_pId]['cvv2']                 = '000';
-//             $defaults[$form->_pId]['credit_card_exp_date'] = array( 'Y' => '2012', 'M' => '05' );
         }
 
         require_once 'CRM/Price/BAO/Set.php';

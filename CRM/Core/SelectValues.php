@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,7 +32,7 @@
  * smart caching scheme on a per domain basis
  * 
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -259,14 +259,12 @@ class CRM_Core_SelectValues
                                         'Pledge'       => ts('Pledges'),
                                         'Grant'        => ts('Grants'),
                                         'Address'      => ts('Addresses'),
-                                        'Campaign'     => ts('Campaigns'),
                                         );
             $contactTypes = self::contactType( );
             unset( $contactTypes[''] ); 
             $contactTypes = !empty( $contactTypes ) ? array( 'Contact' => 'Contacts' ) 
                 + $contactTypes : array( );
-            $extendObjs   = CRM_Core_OptionGroup::values( 'cg_extend_objects' );
-            $customGroupExtends = array_merge( $contactTypes, $customGroupExtends, $extendObjs );
+            $customGroupExtends = array_merge( $contactTypes, $customGroupExtends );
         }
         return $customGroupExtends;
     }
@@ -513,8 +511,7 @@ class CRM_Core_SelectValues
                              '{domain.phone}'          => ts('Domain (organization) phone'),
                              '{domain.email}'          => ts('Domain (organization) email'),
                              '{mailing.name}'          => ts('Mailing name'),
-                             '{mailing.group}'         => ts('Mailing group'),
-                             '{mailing.viewUrl}'	   => ts('Mailing permalink'),
+                             '{mailing.group}'         => ts('Mailing group')    
                           );
         }
         return $tokens;
@@ -552,7 +549,7 @@ class CRM_Core_SelectValues
                 } 
                 //keys for $tokens should be constant. $token Values are changed for Custom Fields. CRM-3734
                 if ( $customFieldId = CRM_Core_BAO_CustomField::getKeyID( $val ) ) {
-                   $tokens["{contact.$val}"] =  CRM_Utils_Array::value($customFieldId, $customFields) ? $customFields[$customFieldId]['label']." :: ".$customFields[$customFieldId]['groupTitle'] : '';
+                    $tokens["{contact.$val}"] = $customFields[$customFieldId]['label']." :: ".$customFields[$customFieldId]['groupTitle'];
                 } else {
                     $tokens["{contact.$val}"] = $exportFields[$val]['title'];
                 }

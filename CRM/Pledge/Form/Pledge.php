@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -424,11 +424,6 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form
                    ts( 'Contribution Type' ), 
                    array(''=>ts( '- select -' )) + CRM_Contribute_PseudoConstant::contributionType( ),
                    true );
-
-        //CRM-7362 --add campaigns.
-        require_once 'CRM/Campaign/BAO/Campaign.php';
-        CRM_Campaign_BAO_Campaign::addCampaign( $this, CRM_Utils_Array::value( 'campaign_id', $this->_values ) );
-        
         $pageIds = array( );
         CRM_Core_DAO::commonRetrieveAll( 'CRM_Pledge_DAO_PledgeBlock', 'entity_table', 
                                          'civicrm_contribution_page', $pageIds, array( 'entity_id' ) );
@@ -559,8 +554,7 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form
                          'honor_first_name',
                          'honor_last_name',
                          'honor_email',
-                         'contribution_page_id',
-                         'campaign_id'
+                         'contribution_page_id'
                          );
         foreach ( $fields as $f ) {
             $params[$f] = CRM_Utils_Array::value( $f, $formValues );
@@ -579,7 +573,7 @@ class CRM_Pledge_Form_Pledge extends CRM_Core_Form
 
         $dates = array( 'create_date', 'start_date', 'acknowledge_date', 'cancel_date' );
         foreach ( $dates as $d ) {
-            if ( $this->_id && ( !$this->_isPending ) && CRM_Utils_Array::value( $d, $this->_values ) ) {
+            if ( $this->_id && !$this->_isPending ) {
                 if ( $d == 'start_date' ) {
                     $params['scheduled_date'] = CRM_Utils_Date::processDate( $this->_values[$d] );
                 }

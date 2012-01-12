@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,7 +24,7 @@
  +--------------------------------------------------------------------+
 *}
 {* Relationship tab within View Contact - browse, and view relationships for a contact *}
-{if !empty($cdType) }
+{if $cdType }
   {include file="CRM/Custom/Form/CustomData.tpl"}
 {else}
  <div class="view-content">
@@ -175,7 +175,7 @@
 </div>
 {/if} {* close of custom data else*}
 
-{if !empty($searchRows) }
+{if $searchRows }
  {*include custom data js file*}
  {include file="CRM/common/customData.tpl"}
 {/if}

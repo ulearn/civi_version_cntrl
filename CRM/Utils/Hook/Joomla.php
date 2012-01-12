@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CiviCRM_Hook
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id: $
  *
  */
@@ -41,15 +41,8 @@ class CRM_Utils_Hook_Joomla extends CRM_Utils_Hook {
    static function invoke( $numParams,
                            &$arg1, &$arg2, &$arg3, &$arg4, &$arg5,
                            $fnSuffix ) {
-       // ensure that we are running in a joomla context
-       // we've not yet figured out how to bootstrap joomla, so we should
-       // not execute hooks if joomla is not loaded
-       if ( defined( '_JEXEC' ) ) {
-           //Invoke the Joomla plugin system to observe to civicrm events.
-           JPluginHelper::importPlugin('civicrm');
-           
-           $app = JFactory::getApplication();
-           $app->triggerEvent($fnSuffix,array(&$arg1, &$arg2, &$arg3, &$arg4, &$arg5));                      
-       }
+       return parent::invoke( $numParams, $arg1, $arg2, $arg3, $arg4, $arg5,
+                       $fnSuffix, 'joomla' );
    }
+
 }

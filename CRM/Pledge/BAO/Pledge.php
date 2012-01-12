@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -660,17 +660,10 @@ WHERE  $whereCond
                                      'activity_date_time' => CRM_Utils_Date::isoToMysql( $params['acknowledge_date'] ),
                                      'is_test'            => $params['is_test'],
                                      'status_id'          => 2,
-                                     'details'            => $details,
-                                     'campaign_id'        => CRM_Utils_Array::value( 'campaign_id', $params )
+                                     'details'            => $details
                                      );
-            
-            //lets insert assignee record.
-            if ( CRM_Utils_Array::value( 'contact_id', $params ) ) {
-                $activityParams['assignee_contact_id'] = $params['contact_id'];
-            }
-            
-            require_once 'CRM/Activity/BAO/Activity.php';
-            if (is_a(CRM_Activity_BAO_Activity::create($activityParams), 'CRM_Core_Error')) {
+            require_once 'api/v2/Activity.php';
+            if ( is_a( civicrm_activity_create( $activityParams ), 'CRM_Core_Error' ) ) {
                 CRM_Core_Error::fatal("Failed creating Activity for acknowledgment");
             }
         }
@@ -691,11 +684,6 @@ WHERE  $whereCond
             
             require_once 'CRM/Pledge/DAO/Pledge.php';
             $fields = CRM_Pledge_DAO_Pledge::export( );
-            
-            //export campaign title.
-            if ( isset( $fields['pledge_campaign_id'] ) ) {
-                $fields['pledge_campaign'] = array( 'title' => ts( 'Campaign Title' ) ); 
-            }
             
             require_once 'CRM/Pledge/DAO/Payment.php';
             $fields = array_merge( $fields, CRM_Pledge_DAO_Payment::export( ) );

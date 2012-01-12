@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -84,9 +84,7 @@ class CRM_Activity_Selector_Search extends CRM_Core_Selector_Base implements CRM
                                 'source_contact_name',
                                 'activity_type_id',
                                 'activity_type',
-                                'activity_is_test',
-                                'activity_campaign_id',
-                                'activity_engagement_level'
+                                'activity_is_test'
                                 );
     
     /** 
@@ -246,16 +244,9 @@ class CRM_Activity_Selector_Search extends CRM_Core_Selector_Base implements CRM
          $mailingIDs =& CRM_Mailing_BAO_Mailing::mailingACLIDs( );
          $accessCiviMail = CRM_Core_Permission::check( 'access CiviMail' );
          
-         //get all campaigns.
-         require_once 'CRM/Campaign/BAO/Campaign.php';
-         $allCampaigns = CRM_Campaign_BAO_Campaign::getCampaigns( null, null, false, false, false, true );
-         
-         require_once 'CRM/Campaign/PseudoConstant.php';
-         $engagementLevels = CRM_Campaign_PseudoConstant::engagementLevel();
-         
          while ( $result->fetch( ) ) {
              $row = array( );
-             
+
              // ignore rows where we dont have an activity id
              if ( empty( $result->activity_id ) ) {
                  continue;
@@ -287,7 +278,7 @@ class CRM_Activity_Selector_Search extends CRM_Core_Selector_Base implements CRM
                 CRM_Contact_BAO_Contact_Utils::getImage( $result->contact_sub_type ?
                                                          $result->contact_sub_type : $result->contact_type ,false,$result->contact_id);
             $accessMailingReport = false;
-            $activityType = CRM_Core_PseudoConstant::activityType( true, true, false, 'name', true );
+            $activityType = CRM_Core_PseudoConstant::activityType( true, true );
             $activityTypeId = CRM_Utils_Array::key( $row['activity_type'], $activityType );
             if ( $row['activity_is_test'] ) {
                 $row['activity_type'] = $row['activity_type'] . " (test)";
@@ -314,16 +305,6 @@ class CRM_Activity_Selector_Search extends CRM_Core_Selector_Base implements CRM
                                                         array( 'id'  => $result->activity_id,
                                                                'cid' => $contactId,
                                                                'cxt' => $this->_context ) );
-            
-            //carry campaign to selector.
-            $row['campaign'] = CRM_Utils_Array::value( $result->activity_campaign_id, $allCampaigns );
-            $row['campaign_id'] = $result->activity_campaign_id;
-            
-            if ( $engagementLevel = CRM_Utils_Array::value( 'activity_engagement_level', $row ) ) {
-                $row['activity_engagement_level'] = CRM_Utils_Array::value( $engagementLevel, 
-                                                                            $engagementLevels, $engagementLevel );
-            }
-            
             $rows[] = $row;
          }
          

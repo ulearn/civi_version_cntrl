@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -65,8 +65,6 @@ class CRM_Contact_Form_Task_PDF extends CRM_Contact_Form_Task {
      */
     
     function preProcess( ) {
-                                        
-        $this->skipOnHold = $this->skipDeceased = false;
         CRM_Contact_Form_Task_PDFLetterCommon::preProcess( $this );
 
         // store case id if present

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -61,7 +61,7 @@ class CRM_Member_Page_UserDashboard extends CRM_Contact_Page_View_UserDashBoard
             CRM_Core_DAO::storeValues( $dao, $membership[$dao->id]);
 
             //get the membership status and type values.
-            $statusANDType = CRM_Member_BAO_Membership::getStatusANDTypeValues( $dao->id );
+            $statusANDType = CRM_Member_BAO_Membership::getStatusANDTypeVaues( $dao->id );
             foreach ( array( 'status', 'membership_type' ) as $fld ) {
                 $membership[$dao->id][$fld] = CRM_Utils_Array::value( $fld, $statusANDType[$dao->id] );
             }

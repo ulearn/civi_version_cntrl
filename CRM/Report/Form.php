@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -694,15 +694,18 @@ class CRM_Report_Form extends CRM_Core_Form {
             $this->addElement('submit', $this->_csvButtonName, $label );
         }
 
-        if ( CRM_Core_Permission::check( 'administer Reports' ) && $this->_add2groupSupported ) {
-            $this->addElement( 'select', 'groups', ts( 'Group' ), 
-                               array( '' => ts( '- select group -' )) + CRM_Core_PseudoConstant::staticGroup( ) );
-            $this->assign( 'group', true );
+        if ( $this->_report != 'Grant' ) {
+            if ( CRM_Core_Permission::check( 'administer Reports' ) && $this->_add2groupSupported ) {
+                $this->addElement( 'select', 'groups', ts( 'Group' ), 
+                                   array( '' => ts( '- select group -' )) + CRM_Core_PseudoConstant::staticGroup( ) );
+                $this->assign( 'group', true );
+            }
+            
+            //$this->addElement('select', 'select_add_to_group_id', ts('Group'), $groupList);
+            $label = ts( 'Add these Contacts to Group' );
+            $this->addElement('submit', $this->_groupButtonName, $label, array('onclick' => 'return checkGroup();') );
         }
-            
-        $label = ts( 'Add these Contacts to Group' );
-        $this->addElement('submit', $this->_groupButtonName, $label, array('onclick' => 'return checkGroup();') );
-            
+
         $this->addChartOptions( );
         $this->addButtons( array(
                                  array ( 'type'      => 'submit',
@@ -1339,9 +1342,8 @@ WHERE cg.extends IN ('" . implode( "','", $this->_customGroupExtends ) . "') AND
                         if ( CRM_Utils_Array::value('statistics', $field) ) {
                             foreach ( $field['statistics'] as $stat => $label ) {
                                 switch (strtolower($stat)) {
-                                case 'max':
                                 case 'sum':
-                                    $select[] = "$stat({$field['dbAlias']}) as {$tableName}_{$fieldName}_{$stat}";
+                                    $select[] = "SUM({$field['dbAlias']}) as {$tableName}_{$fieldName}_{$stat}";
                                     $this->_columnHeaders["{$tableName}_{$fieldName}_{$stat}"]['title'] = $label;
                                     $this->_columnHeaders["{$tableName}_{$fieldName}_{$stat}"]['type']  = 
                                         $field['type'];
@@ -1569,6 +1571,7 @@ WHERE cg.extends IN ('" . implode( "','", $this->_customGroupExtends ) . "') AND
             $this->limit( );
         }
         $sql = "{$this->_select} {$this->_from} {$this->_where} {$this->_groupBy} {$this->_having} {$this->_orderBy} {$this->_limit}";
+
         return $sql;
     }
 
@@ -1704,12 +1707,9 @@ WHERE cg.extends IN ('" . implode( "','", $this->_customGroupExtends ) . "') AND
                                 $pair[$op] = (count($val) == 1) ? ts('Is') : $pair[$op];
                                 $val       = implode( ', ', $val );
                                 $value     = "{$pair[$op]} " . $val;
-                            } else if ( !is_array( $val ) && !empty( $val ) && isset($field['options']) &&
-                                        is_array( $field['options'] ) && !empty( $field['options'] ) ) { 
-                                $value = "{$pair[$op]} " . CRM_Utils_Array::value( $val, $field['options'], $val );
                             } else if ( $val ) {
                                 $value = "{$pair[$op]} " . $val;
-                            }
+                            } 
                         }
                         if ( $value ) {
                             $statistics['filters'][] = 
@@ -1855,7 +1855,6 @@ WHERE cg.extends IN ('" . implode( "','", $this->_customGroupExtends ) . "') AND
         $group = new CRM_Contact_DAO_Group( );
         $group->is_active = 1;
         $group->find();
-        $smartGroups = array( );
         while( $group->fetch( ) ) {
              if( in_array( $group->id, $this->_params['gid_value'] ) && $group->saved_search_id ) {
                  $smartGroups[] = $group->id;
@@ -2086,17 +2085,8 @@ LEFT JOIN civicrm_contact {$field['alias']} ON {$field['alias']}.id = {$this->_a
         
         if ( !empty( $this->_params['fields'] ) ) {
             foreach( array_keys($prop['fields']) as $fieldAlias ) {
-                $customFieldId = CRM_Core_BAO_CustomField::getKeyID( $fieldAlias );
-                if ( $customFieldId ) {
-                    if ( array_key_exists( $fieldAlias, $this->_params['fields'] ) ) {
-                        return true;
-                    }
-                    
-                    //might be survey response field.
-                    if ( CRM_Utils_Array::value( 'survey_response', $this->_params['fields'] ) &&
-                         CRM_Utils_Array::value( 'isSurveyResponseField', $prop['fields'][$fieldAlias] ) ) {
-                        return true;
-                    }
+                if ( array_key_exists( $fieldAlias, $this->_params['fields'] ) && CRM_Core_BAO_CustomField::getKeyID($fieldAlias) ) {
+                    return true;
                 }
             }
         }

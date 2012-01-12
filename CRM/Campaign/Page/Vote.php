@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  --------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -27,7 +27,7 @@
   /**
    *
    * @package CRM
-   * @copyright CiviCRM LLC (c) 2004-2011
+   * @copyright CiviCRM LLC (c) 2004-2010
    * $Id$
    *
    */
@@ -95,7 +95,7 @@ class CRM_Campaign_Page_Vote extends CRM_Core_Page
     {
         $this->browse( );
         
-        return parent::run();
+        parent::run();
     }
     
     function buildTabs( ) 

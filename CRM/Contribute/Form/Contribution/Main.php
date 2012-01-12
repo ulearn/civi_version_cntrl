@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -160,7 +160,7 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
 
             require_once "CRM/Core/BAO/UFGroup.php";
             CRM_Core_BAO_UFGroup::setProfileDefaults( $contactID, $fields, $this->_defaults );
-            
+
             // use primary email address if billing email address is empty
             if ( empty( $this->_defaults["email-{$this->_bltID}"] ) &&
                  ! empty( $this->_defaults["email-Primary"] ) ) {
@@ -176,11 +176,6 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
         
         //set custom field defaults set by admin if value is not set
         if ( ! empty( $this->_fields ) ) {
-            //load default campaign from page.
-            if ( array_key_exists( 'contribution_campaign_id', $this->_fields ) ) {
-                $this->_defaults['contribution_campaign_id'] = CRM_Utils_Array::value( 'campaign_id', $this->_values );
-            }
-            
             //set custom field defaults
             require_once "CRM/Core/BAO/CustomField.php";
             foreach ( $this->_fields as $name => $field ) {
@@ -576,7 +571,7 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
         }
         $this->assign( 'is_for_organization', true);
         CRM_Contact_BAO_Contact_Utils::buildOnBehalfForm( $this, 'Organization', null, 
-                                                          null, ts('Organization Details') );
+                                                          null, 'Organization Details' );
     }
 
     /**
@@ -959,11 +954,6 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
 
         // get the submitted form values. 
         $params = $this->controller->exportValues( $this->_name );
-        
-        //carry campaign from profile.
-        if ( array_key_exists( 'contribution_campaign_id', $params ) ) {
-            $params['campaign_id'] = $params['contribution_campaign_id'];
-        }
         
         if ( CRM_Utils_Array::value( 'onbehalfof_id', $params ) ) {
             $params['organization_id'] = $params['onbehalfof_id'];

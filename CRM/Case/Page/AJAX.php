@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  *
  */
 
@@ -93,10 +93,8 @@ class CRM_Case_Page_AJAX
         CRM_Core_BAO_EntityTag::del( $params );
         
         foreach( $tagIds as $tagid ) {
-            if ( is_numeric( $tagid ) ) {
-                $params['tag_id'] = $tagid;
-                CRM_Core_BAO_EntityTag::add( $params );
-            }
+            $params['tag_id'] = $tagid;
+            CRM_Core_BAO_EntityTag::add( $params );
         }
         
         $session =& CRM_Core_Session::singleton( );
@@ -133,8 +131,7 @@ class CRM_Case_Page_AJAX
         $dao = CRM_Core_DAO::executeQuery( $sql , array( 1 => array( $caseId,  'Integer' ) ) );
         
         while ( $dao->fetch( ) ) {
-            $caseType = CRM_Case_BAO_Case::getCaseType( ( str_replace( CRM_Core_DAO::VALUE_SEPARATOR,
-                                                                        "", 
+             $caseType = CRM_Case_BAO_Case::getCaseType( ( str_replace( CRM_Case_BAO_Case::VALUE_SEPERATOR, "", 
                                                                         $dao->case_type_id) ) );
              $caseStatuses = CRM_Case_PseudoConstant::caseStatus();
              $cs = $caseStatuses[$dao->status_id];

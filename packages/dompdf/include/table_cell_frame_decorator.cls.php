@@ -28,16 +28,16 @@
  * the case, you can obtain a copy at http://www.php.net/license/3_0.txt.
  *
  * The latest version of DOMPDF might be available at:
- * http://www.dompdf.com/
+ * http://www.digitaljunkies.ca/dompdf
  *
- * @link http://www.dompdf.com/
+ * @link http://www.digitaljunkies.ca/dompdf
  * @copyright 2004 Benj Carson
  * @author Benj Carson <benjcarson@digitaljunkies.ca>
  * @package dompdf
-
+ * @version 0.5.1
  */
 
-/* $Id: table_cell_frame_decorator.cls.php 216 2010-03-11 22:49:18Z ryan.masten $ */
+/* $Id: table_cell_frame_decorator.cls.php,v 1.5 2006/07/07 21:31:04 benjcarson Exp $ */
 
 /**
  * Decorates table cells for layout
@@ -133,3 +133,4 @@ class Table_Cell_Frame_Decorator extends Block_Frame_Decorator {
 
   function get_resolved_borders() { return $this->_resolved_borders; }
 }
+?>

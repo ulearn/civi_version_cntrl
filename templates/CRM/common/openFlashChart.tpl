@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -39,24 +39,5 @@
     		                 {"wmode": 'transparent'}
     		                );
     }
-  OFC = {};
-  OFC.jquery = {
-  	       name: "jQuery",
-    	       image: function(src) { return "<img src='data:image/png;base64," + $('#'+src)[0].get_img_binary() + "' />"},
-	           popup: function(src) {
- 		        var img_win = window.open('', 'Save Chart as Image');
-     			img_win.document.write('<html><head><title>Save Chart as Image<\/title><\/head><body>' + OFC.jquery.image(src) + ' <\/body><\/html>'); 
-     			img_win.document.close();
-                       }					
-    	           }   		
-			
-function save_image( divName ) {
-      var divId = {/literal}"{$contriChart}"{literal} ? 'open_flash_chart_'+divName : {/literal}"{$divId}"{literal};
-          if( !divId ) { 
-               divId = 'open_flash_'+divName;
-        }
-      OFC.jquery.popup( divId );
-}
-
 </script>
 {/literal}

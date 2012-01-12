@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -240,20 +240,12 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard
             // -lets use relative url for internal use.
             // -make sure relative url should not be htmlize.
             if ( substr( $dao->url, 0, 4 ) != 'http' ) {
-                if ( $config->userFramework == 'Joomla' ) {
-                    $urlVars = explode( '&', $url, 2 );
-                    $url = CRM_Utils_System::url( $urlVars[0], CRM_Utils_Array::value( 1, $urlVars ), null, false, null, 
-                                                  false );
-                } else if ( $config->userFramework == 'Drupal' )  {
-                    if ( variable_get('clean_url', 0 ) ) {
-                        require_once 'CRM/Core/BAO/Navigation.php';
-                        $url = CRM_Utils_System::cleanUrl( $dao->url );
-                    } else {
-                        $url = CRM_Utils_System::url( $dao->url, null, false, null, false );
-                    }
+                if ( $config->userFramework == 'Joomla' ||
+                     ( $config->userFramework == 'Drupal' && !variable_get('clean_url', '0' ) ) ) {
+                    $url = CRM_Utils_System::url( $dao->url, null, false, null, false );
                 }
             }
-
+            
             //get content from url
             $dao->content = CRM_Utils_System::getServerResponse( $url );
             $dao->created_date = date( "YmdHis" );
@@ -364,7 +356,7 @@ class CRM_Core_BAO_Dashboard extends CRM_Core_DAO_Dashboard
             $dashlet->id = $dashboardID;
         }
         
-        if ( is_array( CRM_Utils_Array::value( 'permission', $params ) ) ) {           
+        if ( is_array( $params['permission'] )) {           
             $params['permission'] = implode( ',', $params['permission'] );
         }
         $dashlet->copyValues( $params );

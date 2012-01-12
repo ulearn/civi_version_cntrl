@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -201,7 +201,7 @@ WHERE  inst.report_id = %1";
                         } elseif ( CRM_Utils_Array::value( 'group_by', $form->_columnHeaders[$v] ) == 'YEAR' ) {
                             $value =  CRM_Utils_Date::customFormat( $value, $config->dateformatYear );
                         } else {
-                            $value =  CRM_Utils_Date::customFormat( $value,'%Y-%m-%d' );
+                            $value =  CRM_Utils_Date::customFormat( $value,'%Y%m%d' );
                         }
                     } else if ( CRM_Utils_Array::value( 'type', $form->_columnHeaders[$v] ) == 1024 ) {
                         $value =  CRM_Utils_Money::format( $value );

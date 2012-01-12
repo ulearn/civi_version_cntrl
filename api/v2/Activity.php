@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,8 +31,8 @@
  *
  * @package CiviCRM_APIv2
  * @subpackage API_Activity
- * @copyright CiviCRM LLC (c) 2004-2011
- * @version $Id: Activity.php 33756 2011-04-19 09:06:24Z kurund $
+ * @copyright CiviCRM LLC (c) 2004-2010
+ * @version $Id: Activity.php 31031 2010-12-02 10:27:45Z deepak $
  *
  */
 
@@ -69,6 +69,7 @@ require_once 'api/v2/ActivityContact.php';
  * {@schema Activity/Activity.xml}
  *                            
  * @return CRM_Activity|CRM_Error Newly created Activity object
+ * 
  */
 function &civicrm_activity_create( &$params ) 
 {
@@ -145,7 +146,7 @@ function civicrm_activity_get_contact( $params ) {
  * Retrieve a set of activities, specific to given input params.
  *
  * @param  array  $params (reference ) input parameters.
- * @deprecated from 3.4 - use civicrm_activity_contact_get
+ *
  * @return array (reference)  array of activities / error message.
  * @access public
  */
@@ -275,19 +276,15 @@ function _civicrm_activity_check_params ( &$params, $addMode = false )
     foreach ( $contactIds as $key => $value ) {
         if ( empty( $value ) ) {
             continue;
-	}
+        }
         $valueIds = array( $value );
         if ( is_array( $value ) ) {
             $valueIds = array( );
             foreach ( $value as $id ) {
-                if ( is_numeric($id) ) $valueIds[$id] = $id;
+                if ( $id ) $valueIds[$id] = $id;
             }
-        } elseif( !is_numeric( $value ) ) {
-	    return civicrm_create_error( ts( 'Invalid %1 Contact Id', array( 1 => ucfirst( 
-$key ) ) ) );
-	}
-        
-	if ( empty( $valueIds ) ) {
+        }
+        if ( empty( $valueIds ) ) {
             continue;
         }
         
@@ -366,11 +363,12 @@ SELECT  count(*)
             }
         }
     }
-
+    
     if ( isset( $params['priority_id'] ) && is_numeric( $params['priority_id'] ) ) { 
         require_once "CRM/Core/PseudoConstant.php";
         $activityPriority = CRM_Core_PseudoConstant::priority( );
-        if ( !array_key_exists( $params['priority_id'], $activityPriority ) ) { 
+        
+        if ( !array_key_exists( $params['priority_id'], $activityStatus ) ) { 
             return civicrm_create_error( ts('Invalid Priority') );
         }
     }
@@ -461,7 +459,6 @@ function _civicrm_activity_buildmailparams( $result, $activityTypeID ) {
  * @param <type> $file
  * @param <type> $activityTypeID
  * @return <type>
- * @deprecated since 3.4 use civicrm_activity_processemail
  */
 function civicrm_activity_process_email( $file, $activityTypeID ) {
     // TODO: Spit out deprecation warning here
@@ -469,8 +466,8 @@ function civicrm_activity_process_email( $file, $activityTypeID ) {
 }
 
 /**
- * @deprecated since 3.4 use civicrm_activity_type_get
- * @return <type>
+ *
+ * @return <type> 
  */
 function civicrm_activity_get_types( ) {
     // TODO: Spit out deprecation warning here
@@ -478,7 +475,7 @@ function civicrm_activity_get_types( ) {
 }
 
 /**
- * Function retrieve activity custom data.
+ * Function retrieve actiovity custom data.
  * @param  array  $params key => value array.
  * @return array  $customData activity custom data 
  *

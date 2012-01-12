@@ -28,16 +28,16 @@
  * the case, you can obtain a copy at http://www.php.net/license/3_0.txt.
  *
  * The latest version of DOMPDF might be available at:
- * http://www.dompdf.com/
+ * http://www.digitaljunkies.ca/dompdf
  *
- * @link http://www.dompdf.com/
+ * @link http://www.digitaljunkies.ca/dompdf
  * @copyright 2004 Benj Carson
  * @author Benj Carson <benjcarson@digitaljunkies.ca>
  * @package dompdf
-
+ * @version 0.5.1
  */
 
-/* $Id: block_positioner.cls.php 216 2010-03-11 22:49:18Z ryan.masten $ */
+/* $Id: block_positioner.cls.php,v 1.2 2006/07/07 21:31:02 benjcarson Exp $ */
 
 /**
  * Positions block frames
@@ -69,3 +69,4 @@ class Block_Positioner extends Positioner {
     $this->_frame->set_position($x, $y);
   }
 }
+?>

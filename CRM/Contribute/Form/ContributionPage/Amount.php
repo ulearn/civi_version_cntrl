@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -392,7 +392,7 @@ SELECT id
         if ( $params['is_recur'] ) {
             require_once 'CRM/Core/BAO/CustomOption.php';
             $params['recur_frequency_unit'] = 
-                implode( CRM_Core_DAO::VALUE_SEPARATOR,
+                implode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR, 
                          array_keys( $params['recur_frequency_unit'] ) );
             $params['is_recur_interval'] = CRM_Utils_Array::value( 'is_recur_interval', $params ,false );
         }
@@ -483,7 +483,6 @@ SELECT id
                 CRM_Core_OptionGroup::deleteAssoc( "civicrm_contribution_page.amount.{$contributionPageID}" );
             }
         }
-        parent::endPostProcess( );
     }
     
     /** 

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -36,10 +36,6 @@
  */
 
 function processQueue($batch_size) {
-    //log the execution of script
-    require_once 'CRM/Core/Error.php';
-    CRM_Core_Error::debug_log_message( 'civimail.cronjob.php');
-    
     require_once 'CRM/Mailing/BAO/Job.php';
 	// Split up the parent jobs into multiple child jobs
 	CRM_Mailing_BAO_Job::runJobs_pre($batch_size);
@@ -50,10 +46,7 @@ function processQueue($batch_size) {
 function run( ) {
     session_start( );                               
                                             
-    if (! function_exists( 'drush_get_context' ) ) {
-        require_once '../civicrm.config.php'; 
-    }
-
+    require_once '../civicrm.config.php'; 
     require_once 'CRM/Core/Config.php'; 
     
     $config =& CRM_Core_Config::singleton(); 
@@ -61,12 +54,19 @@ function run( ) {
     // this does not return on failure
     CRM_Utils_System::authenticateScript( true );
 
+    //log the execution of script
+    CRM_Core_Error::debug_log_message( 'civimail.cronjob.php');
+    
+    // load bootstrap to call hooks
+    require_once 'CRM/Utils/System.php';
+    CRM_Utils_System::loadBootStrap(  );
+
     // we now use DB locks on a per job basis
     processQueue($config->mailerJobSize);
 }
 
 // you can run this program either from an apache command, or from the cli
-if ( php_sapi_name() == "cli" ) {
+if (isset($argv)) {
   require_once ("bin/cli.php");
   $cli=new civicrm_cli ();
   //if it doesn't die, it's authenticated 

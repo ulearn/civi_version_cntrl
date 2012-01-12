@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -136,7 +136,7 @@ class CRM_Custom_Page_Option extends CRM_Core_Page {
         } else {
             CRM_Core_Error::fatal( );
         }
-        $defVal = explode(CRM_Core_DAO::VALUE_SEPARATOR,
+        $defVal = explode(CRM_Core_BAO_CustomOption::VALUE_SEPERATOR,
                           substr( $defaultValue, 1, -1 ) );
 
         // get the option group id
@@ -307,7 +307,7 @@ ORDER BY weight, label
             $this->browse();
         }
         // Call the parents run method
-        return parent::run();
+        parent::run();
     }
 }
 

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -246,7 +246,7 @@ class CRM_Case_Form_Activity extends CRM_Activity_Form_Activity
             return $this->_defaults;
         }
         
-        if ( isset( $this->_encounterMedium ) ) {
+        if ( $this->_encounterMedium ) {
             $this->_defaults['medium_id'] = $this->_encounterMedium;
         } else if ( empty($this->_defaults['medium_id']) ) {
             // set default encounter medium CRM-4816
@@ -576,10 +576,8 @@ class CRM_Case_Form_Activity extends CRM_Activity_Form_Activity
         $caseParams['id'] = $this->_caseId;
         
         if ( CRM_Utils_Array::value('case_type_id', $caseParams ) ) {
-            $caseParams['case_type_id'] = 
-                CRM_Core_DAO::VALUE_SEPARATOR .
-                $caseParams['case_type_id'] . 
-                CRM_Core_DAO::VALUE_SEPARATOR;
+            $caseParams['case_type_id'] = CRM_Case_BAO_Case::VALUE_SEPERATOR .
+                $caseParams['case_type_id'] . CRM_Case_BAO_Case::VALUE_SEPERATOR;
         }
         if ( CRM_Utils_Array::value('case_status_id', $caseParams) ) {
             $caseParams['status_id'] = $caseParams['case_status_id'];

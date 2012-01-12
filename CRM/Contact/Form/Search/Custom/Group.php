@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -64,7 +64,7 @@ class CRM_Contact_Form_Search_Custom_Group
         $this->_allSearch = false; 
         $this->_groups    = false;
         $this->_tags      = false;
-        $this->_andOr     = CRM_Utils_Array::value( 'andOr', $this->_formValues );
+        $this->_andOr      = $this->_formValues['andOr'];
         
 
         //make easy to check conditions for groups and tags are
@@ -551,7 +551,7 @@ class CRM_Contact_Form_Search_Custom_Group
             } else {
                 $from .= " LEFT JOIN Ig_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
                 $from .= " LEFT JOIN Xt_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable2.contact_id IS NULL OR  temptable1.contact_id IS NOT NULL )";
+                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL)";
             }
         }
         if ($iG && !$iT && !$xG && !$xT) {
@@ -585,7 +585,7 @@ class CRM_Contact_Form_Search_Custom_Group
             } else {
                 $from .= " LEFT JOIN It_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
                 $from .= " LEFT JOIN Xg_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NULL)";
+                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL)";
             }
         }
         if (!$iG && $iT && !$xG && $xT) {
@@ -615,7 +615,7 @@ class CRM_Contact_Form_Search_Custom_Group
             } else {
                 $from .= " LEFT JOIN Xg_{$this->_tableName} temptable1 ON (contact_a.id = temptable1.contact_id)";
                 $from .= " LEFT JOIN Xt_{$this->_tableName} temptable2 ON (contact_a.id = temptable2.contact_id)";
-                $this->_where = "( temptable1.contact_id IS NULL OR temptable2.contact_id IS NULL)";
+                $this->_where = "( temptable1.contact_id IS NOT NULL OR temptable2.contact_id IS NOT NULL)";
             }
         }
         if (!$iG && !$iT && !$xG && $xT) {

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -101,10 +101,10 @@ class CRM_Core_Report_Excel {
                     if ($enclosed == '') {
                         $schema_insert .= $value;
                     } else {
-                        if ( ( substr( $value, 0, 1 ) == CRM_Core_DAO::VALUE_SEPARATOR )&& 
-                             ( substr( $value, -1, 1 ) == CRM_Core_DAO::VALUE_SEPARATOR ) ) {
+                        if ( ( substr( $value, 0, 1 ) == CRM_Core_BAO_CustomOption::VALUE_SEPERATOR )&& 
+                             ( substr( $value, -1, 1 ) == CRM_Core_BAO_CustomOption::VALUE_SEPERATOR ) ) {
                             
-                            $strArray = explode( CRM_Core_DAO::VALUE_SEPARATOR, $value );
+                            $strArray = explode( CRM_Core_BAO_CustomOption::VALUE_SEPERATOR, $value );
                             
                             foreach( $strArray as $key => $val ) {
                                 if ( trim( $val ) == '' ) {

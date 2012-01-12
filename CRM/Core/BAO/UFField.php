@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -175,7 +175,6 @@ class CRM_Core_BAO_UFField extends CRM_Core_DAO_UFField
         $ufField->phone_type_id   = CRM_Utils_Array::value( 3, $params['field_name'], 'NULL' );
         $ufField->listings_title  = CRM_Utils_Array::value( 'listings_title' , $params );
         $ufField->visibility      = CRM_Utils_Array::value( 'visibility'     , $params );
-        $ufField->help_pre        = CRM_Utils_Array::value( 'help_pre'       , $params );
         $ufField->help_post       = CRM_Utils_Array::value( 'help_post'      , $params );
         $ufField->label           = CRM_Utils_Array::value( 'label'          , $params );
         $ufField->is_required     = CRM_Utils_Array::value( 'is_required'    , $params, false );

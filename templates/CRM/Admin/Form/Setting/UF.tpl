@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,6 +29,10 @@
 </div>
 <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"}</div>
       <table class="form-layout-compressed">
+         <tr class="crm-uf-form-block-userFrameworkVersion">
+            <td class="label">{$form.userFrameworkVersion.label}</td>
+            <td>{$form.userFrameworkVersion.html}</td>
+         </tr>
          <tr class="crm-uf-form-block-userFrameworkUsersTableName">
             <td class="label">{$form.userFrameworkUsersTableName.label}</td>
             <td>{$form.userFrameworkUsersTableName.html}</td>

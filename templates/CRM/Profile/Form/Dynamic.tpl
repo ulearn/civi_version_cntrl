@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -75,11 +75,7 @@
                 {/if}
                 <div class="form-layout-compressed">
             {/if}
-            {if $field.help_pre && $action neq 4 && $form.$n.html}
-                <div class="crm-section helprow-{$n}-section" id="helprow-{$n}">
-                    <div class="content description">{$field.help_pre}</div>
-                </div>
-            {/if}
+
             {if $field.options_per_line}
             	<div class="crm-section editrow_{$n}-section form-item" id="editrow-{$n}">
                     <div class="label">{$form.$n.label}</div>
@@ -266,13 +262,9 @@ cj(document).ready(function(){
 				eval( 'addMultiClientOption' + blockNo + "( newToken,  blockNo )" );
                        }
                    }
-                   cj('input[name="contact_select_id[' + blockNo +']"]').val( response.contactID );
+                   cj('input[name=contact_select_id[' + blockNo +']]').val( response.contactID );
                    cj('#contact-success-' + blockNo ).show( );
                    cj('#contact-dialog-' + blockNo ).dialog('close');
-
-		   {/literal}{ if $createCallback}{literal}
-        	       profileCreateCallback( blockNo );
-		   {/literal}{/if}{literal}			     
                }
            }
          }).responseText;

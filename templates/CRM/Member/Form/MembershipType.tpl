@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -271,7 +271,7 @@
           return;
        }
        if ( !autoRenewOpt ) {
-       	  autoRenewOpt = cj( 'input:radio[name="auto_renew"]:checked').val();
+       	  autoRenewOpt = cj( 'input:radio[name=auto_renew]:checked').val();
        }	     
        funName = 'hide();';
        if ( autoRenewOpt == 1 || autoRenewOpt == 2 ) funName = 'show();';

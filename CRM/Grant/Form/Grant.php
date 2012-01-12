@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -273,7 +273,7 @@ class CRM_Grant_Form_Grant extends CRM_Core_Form
         // get the submitted form values.  
         $params = $this->controller->exportValues( $this->_name );
 
-        if ( !CRM_Utils_Array::value( 'grant_report_received', $params ) ) {
+        if (!$params['grant_report_received']) {
             $params['grant_report_received'] = "null";
         } 
         
@@ -284,7 +284,14 @@ class CRM_Grant_Form_Grant extends CRM_Core_Form
         
         $params['contact_id'] = $this->_contactID;
 
+        $dates = array( 'application_received_date',
+                        'decision_date',
+                        'money_transfer_date',
+                        'grant_due_date' );
         
+        foreach ( $dates as $d ) {
+            $params[$d] = CRM_Utils_Date::processDate( $params[$d], null, true );
+        }
      
         $ids['note'] = array( );
         if ( $this->_noteId ) {

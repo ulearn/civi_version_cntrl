@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 4.0                                                |
+| CiviCRM version 3.3                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -209,18 +209,6 @@ class CRM_Activity_DAO_Activity extends CRM_Core_DAO
      */
     public $is_deleted;
     /**
-     * The campaign for which this activity has been triggered.
-     *
-     * @var int unsigned
-     */
-    public $campaign_id;
-    /**
-     * Assign a specific level of engagement to this activity. Used for tracking constituents in ladder of engagement.
-     *
-     * @var int unsigned
-     */
-    public $engagement_level;
-    /**
      * class constructor
      *
      * @access public
@@ -245,7 +233,6 @@ class CRM_Activity_DAO_Activity extends CRM_Core_DAO
                 'parent_id' => 'civicrm_activity:id',
                 'relationship_id' => 'civicrm_relationship:id',
                 'original_id' => 'civicrm_activity:id',
-                'campaign_id' => 'civicrm_campaign:id',
             );
         }
         return self::$_links;
@@ -435,34 +422,13 @@ class CRM_Activity_DAO_Activity extends CRM_Core_DAO
                     'maxlength' => 255,
                     'size' => CRM_Utils_Type::HUGE,
                 ) ,
-                'activity_is_deleted' => array(
+                'is_deleted' => array(
                     'name' => 'is_deleted',
                     'type' => CRM_Utils_Type::T_BOOLEAN,
                     'title' => ts('Activity is in the Trash') ,
                     'import' => true,
                     'where' => 'civicrm_activity.is_deleted',
                     'headerPattern' => '/(activity.)?(trash|deleted)/i',
-                    'dataPattern' => '',
-                    'export' => true,
-                ) ,
-                'activity_campaign_id' => array(
-                    'name' => 'campaign_id',
-                    'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Campaign ID') ,
-                    'import' => true,
-                    'where' => 'civicrm_activity.campaign_id',
-                    'headerPattern' => '',
-                    'dataPattern' => '',
-                    'export' => true,
-                    'FKClassName' => 'CRM_Campaign_DAO_Campaign',
-                ) ,
-                'activity_engagement_level' => array(
-                    'name' => 'engagement_level',
-                    'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Engagement Index') ,
-                    'import' => true,
-                    'where' => 'civicrm_activity.engagement_level',
-                    'headerPattern' => '',
                     'dataPattern' => '',
                     'export' => true,
                 ) ,

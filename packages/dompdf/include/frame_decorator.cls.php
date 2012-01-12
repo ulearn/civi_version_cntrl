@@ -28,16 +28,16 @@
  * the case, you can obtain a copy at http://www.php.net/license/3_0.txt.
  *
  * The latest version of DOMPDF might be available at:
- * http://www.dompdf.com/
+ * http://www.digitaljunkies.ca/dompdf
  *
- * @link http://www.dompdf.com/
+ * @link http://www.digitaljunkies.ca/dompdf
  * @copyright 2004 Benj Carson
  * @author Benj Carson <benjcarson@digitaljunkies.ca>
  * @package dompdf
-
+ * @version 0.5.1
  */
 
-/* $Id: frame_decorator.cls.php 216 2010-03-11 22:49:18Z ryan.masten $ */
+/* $Id: frame_decorator.cls.php,v 1.13 2006/07/07 21:31:03 benjcarson Exp $ */
 
 /**
  * Base Frame_Decorator class
@@ -157,7 +157,6 @@ abstract class Frame_Decorator extends Frame {
   function get_original_style() { return $this->_frame->get_original_style(); }
   function get_containing_block($i = null) { return $this->_frame->get_containing_block($i); }
   function get_position($i = null) { return $this->_frame->get_position($i); }
-  function get_dompdf() { return $this->_dompdf; }
 //   function get_decorator() {
 //     if ( isset($this->_decorator) )
 //       return $this->_decorator;
@@ -394,3 +393,5 @@ abstract class Frame_Decorator extends Frame {
 
 
 }
+
+?>

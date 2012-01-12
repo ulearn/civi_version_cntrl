@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -101,12 +101,21 @@ WHERE      g.id IN ( {$groupID} ) AND ( g.saved_search_id IS NOT NULL OR g.child
             $groupID = array( $groupID );
         }
 
-        require_once 'CRM/Contact/BAO/Query.php';
-        $returnProperties = array('contact_id');
-        foreach ($groupID as $gid) {
-            $params = array(array('group', 'IN', array($gid => 1), 0, 0));
+        $params['return.contact_id'] = 1;
+        $params['offset']            = 0;
+        $params['rowCount']          = 0;
+        $params['sort']              = null;
+        $params['smartGroupCache']   = false;
+
+        require_once 'api/v2/Contact.php';
+        
+        $values = array( );
+        foreach ( $groupID as $gid ) {
+            $params['group'] = array( );
+            $params['group'][$gid] = 1;
+
             // the below call update the cache table as a byproduct of the query
-            CRM_Contact_BAO_Query::apiQuery($params, $returnProperties, null, null, 0, 0, false);
+            $contacts = civicrm_contact_search( $params );
         }
     }
 
@@ -239,15 +248,6 @@ WHERE  id = %1
         if ( $savedSearchID ) {
             require_once 'CRM/Contact/BAO/SavedSearch.php';
             $ssParams =& CRM_Contact_BAO_SavedSearch::getSearchParams($savedSearchID);
-
-            // rectify params to what proximity search expects if there is a value for prox_distance
-            // CRM-7021
-            if ( !empty( $ssParams ) ) { 
-                require_once 'CRM/Contact/BAO/ProximityQuery.php';
-                CRM_Contact_BAO_ProximityQuery::fixInputParams( $ssParams );
-            }
-
-            
             $returnProperties = array();
             if (CRM_Core_DAO::getFieldValue( 'CRM_Contact_DAO_SavedSearch',
                                              $savedSearchID,

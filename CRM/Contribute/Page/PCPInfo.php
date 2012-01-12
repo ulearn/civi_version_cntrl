@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -263,7 +263,7 @@ class CRM_Contribute_Page_PCPInfo extends CRM_Core_Page
             return $controller->run();
         }
         $session->pushUserContext( CRM_Utils_System::url(CRM_Utils_System::currentPath( ),'reset=1&id='.$this->_id ));
-        return parent::run();
+        parent::run();
     }
     
     function getTemplateFileName() 

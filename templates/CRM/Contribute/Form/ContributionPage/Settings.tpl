@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,6 +23,8 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
+{* WizardHeader.tpl provides visual display of steps thru the wizard as well as title for current step *}
+{include file="CRM/common/WizardHeader.tpl"}
 <div class="crm-block crm-form-block crm-contribution-contributionpage-settings-form-block">
 <div id="help">
     {if $action eq 0}
@@ -40,11 +42,6 @@
 	<tr class="crm-contribution-contributionpage-settings-form-block-contribution_type_id"><td class="label">{$form.contribution_type_id.label}</td><td>{$form.contribution_type_id.html}<br />	
             <span class="description">{ts}Select the corresponding contribution type for contributions made using this page.{/ts}</span> {help id="id-contribution_type"}</td>
 	</tr>
-	
-	{* CRM-7362 --add campaign to contribution page *}
-	{include file="CRM/Campaign/Form/addCampaignToComponent.tpl"
-	campaignTrClass="crm-contribution-contributionpage-settings-form-block-campaign_id"}
-
 	<tr class="crm-contribution-contributionpage-settings-form-block-is_organization"><td>&nbsp;</td><td>{$form.is_organization.html} {$form.is_organization.label} {help id="id-is_organization"}</td></tr>
 	<tr id="for_org_option" class="crm-contribution-form-block-is_organization">
         <td>&nbsp;</td>

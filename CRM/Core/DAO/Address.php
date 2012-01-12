@@ -1,9 +1,9 @@
 <?php
 /*
 +--------------------------------------------------------------------+
-| CiviCRM version 4.0                                                |
+| CiviCRM version 3.3                                                |
 +--------------------------------------------------------------------+
-| Copyright CiviCRM LLC (c) 2004-2011                                |
+| Copyright CiviCRM LLC (c) 2004-2010                                |
 +--------------------------------------------------------------------+
 | This file is a part of CiviCRM.                                    |
 |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -302,12 +302,10 @@ class CRM_Core_DAO_Address extends CRM_Core_DAO
                 'location_type_id' => array(
                     'name' => 'location_type_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Address Location Type') ,
                 ) ,
                 'is_primary' => array(
                     'name' => 'is_primary',
                     'type' => CRM_Utils_Type::T_BOOLEAN,
-                    'title' => ts('Is Address Primary?') ,
                 ) ,
                 'is_billing' => array(
                     'name' => 'is_billing',
@@ -391,7 +389,7 @@ class CRM_Core_DAO_Address extends CRM_Core_DAO
                 'supplemental_address_1' => array(
                     'name' => 'supplemental_address_1',
                     'type' => CRM_Utils_Type::T_STRING,
-                    'title' => ts('Additional Address 1') ,
+                    'title' => ts('Supplemental Address 1') ,
                     'maxlength' => 96,
                     'size' => CRM_Utils_Type::HUGE,
                     'import' => true,
@@ -403,7 +401,7 @@ class CRM_Core_DAO_Address extends CRM_Core_DAO
                 'supplemental_address_2' => array(
                     'name' => 'supplemental_address_2',
                     'type' => CRM_Utils_Type::T_STRING,
-                    'title' => ts('Additional Address 2') ,
+                    'title' => ts('Supplemental Address 2') ,
                     'maxlength' => 96,
                     'size' => CRM_Utils_Type::HUGE,
                     'import' => true,
@@ -439,7 +437,6 @@ class CRM_Core_DAO_Address extends CRM_Core_DAO
                 'state_province_id' => array(
                     'name' => 'state_province_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('State') ,
                     'FKClassName' => 'CRM_Core_DAO_StateProvince',
                 ) ,
                 'postal_code_suffix' => array(
@@ -476,7 +473,6 @@ class CRM_Core_DAO_Address extends CRM_Core_DAO
                 'country_id' => array(
                     'name' => 'country_id',
                     'type' => CRM_Utils_Type::T_INT,
-                    'title' => ts('Country') ,
                     'FKClassName' => 'CRM_Core_DAO_Country',
                 ) ,
                 'geo_code_1' => array(
@@ -541,7 +537,8 @@ class CRM_Core_DAO_Address extends CRM_Core_DAO
      */
     function getTableName()
     {
-        return self::$_tableName;
+        global $dbLocale;
+        return self::$_tableName . $dbLocale;
     }
     /**
      * returns if this table needs to be logged

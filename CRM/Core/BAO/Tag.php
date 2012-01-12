@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -289,13 +289,6 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag
             CRM_Utils_Hook::pre( 'edit', 'Tag', $tag->id, $tag );
         } else {
             CRM_Utils_Hook::pre( 'create', 'Tag', null, $tag );
-        }
-    
-        // save creator id and time
-        if ( !$tag->id ) {
-            $session =& CRM_Core_Session::singleton( );
-            $tag->created_id   = $session->get('userID');
-            $tag->created_date = date('YmdHis'); 
         }
 
         $tag->save( );

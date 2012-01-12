@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -40,21 +40,14 @@ $config   = CRM_Core_Config::singleton( );
 $template = CRM_Core_Smarty::singleton( );
 
 require_once 'CRM/Utils/Request.php';
-$cpageId  = CRM_Utils_Request::retrieve( 'cpageId',  'Positive', CRM_Core_DAO::$_nullObject );
+$cpageId  = CRM_Utils_Request::retrieve( 'cpageId', 'Positive', CRM_Core_DAO::$_nullObject );
 $widgetId = CRM_Utils_Request::retrieve( 'widgetId', 'Positive', CRM_Core_DAO::$_nullObject );
-$format   = CRM_Utils_Request::retrieve( 'format',   'Positive', CRM_Core_DAO::$_nullObject );
 
 require_once 'CRM/Contribute/BAO/Widget.php';
-
-$jsonvar = 'jsondata';
-if ( isset( $format ) ) {
-    $jsonvar .= $cpageId; 
-}
-
 $data = CRM_Contribute_BAO_Widget::getContributionPageData( $cpageId, $widgetId );
 
 $output = '
-    var '.$jsonvar.' = '.json_encode( $data ) .';
+    var jsondata = '.json_encode( $data ) .';
 ';
 
 echo $output;

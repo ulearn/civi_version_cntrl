@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -136,7 +136,7 @@ function showHideAutoRenew( memTypeId )
 {
   var considerUserInput = {/literal}'{$takeUserSubmittedAutoRenew}'{literal};	    
   if ( memTypeId ) considerUserInput = false;
-  if ( !memTypeId ) memTypeId = cj('input:radio[name="selectMembership"]:checked').val();
+  if ( !memTypeId ) memTypeId = cj('input:radio[name=selectMembership]:checked').val();
   
   //does this page has only one membership type.
   var singleMembership = {/literal}'{$singleMembership}'{literal};
@@ -165,7 +165,7 @@ function showHideAutoRenew( memTypeId )
 
   //its a normal recur contribution.
   if ( cj( "is_recur" ) && 
-      ( cj( 'input:radio[name="is_recur"]:checked').val() == 1 ) ) {
+      ( cj( 'input:radio[name=is_recur]:checked').val() == 1 ) ) {
      isChecked = false;
      funName   = 'hide();';
   }

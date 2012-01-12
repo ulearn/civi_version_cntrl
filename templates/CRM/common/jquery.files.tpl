@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,8 +28,11 @@
  * We will unify the two files in a future release
  *}
 packages/jquery/jquery.js
-packages/jquery/jquery-ui-1.8.11/js/jquery-ui-1.8.11.custom.min.js
-packages/jquery/jquery-ui-1.8.11/css/smoothness/jquery-ui-1.8.11.custom.css
+packages/jquery/jquery-ui-1.8.5/js/jquery-ui-1.8.5.custom.min.js
+packages/jquery/jquery-ui-1.8.5/css/custom-theme/jquery-ui-1.8.5.custom.css
+
+packages/jquery/plugins/flexigrid.js
+packages/jquery/css/flexigrid.css
 
 packages/jquery/plugins/jquery.autocomplete.js
 packages/jquery/css/jquery.autocomplete.css
@@ -60,8 +63,8 @@ packages/jquery/plugins/jquery.mousewheel.pack.js
 
 packages/jquery/plugins/jquery.toolTip.js
 
-packages/jquery/plugins/DataTables-1.7.6/media/css/demo_table_jui.css
-packages/jquery/plugins/DataTables-1.7.6/media/js/jquery.dataTables.min.js
+packages/jquery/plugins/DataTables-1.7.2/media/css/demo_table_jui.css
+packages/jquery/plugins/DataTables-1.7.2/media/js/jquery.dataTables.min.js
 
 packages/jquery/plugins/jquery.dashboard.js
 packages/jquery/css/dashboard.css
@@ -73,4 +76,3 @@ js/rest.js
 js/jquery/jquery.crmaccordions.js
 js/jquery/jquery.crmasmselect.js
 js/jquery/jquery.crmtooltip.js
-js/jquery/jquery.crmrowhighlighter.js

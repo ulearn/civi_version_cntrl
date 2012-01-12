@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,4 +23,16 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
-{include file="CRM/Logging/ReportDetail.tpl"}
+<div class="crm-block crm-content-block crm-report-form-block">
+  {if $rows}
+    <p>{ts 1=$whom_url 2=$whom_name 3=$who_url 4=$who_name 5=$log_date}Change to <a href='%1'>%2</a> made by <a href='%3'>%4</a> on %5:{/ts}</p>
+    {include file="CRM/Report/Form/Layout/Table.tpl"}
+  {else}
+    <div class='messages status'>
+        <div class='icon inform-icon'></div>&nbsp; {ts}This report can not be displayed because there are no entries in the logging tables yet.{/ts}
+    </div>
+  {/if}
+  <div class="action-link">
+      <a href="{$summaryReportURL}" class="button"><span><div class="icon back-icon"></div>{ts}Back to Logging Summary{/ts}</span></a>
+  </div>
+</div>

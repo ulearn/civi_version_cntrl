@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -60,10 +60,7 @@
       {/foreach}
   </td>
 {/if}
-</tr>
-
-<tr><td colspan="3">{include file="CRM/common/Tag.tpl" tagsetType='case'}</td></tr>
-
+</tr>    
 {literal}
 <script type="text/javascript">
     var verifyCaseInput = new Array();
@@ -123,7 +120,7 @@
            
     function alterCaseFilters( ) {
         var isChecked = 0;
-        cj("#case_search_form input[name='case_owner']").each( function( ) {
+        cj("#case_search_form input[name=case_owner]").each( function( ) {
             if ( (cj(this).attr('type') == 'radio' && cj(this).attr('checked') ) ) {
                 isChecked = 1;
             }    
@@ -134,7 +131,7 @@
         }
 
         if ( cj.inArray( 1, verifyCaseInput ) != -1 ) {
-            cj("#case_search_form input[name='case_owner']").each( function( ) {
+            cj("#case_search_form input[name=case_owner]").each( function( ) {
                 if ( (cj(this).attr('type') == 'radio' && cj(this).val( ) == 1) ) {
                     cj(this).click();
                 }    

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -223,6 +223,7 @@ class CRM_Group_Form_Edit extends CRM_Core_Form
         $this->applyFilter('__ALL__', 'trim');
         $this->add('text', 'title'       , ts('Name') . ' ' ,
                    CRM_Core_DAO::getAttribute( 'CRM_Contact_DAO_Group', 'title' ),true );
+        $this->addFormRule( array( 'CRM_Group_Form_Edit', 'formRule' ), $this );
         
         $this->add('textarea', 'description', ts('Description') . ' ', 
                    CRM_Core_DAO::getAttribute( 'CRM_Contact_DAO_Group', 'description' ) );
@@ -311,15 +312,14 @@ class CRM_Group_Form_Edit extends CRM_Core_Form
                                  )
                            );
         
-        $doParentCheck = false;
         if ( defined( 'CIVICRM_MULTISITE' ) && CIVICRM_MULTISITE ) {
             $doParentCheck = ($this->_id && CRM_Core_BAO_Domain::isDomainGroup($this->_id)) ? false : true;
+        } else {
+            $doParentCheck = false;
         }
-
-        $options = array( 'selfObj'       => $this,
-                          'parentGroups'  => $parentGroups,
-                          'doParentCheck' => $doParentCheck );
-        $this->addFormRule( array( 'CRM_Group_Form_Edit', 'formRule' ), $options );
+        if ( $doParentCheck ) {
+            $this->addFormRule( array( 'CRM_Group_Form_Edit', 'formRule' ), $parentGroups );
+        }
     }
     
     /**
@@ -331,33 +331,26 @@ class CRM_Group_Form_Edit extends CRM_Core_Form
      * @static
      * @access public
      */
-    static function formRule( $fields, $fileParams, $options ) 
+    static function formRule( $fields, $fileParams, $parentGroups ) 
     {
         $errors = array( );
 
-        $doParentCheck = $options['doParentCheck'];
-        $self          = &$options['selfObj'];
-
-        if ( $doParentCheck ) {
-            $parentGroups  = $options['parentGroups'];
-
-            $grpRemove = 0;
-            foreach ( $fields as $key => $val ) {
-                if ( substr( $key, 0, 20 ) == 'remove_parent_group_' ) {
-                    $grpRemove++;
-                }
-            }
-            
-            $grpAdd = 0;
-            if ( CRM_Utils_Array::value( 'parents', $fields ) ) {
-                $grpAdd++;
-            }
-            
-            if ( (count($parentGroups) >= 1) && (($grpRemove - $grpAdd) >=  count($parentGroups)) ) {
-                $errors['parents'] = ts( 'Make sure at least one parent group is set.' );
+        $grpRemove = 0;
+        foreach ( $fields as $key => $val ) {
+            if ( substr( $key, 0, 20 ) == 'remove_parent_group_' ) {
+                $grpRemove++;
             }
         }
 
+        $grpAdd = 0;
+        if ( CRM_Utils_Array::value( 'parents', $fields ) ) {
+            $grpAdd++;
+        }
+
+        if ( (count($parentGroups) >= 1) && (($grpRemove - $grpAdd) >=  count($parentGroups)) ) {
+            $errors['parents'] = ts( 'Make sure at least one parent group is set.' );
+        }
+        
         // do check for both name and title uniqueness
         if ( CRM_Utils_Array::value( 'title', $fields ) ) {
             $title = trim( $fields['title'] );
@@ -370,7 +363,7 @@ AND    id <> %3
 ";
             $grpCnt = CRM_Core_DAO::singleValueQuery( $query, array( 1 => array( $name,  'String' ),
                                                                      2 => array( $title, 'String' ),
-                                                                     3 => array( (int)$self->_id, 'Integer' ) ) );
+                                                                     3 => array( (int)$parentGroups->_id, 'Integer' ) ) );
             if ( $grpCnt ) {
                 $errors['title'] = ts( 'Group \'%1\' already exists.', array( 1 => $fields['title']) );
             }

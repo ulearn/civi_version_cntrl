@@ -10,7 +10,6 @@ class civicrm_handler_field_markup extends views_handler_field {
 
     function render($values) {
         $value = $values->{$this->field_alias};
-        $retval = check_markup($value, filter_fallback_format(), FALSE);
-        return ( $retval == 'n/a' ) ? null : $retval;
+        return check_markup($value, FILTER_FORMAT_DEFAULT, FALSE);
     }
 }

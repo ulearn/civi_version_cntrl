@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -81,11 +81,6 @@
 	<td><label>{ts}Currency{/ts}</label> <br />
 	{$form.contribution_currency_type.html}</td>
 </tr>
-
-{* campaign in contribution search *}
-{include file="CRM/Campaign/Form/addCampaignToComponent.tpl" campaignContext="componentSearch" 
-	 campaignTrClass='' campaignTdClass=''}
-
 {if $contributeGroupTree}
 <tr>
 	<td colspan="2">

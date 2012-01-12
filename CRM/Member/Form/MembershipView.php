@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -164,14 +164,7 @@ END AS 'relType'
 
         $subscriptionCancelled = CRM_Member_BAO_Membership::isSubscriptionCancelled( $id );
         $values['auto_renew'] = ( $autoRenew && !$subscriptionCancelled ) ? 'Yes' : 'No';
-
-        //do check for campaigns
-        if ( $campaignId = CRM_Utils_Array::value( 'campaign_id', $values ) ) {
-            require_once 'CRM/Campaign/BAO/Campaign.php';
-            $campaigns = CRM_Campaign_BAO_Campaign::getCampaigns( $campaignId );
-            $values['campaign'] = $campaigns[$campaignId];
-        }
-        
+                        
         $this->assign( $values ); 
     }
 

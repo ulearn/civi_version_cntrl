@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -121,9 +121,13 @@ class CRM_Utils_Rule
         return true;
     }
 
-    static function url($url)
+    static function url( $url, $checkDomain = false) 
     {
-        return (bool) filter_var($url, FILTER_VALIDATE_URL);
+        $options = array( 'domain_check'    => $checkDomain,
+                          'allowed_schemes' => array( 'http', 'https', 'mailto', 'ftp' ) );
+
+        require_once 'Validate.php';
+        return Validate::uri( $url, $options );
     }
 
     static function wikiURL( $string )
@@ -374,17 +378,21 @@ class CRM_Utils_Rule
             true : false;
     }
 
-    static function email($value)
+    static function email($value, $checkDomain = false) 
     {
-        return (bool) filter_var($value, FILTER_VALIDATE_EMAIL);
+        static $qfRule = null;
+        if ( ! isset( $qfRule ) ) {
+            $qfRule = new HTML_QuickForm_Rule_Email();
+        }
+        return $qfRule->validate( $value, $checkDomain );
     }
 
-    static function emailList($list)
+    static function emailList( $list, $checkDomain = false ) 
     {
         $emails = explode( ',', $list );
         foreach ( $emails as $email ) {
             $email = trim( $email );
-            if (!self::email($email)) {
+            if ( ! self::email( $email, $checkDomain ) ) {
                 return false;
             }
         }

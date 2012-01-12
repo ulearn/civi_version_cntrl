@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -115,9 +115,7 @@ class CRM_Core_Payment_PayPalIPN extends CRM_Core_Payment_BaseIPN {
             break;
             
         case 'subscr_eot':
-            if ( $recur->contribution_status_id != 3 ) {
-                $recur->contribution_status_id = 1;
-            }
+            $recur->contribution_status_id = 1;
             $recur->end_date               = $now;
             $sendNotification              = true;
             $subscriptionPaymentStatus     = CRM_Core_Payment::RECURRING_PAYMENT_END;
@@ -130,7 +128,7 @@ class CRM_Core_Payment_PayPalIPN extends CRM_Core_Payment_BaseIPN {
 
         case 'subscr_failed':
             $recur->contribution_status_id = 4;
-            $recur->modified_date          = $now;
+            $recur->cancel_date            = $now;
             break;
 
         case 'subscr_modify':

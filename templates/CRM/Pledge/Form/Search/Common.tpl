@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -114,11 +114,6 @@
      {$form.pledge_frequency_unit.html}
     </td>
  </tr>
-
-{* campaign in pledge search *}
-{include file="CRM/Campaign/Form/addCampaignToComponent.tpl" 
-campaignContext="componentSearch" campaignTrClass='' campaignTdClass=''}
-
 {if $pledgeGroupTree}
  <tr>
     <td colspan="2">

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -472,7 +472,7 @@ ORDER BY  modified_date desc";
                 require_once 'CRM/Contact/DAO/Contact.php';
                 require_once 'CRM/Core/Smarty/plugins/modifier.mb_truncate.php';
                 $contact =  new CRM_Contact_DAO_Contact( );
-                $createdById = $note->contact_id;
+                $createdById = CRM_Core_DAO::getFieldValue( 'CRM_Core_DAO_Note', $parentId, 'entity_id' );
                 $contact->id = $createdById;
                 $contact->find( );
                 $contact->fetch( );

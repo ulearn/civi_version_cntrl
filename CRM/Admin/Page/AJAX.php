@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -44,7 +44,7 @@ class CRM_Admin_Page_AJAX
      */    
     static function getNavigationList( ) {
         require_once 'CRM/Core/BAO/Navigation.php';
-        echo CRM_Core_BAO_Navigation::buildNavigation( true, false );           
+        echo CRM_Core_BAO_Navigation::buildNavigation( true );           
         CRM_Utils_System::civiExit();
     }
     
@@ -209,36 +209,25 @@ class CRM_Admin_Page_AJAX
         $statusMessage['show']   = $show;
         
         echo json_encode( $statusMessage );
-        CRM_Utils_System::civiExit();
+        
+        exit;
     }
     
     static function getTagList( ) {
         $name     = CRM_Utils_Type::escape( $_GET['name'], 'String' );
         $parentId = CRM_Utils_Type::escape( $_GET['parentId'], 'Integer' );
         
-        $isSearch = null;
-        if ( isset( $_GET['search'] ) ) {
-            $isSearch = CRM_Utils_Type::escape( $_GET['search'], 'Integer' );
-        }
-
         $tags = array( );
         
         // always add current search term as possible tag
-        // here we append :::value to determine if existing / new tag should be created
-        if ( !$isSearch ) {
-            $tags[] = array( 'name' => $name,
-                             'id'   => $name. ":::value" );            
-        }
-
+        $tags[] = array( 'name' => $name,
+                         'id'   => $name );            
+        
         $query = "SELECT id, name FROM civicrm_tag WHERE parent_id = {$parentId} and name LIKE '%{$name}%'";
         $dao = CRM_Core_DAO::executeQuery( $query );
         
         while( $dao->fetch( ) ) {
-            // make sure we return tag name entered by user only if it does not exists in db
-            if ( $name == $dao->name ) {
-                $tags = array();
-            }
-            // escape double quotes, which break results js
+                                       // escape double quotes, which break results js
             $tags[] = array( 'name' =>  addcslashes($dao->name, '"'),
                              'id'   => $dao->id );
         }
@@ -264,17 +253,9 @@ class CRM_Admin_Page_AJAX
         if ( $_POST['skipEntityAction'] ) {
             $skipEntityAction = CRM_Utils_Type::escape( $_POST['skipEntityAction'], 'Integer' );
         }
-
-        // check if user has selected existing tag or is creating new tag
-        // this is done to allow numeric tags etc. 
-        $tagValue = explode( ':::', $_POST['tagID'] );
         
-        $createNewTag = false;
-        $tagID  = $tagValue[0];
-        if ( isset( $tagValue[1] ) && $tagValue[1] == 'value' ) {
-            $createNewTag = true;
-        }       
-
+        $tagID = $_POST['tagID' ];
+        
         require_once 'CRM/Core/BAO/EntityTag.php';
         $tagInfo = array( );
         // if action is select
@@ -282,7 +263,7 @@ class CRM_Admin_Page_AJAX
             // check the value of tagID
             // if numeric that means existing tag
             // else create new tag
-            if ( !$skipTagCreate && $createNewTag ) {
+            if ( !$skipTagCreate && !is_numeric( $tagID ) ) {
                 $params = array( 'name'      => $tagID, 
                                  'parent_id' => $parentId );
 

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -184,11 +184,6 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
                 list( $displayName, $email ) = CRM_Contact_BAO_Contact_Location::getEmailDetails( $contactID );
             }
             
-            if ( empty( $displayName ) ) {
-                require_once 'CRM/Contact/BAO/Contact.php';
-                $displayName = CRM_Contact_BAO_Contact::displayName( $contactID );
-            }
-            
             //for display profile need to get individual contact id,  
             //hence get it from related_contact if on behalf of org true CRM-3767.
                        
@@ -219,11 +214,11 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
                 }
                 self::buildCustomDisplay( $postID, 'customPost', $userID, $template, $params['custom_post_id'] );
             }
-
+            
             // set email in the template here
             $tplParams = array(
                 'email'            => $email,
-                'receiptFromEmail' => CRM_Utils_Array::value( 'receipt_from_email', $values ),
+                'receiptFromEmail' => $values['receipt_from_email'],
                 'contactID'        => $contactID,
                 'contributionID'   => $values['contribution_id'],
                 'membershipID'     => CRM_Utils_Array::value('membership_id', $values),
@@ -235,10 +230,6 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
                 $tplParams['contributionTypeId']   = $contributionTypeId;
                 $tplParams['contributionTypeName'] = CRM_Core_DAO::getFieldValue( 'CRM_Contribute_DAO_ContributionType',
                                                                                   $contributionTypeId );
-            }
-
-            if ( $contributionPageId = CRM_Utils_Array::value('id', $values ) ) {
-                $tplParams['contributionPageId']   = $contributionPageId;
             }
                         
             // address required during receipt processing (pdf and email receipt)
@@ -270,12 +261,12 @@ class CRM_Contribute_BAO_ContributionPage extends CRM_Contribute_DAO_Contributio
             
             // use either the contribution or membership receipt, based on whether it’s a membership-related contrib or not
             $sendTemplateParams = array(
-                'groupName'   => $tplParams['membershipID'] ? 'msg_tpl_workflow_membership' : 'msg_tpl_workflow_contribution',
-                'valueName'   => $tplParams['membershipID'] ? 'membership_online_receipt'   : 'contribution_online_receipt',
-                'contactId'   => $contactID,
-                'tplParams'   => $tplParams,
-                'isTest'      => $isTest,
-            	'PDFFilename' => 'receipt.pdf',
+                'groupName' => $tplParams['membershipID'] ? 'msg_tpl_workflow_membership' : 'msg_tpl_workflow_contribution',
+                'valueName' => $tplParams['membershipID'] ? 'membership_online_receipt'   : 'contribution_online_receipt',
+                'contactId' => $contactID,
+                'tplParams' => $tplParams,
+                'isTest'    => $isTest,
+            	'PDFFilename' => 'civicrm.pdf',
             );
 
             require_once 'CRM/Core/BAO/MessageTemplates.php';

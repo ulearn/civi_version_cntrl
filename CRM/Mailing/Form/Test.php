@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -216,7 +216,7 @@ class CRM_Mailing_Form_Test extends CRM_Core_Form
             if ( $error ) {
                 $url = CRM_Utils_System::url( $urlString, $urlParams );
                 CRM_Utils_System::redirect( $url );
-                return $error;
+                return true;
             }
         } 
         
@@ -255,8 +255,7 @@ class CRM_Mailing_Form_Test extends CRM_Core_Form
         if ( CRM_Utils_Array::value( '_qf_Import_refresh', $_POST ) || 
              CRM_Utils_Array::value( '_qf_Test_next', $testParams ) ||
              !CRM_Utils_Array::value( 'sendtest', $testParams ) ) {
-            $error = true;
-            return $error;
+            return true;
         }
         
         require_once 'CRM/Mailing/BAO/Job.php';
@@ -336,8 +335,8 @@ class CRM_Mailing_Form_Test extends CRM_Core_Form
             $url = CRM_Utils_System::url( $urlString, $urlParams );
             CRM_Utils_System::redirect( $url );
         }
-        $error = true;
-        return $error;
+        
+        return true;
     }
     
     /**

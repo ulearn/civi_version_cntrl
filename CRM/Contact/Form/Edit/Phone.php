@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -73,7 +73,7 @@ class CRM_Contact_Form_Edit_Phone
 			$form->addElement('select',"phone[$blockId][location_type_id]", '' , CRM_Core_PseudoConstant::locationType());
 			
 			//is_Primary radio
-			$js = array( 'id' => 'Phone_'.$blockId.'_IsPrimary', 'onClick' => 'singleSelect( this.id );');
+			$js = array( 'id' => "Phone_".$blockId."_IsPrimary", 'onClick' => 'singleSelect( this.id );');
             $form->addElement( 'radio', "phone[$blockId][is_primary]", '', '', '1', $js );
 		}           
         // TODO: set this up as a group, we need a valid phone_type_id if we have a  phone number

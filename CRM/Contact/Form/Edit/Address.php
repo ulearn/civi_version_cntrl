@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -71,7 +71,7 @@ class CRM_Contact_Form_Edit_Address
                           ts( 'Location Type' ),
                           array( '' => ts( '- select -' ) ) + CRM_Core_PseudoConstant::locationType( ), $js );
         
-        $js = array( 'id' => 'Address_'.$blockId.'_IsPrimary', 'onClick' => 'singleSelect( this.id );');
+        $js = array( 'id' => "Address_".$blockId."_IsPrimary", 'onClick' => 'singleSelect( this.id );');
         $form->addElement(
                           'checkbox', 
                           "address[$blockId][is_primary]", 
@@ -79,7 +79,7 @@ class CRM_Contact_Form_Edit_Address
                           ts('Primary location for this contact'), 
                           $js );
         
-        $js = array( 'id' => 'Address_'.$blockId.'_IsBilling', 'onClick' => 'singleSelect( this.id );');
+        $js = array( 'id' => "Address_".$blockId."_IsBilling", 'onClick' => 'singleSelect( this.id );');
         $form->addElement(
                           'checkbox', 
                           "address[$blockId][is_billing]", 
@@ -103,7 +103,7 @@ class CRM_Contact_Form_Edit_Address
                           'city'                   => array( ts('City')              ,  $attributes['city'] , null ),
                           'postal_code'            => array( ts('Zip / Postal Code') ,  $attributes['postal_code'], null ),
                           'postal_code_suffix'     => array( ts('Postal Code Suffix'),  array( 'size' => 4, 'maxlength' => 12 ), null ),
-                          'county_id'              => array( ts('County')            ,  $attributes['county_id'], null ),
+                          'county_id'              => array( ts('County')            ,  $attributes['county_id'], 'county' ),
                           'state_province_id'      => array( ts('State / Province')  ,  $attributes['state_province_id'],null ),
                           'country_id'             => array( ts('Country')           ,  $attributes['country_id'], null ), 
                           'geo_code_1'             => array( ts('Latitude') ,  array( 'size' => 9, 'maxlength' => 10 ), null ),
@@ -139,29 +139,18 @@ class CRM_Contact_Form_Edit_Address
             }
             
             if ( ! $select ) {
-                if ( $name == 'country_id' || $name == 'state_province_id' || $name == 'county_id' ) {
+                if ( $name == 'country_id' || $name == 'state_province_id' ) {
                     if ( $name == 'country_id' ) {
                         $stateCountryMap[$blockId]['country'] = "address_{$blockId}_{$name}";
                         $selectOptions = array('' => ts('- select -')) + 
                             CRM_Core_PseudoConstant::country( );
-                    } elseif ( $name == 'state_province_id' ) {
+                    } else {
                         $stateCountryMap[$blockId]['state_province'] = "address_{$blockId}_{$name}";
                         if ( $countryDefault ) {
                             $selectOptions = array('' => ts('- select -')) +
                                 CRM_Core_PseudoConstant::stateProvinceForCountry( $countryDefault );
                         } else {
                             $selectOptions = array( '' => ts( '- select a country -' ) );
-                        }
-                    } elseif ( $name == 'county_id' ) { 
-                        $stateCountryMap[$blockId]['county'] = "address_{$blockId}_{$name}";
-                        if ( $form->getSubmitValue( "address[{$blockId}][state_province_id]" ) ) {
-                            $selectOptions = array( '' => ts( '- select -' ) ) +
-                               CRM_Core_PseudoConstant::countyForState( $form->getSubmitValue( "address[{$blockId}][state_province_id]" ) ); 
-                        } elseif ( $form->getSubmitValue( "address[{$blockId}][county_id]" ) ) {
-                            $selectOptions = array( '' => ts( '- select a state -' )) +
-                                    CRM_Core_PseudoConstant::county();
-                        } else {
-                            $selectOptions = array( '' => ts( '- select a state -' ));
                         }
                     }
                     $form->addElement( 'select',
@@ -170,7 +159,7 @@ class CRM_Contact_Form_Edit_Address
                                        $selectOptions );
                 } else {
                     if ( $name == 'address_name' ) {
-                        $name = 'name';
+                        $name = "name";
                     }
                     
                     $form->addElement( 'text',
@@ -224,14 +213,14 @@ class CRM_Contact_Form_Edit_Address
 
             // we setting the prefix to 'dnc_' below, so that we don't overwrite smarty's grouptree var. 
             // And we can't set it to 'address_' because we want to set it in a slightly different format.
-            CRM_Core_BAO_CustomGroup::buildQuickForm( $form, $groupTree, false, 1, 'dnc_' );
+            CRM_Core_BAO_CustomGroup::buildQuickForm( $form, $groupTree, false, 1, "dnc_" );
 
             $template  =& CRM_Core_Smarty::singleton( );
             $tplGroupTree = $template->get_template_vars( 'address_groupTree' );
             $tplGroupTree = empty($tplGroupTree) ? array() : $tplGroupTree;
 
-            $form->assign( 'address_groupTree', $tplGroupTree + array( $blockId => $groupTree ) );
-            $form->assign( 'dnc_groupTree', null ); // unset the temp smarty var that got created
+            $form->assign( "address_groupTree", $tplGroupTree + array( $blockId => $groupTree ) );
+            $form->assign( "dnc_groupTree", null ); // unset the temp smarty var that got created
         }
         // address custom data processing ends ..
         
@@ -264,7 +253,7 @@ class CRM_Contact_Form_Edit_Address
     {
         $errors = array( );
         // check for state/county match if not report error to user.
-        if ( CRM_Utils_Array::value( 'address', $fields ) && is_array( $fields['address'] ) ) {
+        if ( is_array( $fields['address'] ) ) {
             foreach ( $fields['address'] as $instance => $addressValues ) {
                 if ( CRM_Utils_System::isNull( $addressValues ) ) {
                     continue;
@@ -332,10 +321,8 @@ class CRM_Contact_Form_Edit_Address
     static function fixStateSelect( &$form,
                                     $countryElementName,
                                     $stateElementName,
-                                    $countyElementName,
-                                    $countryDefaultValue,
-                                    $stateDefaultValue = null ) {
-        $countryID = $stateID = null;
+                                    $countryDefaultValue ) {
+        $countryID = null;
         if ( isset( $form->_elementIndex[$countryElementName] ) ) {
             //get the country id to load states -
             //first check for submitted value,
@@ -350,7 +337,7 @@ class CRM_Contact_Form_Edit_Address
                 $countryID = CRM_Utils_Array::value( 0, $form->getElementValue( $countryElementName ) );
             }
         }
-
+        
         $stateTitle = ts( 'State/Province' );
         if ( isset( $form->_fields[$stateElementName]['title'] ) ) {
             $stateTitle = $form->_fields[$stateElementName]['title'];
@@ -358,37 +345,11 @@ class CRM_Contact_Form_Edit_Address
             
         if ( $countryID &&
              isset( $form->_elementIndex[$stateElementName] ) ) {
-
-            $submittedValState = $form->getSubmitValue( $stateElementName );
-            if ( $submittedValState ) {
-                $stateID = $submittedValState;
-            } else if ( $stateDefaultValue ) {
-                $stateID = $stateDefaultValue;
-            } else {
-                $stateID = CRM_Utils_Array::value( 0, $form->getElementValue( $stateElementName ) );
-            }
-            
-            $stateSelect =& $form->addElement( 'select',
-                                               $stateElementName,
-                                               $stateTitle,
-                                               array( '' => ts( '- select -' ) ) +
-                                               CRM_Core_PseudoConstant::stateProvinceForCountry( $countryID ) );
-
- 
-            if ( $stateID && 
-                 isset( $form->_elementIndex[$stateElementName] ) &&
-                 isset( $form->_elementIndex[$countyElementName] ) ) {
-                $form->addElement( 'select',
-                                   $countyElementName,
-                                   ts( 'County' ),
-                                   array( '' => ts( '- select -' ) ) +
-                                   CRM_Core_PseudoConstant::countyForState( $stateID ) ); 
-            } 
-            
-            // CRM-7296 freeze the select for state if address is shared with household 
-            if ( CRM_Utils_Array::value( 'is_shared', $form->_fields[$stateElementName] ) ) {
-                $stateSelect->freeze( );
-            }
+            $form->addElement( 'select',
+                               $stateElementName,
+                               $stateTitle,
+                               array( '' => ts( '- select -' ) ) +
+                               CRM_Core_PseudoConstant::stateProvinceForCountry( $countryID ) );
         }
     }
 

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
  *
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -64,7 +64,7 @@ class CRM_Event_Form_Registration extends CRM_Core_Form
      * @var int
      * @protected
      */
-    protected $_participantIDS;
+    protected $_participantIDs;
     
     /**
      * the id of the participant we are proceessing
@@ -437,7 +437,7 @@ class CRM_Event_Form_Registration extends CRM_Core_Form
             
             // get the billing location type
             $locationTypes =& CRM_Core_PseudoConstant::locationType( );
-            $this->_bltID = array_search( ts('Billing'),  $locationTypes );
+            $this->_bltID = array_search( 'Billing',  $locationTypes );
             if ( ! $this->_bltID ) {
                 CRM_Core_Error::fatal( ts( 'Please set a location type of %1', array( 1 => 'Billing' ) ) );
             }
@@ -496,12 +496,6 @@ class CRM_Event_Form_Registration extends CRM_Core_Form
         $config->defaultCurrency = CRM_Utils_Array::value( 'currency', 
                                                            $this->_values['event'], 
                                                            $config->defaultCurrency );
-        
-        //lets allow user to override campaign. 
-        $campID = CRM_Utils_Request::retrieve( 'campID', 'Positive', $this );
-        if ( $campID && CRM_Core_DAO::getFieldValue( 'CRM_Campaign_DAO_Campaign', $campID ) ) {
-            $this->_values['event']['campaign_id'] = $campID;
-        }
     }
 
     /** 
@@ -602,7 +596,6 @@ class CRM_Event_Form_Registration extends CRM_Core_Form
 
         if ( $id ) {
             $button = substr( $this->controller->getButtonName(), -4 );
-            $cid    = CRM_Utils_Request::retrieve( 'cid', 'Positive', $this );
             require_once 'CRM/Core/BAO/UFGroup.php';
             require_once 'CRM/Profile/Form.php';
             $session = CRM_Core_Session::singleton( );
@@ -636,11 +629,6 @@ class CRM_Event_Form_Registration extends CRM_Core_Form
             }
             $addCaptcha = false;
             $fields = array_diff_assoc( $fields, $this->_fields );
-            if ( !CRM_Utils_Array::value( 'additional_participants', $this->_params[0] ) && 
-                 is_null( $cid ) ) {
-                require_once 'CRM/Core/BAO/Address.php';
-                CRM_Core_BAO_Address::checkContactSharedAddressFields( $fields, $contactID );
-            }
             $this->assign( $name, $fields );
             if ( is_array( $fields ) ) {
                 foreach($fields as $key => $field) {
@@ -660,7 +648,7 @@ class CRM_Event_Form_Registration extends CRM_Core_Form
                     }
 
                     list( $prefixName, $index ) = CRM_Utils_System::explode( '-', $key, 2 );
-                    if ( $prefixName == 'state_province' || $prefixName == 'country' || $prefixName == 'county' ) {
+                    if ( $prefixName == 'state_province' || $prefixName == 'country' ) {
                         if ( ! array_key_exists( $index, $stateCountryMap ) ) {
                             $stateCountryMap[$index] = array( );
                         }
@@ -690,9 +678,7 @@ class CRM_Event_Form_Registration extends CRM_Core_Form
     {
         // get price info
         require_once 'CRM/Price/BAO/Set.php';
-         
-        // retrive all active price set fields.
-        $price = CRM_Price_BAO_Set::initSet( $form, $eventID, 'civicrm_event', true );
+        $price = CRM_Price_BAO_Set::initSet( $form, $eventID, 'civicrm_event' );
         
         if ( $price == false ) {
             require_once 'CRM/Core/OptionGroup.php'; 
@@ -721,9 +707,7 @@ class CRM_Event_Form_Registration extends CRM_Core_Form
             $isPaidEvent = CRM_Utils_Array::value( 'is_monetary', $form->_values['event'] );    
         }
         if ( $isPaidEvent && empty( $form->_values['fee'] ) ) {
-            if ( CRM_Utils_System::getClassName($form) != 'CRM_Event_Form_Participant' ) {
-                CRM_Core_Error::fatal( ts('No Fee Level(s) or Price Set is configured for this event.<br />Click <a href=\'%1\'>CiviEvent >> Manage Event >> Configure >> Event Fees</a> to configure the Fee Level(s) or Price Set for this event.', array( 1 => CRM_Utils_System::url('civicrm/event/manage/fee', 'reset=1&action=update&id='.$form->_eventId ))));
-            }
+            CRM_Core_Error::fatal( ts('No Fee Level(s) or Price Set is configured for this event.<br />Click <a href=\'%1\'>CiviEvent >> Manage Event >> Configure >> Event Fees</a> to configure the Fee Level(s) or Price Set for this event.', array( 1 => CRM_Utils_System::url('civicrm/event/manage/fee', 'reset=1&action=update&id='.$form->_eventId ))));  
         }
     }
 
@@ -819,7 +803,7 @@ class CRM_Event_Form_Registration extends CRM_Core_Form
     public function addParticipant( $params, $contactID ) 
     {
         require_once 'CRM/Core/Transaction.php';
-        
+      
         $transaction = new CRM_Core_Transaction( );
         
         $groupName = "participant_role";
@@ -843,9 +827,7 @@ WHERE  v.option_group_id = g.id
         $registerDate = null;
         if ( $this->_allowConfirmation && $this->_participantId ) {
             $registerDate = $params['participant_register_date'];
-        } else if ( CRM_Utils_Array::value( 'participant_register_date', $params ) && 
-                    is_array( $params['participant_register_date'] ) && 
-                    !empty( $params['participant_register_date'] ) ) {
+        } else if ( is_array( $params['participant_register_date'] ) && !empty( $params['participant_register_date'] ) ) {
             $registerDate = CRM_Utils_Date::format( $params['participant_register_date'] ); 
         }
         
@@ -864,8 +846,7 @@ WHERE  v.option_group_id = g.id
                                    'fee_amount'    => CRM_Utils_Array::value( 'fee_amount', $params ),
                                    'registered_by_id' => CRM_Utils_Array::value( 'registered_by_id', $params ),
                                    'discount_id'      => CRM_Utils_Array::value( 'discount_id', $params ),
-                                   'fee_currency'     => CRM_Utils_Array::value( 'currencyID', $params ),
-                                   'campaign_id'      => CRM_Utils_Array::value( 'campaign_id', $params )
+                                   'fee_currency'     => CRM_Utils_Array::value( 'currencyID', $params )
                                    );
        
         if ( $this->_action & CRM_Core_Action::PREVIEW || CRM_Utils_Array::value( 'mode', $params ) == 'test' ) {
@@ -1194,7 +1175,7 @@ WHERE  v.option_group_id = g.id
                 $optMax  = $optionsMaxValueDetails[$fieldId]['options'][$optId];
                 $total  += CRM_Utils_Array::value( 'db_total_count', $options[$optId], 0 );
                 if ( $optMax && $total > $optMax ) {
-                    $errors[$currentParticipantNum]["price_{$fieldId}"] = ts( 'Sorry, this option is currently sold out.' );
+                    $errors[$currentParticipantNum]["price_{$fieldId}"] = ts( 'It looks like this field participant count extending its maximum limit.' );
                 }
             }
         }

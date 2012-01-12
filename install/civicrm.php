@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -186,7 +186,6 @@ function civicrm_config( &$config ) {
     $params['CMSdbPass']  = $config['drupal']['password'];
     $params['CMSdbHost']  = $config['drupal']['server'];
     $params['CMSdbName']  = $config['drupal']['database'];
-    $params['siteKey']    = md5(uniqid( '', true ) . $params['baseURL']);
 
     $str = file_get_contents( $tplPath . 'civicrm.settings.php.tpl' );
     foreach ( $params as $key => $value ) { 
@@ -200,6 +199,11 @@ function civicrm_cms_base( ) {
 
     // for drupal
     $numPrevious = 6;
+
+    // for standalone
+    if ( $installType == 'standalone' ) {
+        $numPrevious = 2;
+    }
 
     if ( ! isset( $_SERVER['HTTPS'] ) ||
          strtolower( $_SERVER['HTTPS'] )  == 'off' ) {

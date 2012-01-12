@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -121,18 +121,6 @@ class CRM_Mailing_Selector_Browse   extends CRM_Core_Selector_Base
         $mailing = CRM_Mailing_BAO_Mailing::getTableName();
         $job = CRM_Mailing_BAO_Job::getTableName();
         if ( ! isset( self::$_columnHeaders ) ) {
-            $completedOrder = null;
-            
-            // Set different default sort depending on type of mailings (CRM-7652)
-            $unscheduledOrder = $scheduledOrder = $archivedOrder = CRM_Utils_Sort::DONTCARE;
-            if ( $this->_parent->get( 'unscheduled' ) ) {
-                $unscheduledOrder = CRM_Utils_Sort::DESCENDING;
-            } elseif ( $this->_parent->get( 'scheduled' ) ) {
-                $scheduledOrder = CRM_Utils_Sort::DESCENDING;
-            } else {
-                // sort by completed date for archived and undefined get
-                $completedOrder = CRM_Utils_Sort::DESCENDING;
-            }
             
             self::$_columnHeaders = array( 
                                           array(
@@ -148,13 +136,8 @@ class CRM_Mailing_Selector_Browse   extends CRM_Core_Selector_Base
                                           array(
                                                 'name'      => ts('Created By'),
                                                 'sort'      => 'created_by',
-                                                'direction' =>  CRM_Utils_Sort::DONTCARE,
+                                                'direction' => CRM_Utils_Sort::DONTCARE,
                                                 ),
-                                          array(
-                                                'name'      => ts('Created Date'),
-                                                'sort'      => 'created_date',
-                                                'direction' => $unscheduledOrder,
-                                                  ),
                                           array(
                                                 'name'      => ts('Sent By'),
                                                 'sort'      => 'scheduled_by',
@@ -163,7 +146,7 @@ class CRM_Mailing_Selector_Browse   extends CRM_Core_Selector_Base
                                           array(
                                                 'name'      => ts('Scheduled'),
                                                 'sort'      => 'scheduled_date',
-                                                'direction' => $scheduledOrder,
+                                                'direction' => CRM_Utils_Sort::DONTCARE,
                                                 ), 
                                           array(
                                                 'name'      => ts('Started'),
@@ -173,17 +156,9 @@ class CRM_Mailing_Selector_Browse   extends CRM_Core_Selector_Base
                                           array(
                                                 'name'      => ts('Completed'),
                                                 'sort'      => 'end_date',
-                                                'direction' => $completedOrder,
+                                                'direction' => CRM_Utils_Sort::DESCENDING,
                                                 )
                                           );
-            
-            require_once 'CRM/Campaign/BAO/Campaign.php';
-            if ( CRM_Campaign_BAO_Campaign::isCampaignEnable( ) ) {
-                self::$_columnHeaders[] = array( 'name' => ts('Campaign'),
-                                                 'sort' => 'campaign_id',
-                                                 'direction' => CRM_Utils_Sort::DONTCARE );
-            }
-            
             if ( $output != CRM_Core_Selector_Controller::EXPORT ) {
                 self::$_columnHeaders[] = array( 'name' => ts('Action') );
             }
@@ -493,12 +468,6 @@ LEFT JOIN  civicrm_contact scheduledContact ON ( $mailing.scheduled_id = schedul
         if ( $createdId ) {
             $clauses[] = "(created_id = {$createdId})";
             $params[5] = array( $createdId, 'Integer' );
-        }
-        
-        $campainIds = $this->_parent->get( 'campaign_id' );
-        if ( !CRM_Utils_System::isNull( $campainIds ) ) {
-            if ( !is_array( $campainIds ) ) $campaignIds = array( $campaignIds );
-            $clauses[] = '( campaign_id IN ( ' . implode( ' , ', array_values( $campainIds ) ). ' ) )';
         }
         
         if ( empty( $clauses ) ) {

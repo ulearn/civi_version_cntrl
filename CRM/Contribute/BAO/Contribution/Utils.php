@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -264,7 +264,7 @@ class CRM_Contribute_BAO_Contribution_Utils
             return $membershipResult;
         }
         //Do not send an email if Recurring contribution is done via Direct Mode
-        //We will send email once the IPN is received.
+        //Email will we send once the IPN will receive.
         if ( $paymentParams['is_recur'] && $form->_contributeMode == 'direct' ) {
             return true;
         }
@@ -470,16 +470,6 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
                             $unix_timestamp = strtotime($val);
                             $transaction[$mapper['transaction'][$detail]] = date('YmdHis', $unix_timestamp);
                             break;
-                    case 'note'     :
-                    case 'custom'   :
-                    case 'l_number0':
-                        if ( $val ) {
-                            $val = "[PayPal_field:{$detail}] {$val}";
-                            $transaction[$mapper['transaction'][$detail]] = 
-                                !empty( $transaction[$mapper['transaction'][$detail]] ) ? 
-                                $transaction[$mapper['transaction'][$detail]] . " <br/> " . $val : $val;
-                        }
-                        break;
                         default:
                             $transaction[$mapper['transaction'][$detail]] = $val;
                     }
@@ -564,33 +554,6 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
                     $localMapper['latest-charge-fee'] = $apiParams[2]['latest-charge-fee']['total']['VALUE'];
                     $localMapper['net-amount'] = $localMapper['total-charge-amount'] - $localMapper['latest-charge-fee'];
                 }
-                
-                // This is a subscription (recurring) donation.
-                if ( array_key_exists('subscription', $newOrder['shopping-cart']['items']['item']) ) {
-                    $subscription = $newOrder['shopping-cart']['items']['item']['subscription'];
-                    $localMapper['amount'] = $newOrder['order-total']['VALUE'];
-                    $localMapper['times'] = $subscription['payments']['subscription-payment']['times'];
-                    // Convert Google's period to one compatible with the CiviCRM db field.
-                    $freqUnits = array (
-                                        'DAILY' => 'day',
-                                        'WEEKLY' => 'week',
-                                        'MONHTLY' => 'month',
-                                        'YEARLY' => 'year'
-                                        );
-                    $localMapper['period'] = $freqUnits[$subscription['period']];
-                    // Unlike PayPal, Google has no concept of freq. interval, it is always 1.
-                    $localMapper['frequency_interval'] = '1';
-                    // Google Checkout dates are in ISO-8601 format. We need a format that
-                    // MySQL likes
-                    $unix_timestamp = strtotime($localMapper['timestamp']);
-                    $mysql_date = date('YmdHis', $unix_timestamp);
-                    $localMapper['modified_date'] = $mysql_date;
-                    $localMapper['start_date'] = $mysql_date;
-                    // This is PayPal's nomenclature, but just use it for Google as well since
-                    // we act on the value of trxn_type in processAPIContribution().
-                    $localMapper['trxn_type'] = 'subscrpayment';
-                }
-
                 foreach ( $localMapper as $localKey => $localVal ) {
                     if ( CRM_Utils_Array::value($localKey, $mapper['transaction']) ) {
                         $transaction[$mapper['transaction'][$localKey]] = $localVal;

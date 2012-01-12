@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -52,6 +52,12 @@ class CRM_Case_BAO_Case extends CRM_Case_DAO_Case
      */
     static $_exportableFields = null;
 
+    /**  
+     * value seletor for multi-select
+     **/ 
+   
+    const VALUE_SEPERATOR = "";
+    
     function __construct()
     {
         parent::__construct();
@@ -529,7 +535,6 @@ WHERE cc.contact_id = %1
         
         $query = "SELECT
                   civicrm_case.id as case_id,
-                  civicrm_case.subject as case_subject,
                   civicrm_contact.id as contact_id,
                   civicrm_contact.sort_name as sort_name,
                   civicrm_phone.phone as phone,
@@ -699,7 +704,6 @@ AND civicrm_case.status_id != $closedId";
                                'sort_name',
                                'phone',
                                'case_id',
-                               'case_subject',
                                'case_type',
                                'case_type_name',
                                'status_id',
@@ -746,19 +750,10 @@ AND civicrm_case.status_id != $closedId";
                         = CRM_Contact_BAO_Contact_Utils::getImage( $result->contact_sub_type ? 
                                                                    $result->contact_sub_type : $result->contact_type );
                     $casesList[$result->case_id]['action'] 
-                        = CRM_Core_Action::formLink( $actions['primaryActions'], $mask,
+                        = CRM_Core_Action::formLink( $actions, $mask,
                                                      array( 'id'  => $result->case_id,
                                                             'cid' => $result->contact_id,
-                                                            'cxt' => $this->_context ) );
-                    $casesList[$result->case_id]['moreActions'] 
-                        = CRM_Core_Action::formLink( $actions['moreActions'], 
-                                                     $mask, array( 'id'  => $result->case_id,
-                                                                   'cid' => $result->contact_id,
-                                                                   'cxt' => $this->_context ),
-                                                     ts( 'more' ),
-                                                     true 
-                                                     );
-
+                                                            'cxt' => 'dashboard' ) );
                 } elseif ( $field == 'case_status' ) {  
                     if ( in_array($result->$field, $caseStatus) ) {
                         $casesList[$result->case_id]['class'] = "status-urgent";
@@ -833,7 +828,7 @@ AND civicrm_case.status_id != $closedId";
             $myGroupByClause   = " GROUP BY CONCAT(case_relationship.case_id,'-',case_relationship.contact_id_b)";
         }
         
-        $seperator = CRM_Core_DAO::VALUE_SEPARATOR;
+        $seperator = self::VALUE_SEPERATOR;
    
         $query = "
 SELECT case_status.label AS case_status, status_id, case_type.label AS case_type, 
@@ -879,30 +874,25 @@ WHERE is_deleted =0
     static function getCaseRoles( $contactID, $caseID, $relationshipID = null )
     {
         $query = '
-    SELECT  civicrm_relationship.id as civicrm_relationship_id, 
-            civicrm_contact.sort_name as sort_name, 
-            civicrm_email.email as email, 
-            civicrm_phone.phone as phone, 
-            civicrm_relationship.contact_id_b as civicrm_contact_id, 
-            civicrm_relationship_type.label_a_b as relation, 
-            civicrm_relationship_type.id as relation_type 
-      FROM  civicrm_relationship 
-INNER JOIN  civicrm_relationship_type ON civicrm_relationship.relationship_type_id = civicrm_relationship_type.id
-INNER JOIN  civicrm_contact ON civicrm_relationship.contact_id_b = civicrm_contact.id
- LEFT JOIN  civicrm_phone ON (civicrm_phone.contact_id = civicrm_contact.id AND civicrm_phone.is_primary = 1) 
- LEFT JOIN  civicrm_email ON (civicrm_email.contact_id = civicrm_contact.id ) 
-     WHERE  civicrm_relationship.contact_id_a = %1 AND civicrm_relationship.case_id = %2';
-        
-        $params = array( 1 => array( $contactID, 'Positive' ),
-                         2 => array( $caseID,    'Positive' ) );
-        
+SELECT civicrm_relationship.id as civicrm_relationship_id, civicrm_contact.sort_name as sort_name, civicrm_email.email as email, civicrm_phone.phone as phone, civicrm_relationship.contact_id_b as civicrm_contact_id, civicrm_relationship_type.label_b_a as relation, civicrm_relationship_type.id as relation_type 
+FROM civicrm_relationship INNER JOIN civicrm_relationship_type ON civicrm_relationship.relationship_type_id = civicrm_relationship_type.id
+INNER JOIN civicrm_contact ON civicrm_relationship.contact_id_b = civicrm_contact.id
+LEFT OUTER JOIN civicrm_phone ON (civicrm_phone.contact_id = civicrm_contact.id AND civicrm_phone.is_primary = 1) 
+LEFT JOIN civicrm_email ON (civicrm_email.contact_id = civicrm_contact.id ) 
+WHERE civicrm_relationship.contact_id_a = %1 AND civicrm_relationship.case_id = %2
+';
+
+        $params = array( 1 => array( $contactID, 'Integer' ),
+                         2 => array( $caseID, 'Integer' )
+                         );
+
 		if ( $relationshipID ) {
 			$query .= ' AND civicrm_relationship.id = %3 ';
 			$params[3] = array( $relationshipID, 'Integer' );
 		}
         
         $dao =& CRM_Core_DAO::executeQuery( $query, $params );
-        
+
         $values = array( );
         while ( $dao->fetch( ) ) {
             $rid = $dao->civicrm_relationship_id;
@@ -1339,7 +1329,11 @@ GROUP BY cc.id';
             $tplParams['contact'] = $info;
             self::buildPermissionLinks( $tplParams, $activityParams );
 
-            $displayName = $info['display_name'];
+            if ( !CRM_Utils_Array::value('sort_name', $info) ) {
+                $info['sort_name'] = $info['display_name'];   
+            }
+            
+            $displayName = $info['sort_name'];
 
             require_once 'CRM/Core/BAO/MessageTemplates.php';
             list ($result[$info['contact_id']], $subject, $message, $html) = CRM_Core_BAO_MessageTemplates::sendTemplate(
@@ -1606,31 +1600,37 @@ AND civicrm_case.is_deleted     = {$cases['case_deleted']}";
         return true;
     }
     
-    static function getGlobalContacts(&$groupInfo)
+    static function getGlobalContacts( &$groupInfo )
     {
-        $globalContacts = array();
+    	$globalContacts = array();
+    	
+   		require_once 'CRM/Case/XMLProcessor/Settings.php';
+   		require_once 'CRM/Contact/BAO/Group.php';
+   		require_once 'api/v2/Contact.php';
+   		$settingsProcessor = new CRM_Case_XMLProcessor_Settings();
+   		$settings = $settingsProcessor->run();
+   		if (! empty($settings)) {
+   			$groupInfo['name'] = $settings['groupname'];
+   			if ($groupInfo['name']) {
+				$searchParams = array('name' => $groupInfo['name']);   				
+				$results = array();
+   				CRM_Contact_BAO_Group::retrieve($searchParams, $results);
+				if ($results) {
+					$groupInfo['id'] = $results['id'];
+					$groupInfo['title'] = $results['title'];
+					$searchParams = array( 'group' => array($groupInfo['id'] => 1),
+                                           'return.sort_name'     => 1,
+                                           'return.display_name'  => 1,
+                                           'return.email'         => 1,
+                                           'return.phone'         => 1
+                                           );
+        
+					$globalContacts = civicrm_contact_search( $searchParams );
+				}
 
-        require_once 'CRM/Case/XMLProcessor/Settings.php';
-        require_once 'CRM/Contact/BAO/Group.php';
-        $settingsProcessor = new CRM_Case_XMLProcessor_Settings();
-        $settings = $settingsProcessor->run();
-        if (!empty($settings)) {
-            $groupInfo['name'] = $settings['groupname'];
-            if ($groupInfo['name']) {
-                $searchParams = array('name' => $groupInfo['name']);
-                $results = array();
-                CRM_Contact_BAO_Group::retrieve($searchParams, $results);
-                if ($results) {
-                    $groupInfo['id']    = $results['id'];
-                    $groupInfo['title'] = $results['title'];
-                    require_once 'CRM/Contact/BAO/Query.php';
-                    $params = array(array('group', 'IN', array($groupInfo['id'] => 1), 0, 0));
-                    $return = array('sort_name', 'display_name', 'email', 'phone');
-                    list($globalContacts, $_) = CRM_Contact_BAO_Query::apiQuery($params, $return);
-                }
-            }
-        }
-        return $globalContacts;
+   			}
+   		}
+   		return $globalContacts;
     }
 
 	/* 
@@ -1730,37 +1730,33 @@ AND civicrm_case.is_deleted     = {$cases['case_deleted']}";
             $relationshipClause = " civicrm_relationship.id IN ($relationshipId)";
         } else {
             $relationshipClause = " civicrm_relationship.id = %1";
-            $queryParam[1] = array( $relationshipId, 'Positive' );
+            $queryParam[1] = array( $relationshipId, 'Integer' );
         }
-        
+
         $query = "
-   SELECT  cc.display_name as clientName, 
-           cca.display_name as  assigneeContactName,  
-           civicrm_relationship.case_id as caseId,
-           civicrm_relationship_type.label_a_b as relation_a_b,
-           civicrm_relationship_type.label_b_a as relation_b_a,
-           civicrm_relationship.contact_id_b as rel_contact_id,            
-           civicrm_relationship.contact_id_a as assign_contact_id 
-     FROM  civicrm_relationship_type,  civicrm_relationship 
-LEFT JOIN  civicrm_contact cc  ON cc.id  = civicrm_relationship.contact_id_b  
-LEFT JOIN  civicrm_contact cca ON cca.id = civicrm_relationship.contact_id_a
-    WHERE  civicrm_relationship.relationship_type_id = civicrm_relationship_type.id AND {$relationshipClause}";
+                  SELECT civicrm_relationship.contact_id_b as rel_contact_id, civicrm_relationship.contact_id_a as assign_contact_id, 
+                  civicrm_relationship_type.label_b_a as relation, civicrm_relationship.case_id as caseId,
+                  cc.display_name as clientName, cca.display_name as  assigneeContactName  
+                  FROM civicrm_relationship_type,  civicrm_relationship 
+                  LEFT JOIN civicrm_contact cc  ON cc.id  = civicrm_relationship.contact_id_b  
+                  LEFT JOIN civicrm_contact cca ON cca.id = civicrm_relationship.contact_id_a
+                  WHERE civicrm_relationship.relationship_type_id = civicrm_relationship_type.id AND {$relationshipClause}";
         
+              
         $dao = CRM_Core_DAO::executeQuery( $query,$queryParam );
-        
+              
         while ( $dao->fetch() ) {
+            $caseRelationship  = $dao->relation;
             //to get valid assignee contact(s).
-            if ( isset($dao->caseId) || $dao->rel_contact_id != $contactId ) { 
-                $caseRelationship = $dao->relation_a_b;
-                $assigneContactName = $dao->clientName;
-                $assigneContactIds[$dao->rel_contact_id] = $dao->rel_contact_id;
-            } else {
-                $caseRelationship = $dao->relation_b_a;
-                $assigneContactName = $dao->assigneeContactName;
-                $assigneContactIds[$dao->assign_contact_id] = $dao->assign_contact_id; 
-            }
+             if ( isset($dao->caseId) || $dao->rel_contact_id != $contactId ) { 
+                 $assigneContactIds[$dao->rel_contact_id]  = $dao->rel_contact_id;
+                 $assigneContactName = $dao->clientName;
+             } else {
+                 $assigneContactIds[$dao->assign_contact_id]  = $dao->assign_contact_id; 
+                 $assigneContactName = $dao->assigneeContactName;
+             }
         }
-        
+
         require_once 'CRM/Core/OptionGroup.php';
         $session = & CRM_Core_Session::singleton();
         $activityParams = array('source_contact_id'    => $session->get( 'userID' ),
@@ -2610,8 +2606,8 @@ WHERE id IN ('. implode( ',', $copiedActivityIds ) . ')';
             //get the activity type name.
             $actTypeName = CRM_Utils_Array::value( $actTypeId, $activityTypes );
             
-            //do not allow multiple copy / edit action.
-            $singletonNames = array( 'Open Case', 'Reassigned Case', 'Merge Case', 'Link Cases', 'Assign Case Role', 'Email', 'Inbound Email' );
+            //do not allow multiple copy.
+            $singletonNames = array( 'Open Case', 'Reassigned Case', 'Merge Case', 'Link Cases', 'Assign Case Role' );
             
             //do not allow to delete these activities, CRM-4543
             $doNotDeleteNames = array( 'Open Case', 'Change Case Type', 'Change Case Status', 'Change Case Start Date' );
@@ -2718,8 +2714,7 @@ WHERE id IN ('. implode( ',', $copiedActivityIds ) . ')';
             $dao = CRM_Core_DAO::executeQuery( $query );
             $caseTypeIds = array( );
             while ( $dao->fetch( ) ) {
-                $typeId        = explode( CRM_Core_DAO::VALUE_SEPARATOR,
-                                          $dao->case_type_id );
+                $typeId        = explode( CRM_Case_BAO_Case::VALUE_SEPERATOR, $dao->case_type_id );
                 $caseTypeIds[] = $typeId[1];
             }  
         }

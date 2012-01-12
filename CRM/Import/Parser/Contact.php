@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,14 +29,14 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
 
 require_once 'CRM/Import/Parser.php';
 
-civicrm_api_include('utils', false, 2);
+require_once 'api/v2/utils.php';
 
 /**
  * class to parse contact csv files
@@ -481,7 +481,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser
                     array_unshift($values, $errorMessage);
                     $importRecordParams = array($statusFieldName => 'ERROR', "${statusFieldName}Msg" => $errorMessage);
                     $this->updateImportRecord( $values[count($values)-1], $importRecordParams );
-                    return CRM_Import_Parser::DUPLICATE;
+                    return CRM_Import_Parser::ERROR;
                 }
             }
         }
@@ -1060,7 +1060,6 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser
        
         //CRM-5125
         //add custom fields for contact sub type
-        $csType = NULL;
         if ( !empty($this->_contactSubType) ) {
             $csType = $this->_contactSubType;
         }
@@ -1068,9 +1067,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser
         if ( CRM_Utils_Array::value('contact_sub_type', $params) ) {
             $csType = CRM_Utils_Array::value('contact_sub_type', $params);
         }
-        if ( !CRM_Utils_Array::value( 'contact_type', $params ) ) {
-            $params['contact_type'] = 'Individual';
-        }
+        
         $customFields = CRM_Core_BAO_CustomField::getFields( $params['contact_type'], false, false, $csType );
         
         $addressCustomFields = CRM_Core_BAO_CustomField::getFields( 'Address' );
@@ -1102,8 +1099,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser
                         }
                     }
                     // need not check for label filed import
-                    $htmlType = array( 'CheckBox','Multi-Select','AdvMulti-Select','Select',
-                                       'Radio','Multi-Select State/Province' ,'Multi-Select Country' );
+                    $htmlType = array('CheckBox','Multi-Select','AdvMulti-Select','Select','Radio','Multi-Select State/Province' ,'Multi-Select Country','Text' );
                     if ( ! in_array( $customFields[$customFieldID]['html_type'], $htmlType ) ||
                          $customFields[$customFieldID]['data_type'] =='Boolean' || 
                          $customFields[$customFieldID]['data_type'] == 'ContactReference' ) {
@@ -1376,12 +1372,10 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser
                     break;
                 case 'county':
                     if ( !empty( $value ) ) {
+                        $countyNames = CRM_Core_PseudoConstant::county( );
                         foreach ( $value as $county ) {
-                            if( $county['county'] ) {
-                                $countyNames = CRM_Core_PseudoConstant::county( );
-                                if ( !in_array( $county['county'], $countyNames ) ) {
-                                    self::addToErrorMsg( ts('County input value not in county table: The County value appears to be invalid. It does not match any value in CiviCRM table of counties.'), $errorMessage );
-                                }
+                            if ( !in_array( $county['county'], $countyNames ) ) {
+                                self::addToErrorMsg( ts('County input value not in county table: The County value appears to be invalid. It does not match any value in CiviCRM table of counties.'), $errorMessage );
                             }
                         }
                     }
@@ -1561,7 +1555,7 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser
         //get the prefix id etc if exists
         CRM_Contact_BAO_Contact::resolveDefaults($formatted, true);
         
-        civicrm_api_include('contact', false, 2);
+        require_once 'api/v2/Contact.php';
         // setting required check to false, CRM-2839
         // plus we do our own required check in import
         $error = civicrm_contact_check_params( $formatted, $dupeCheck, true, false );
@@ -1718,7 +1712,16 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser
     {
         //fix for CRM-2687
         CRM_Utils_Date::convertToDefaultDate( $params, $dateType, $dateParam );
+        
+        if ( $dateType == 1 ) {
+            if ( strstr( $params[$dateParam], '-' ) ) { 
+                $formatted[$dateParam] = CRM_Utils_Date::processDate( $params[$dateParam] ); 
+            } else {
+                $formatted[$dateParam] = CRM_Utils_Date::processDate( $params[$dateParam] );   
+            }
+        } else {
             $formatted[$dateParam] = CRM_Utils_Date::processDate( $params[$dateParam] ); 
+        }
     }
     
     /**
@@ -1844,6 +1847,20 @@ class CRM_Import_Parser_Contact extends CRM_Import_Parser
                 //get the html type.
                 $type = $customFields[$customFieldID]['html_type'];
                 _civicrm_add_custom_formatted_param( $customFieldID, $key, $field, $formatted, $type );
+            }
+        }
+        // check for primary location type, whether it is already present for the contact or not, CRM-4423
+        if ( CRM_Utils_Array::value( 'id', $formatted ) && isset( $formatted['location'] ) ) {
+            $primaryLocationTypeId = CRM_Contact_BAO_Contact::getPrimaryLocationType($formatted['id'], true);
+            if ( isset ( $primaryLocationTypeId ) ) {
+                foreach ( $formatted['location'] as $loc => $details ) {
+                    if ( $primaryLocationTypeId == CRM_Utils_Array::value( 'location_type_id', $details ) ) {
+                        $formatted['location'][$loc]['is_primary'] = 1; 
+                        break;
+                    } else {
+                        $formatted['location'][$loc]['is_primary'] = 0;
+                    }
+                }
             }
         }
         

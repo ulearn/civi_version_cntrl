@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -51,7 +51,7 @@
             {ts}Otherwise, click the <strong>Continue</strong> button below to complete your registration.{/ts}
         {/if}
         </div>
-        {if $is_pay_later and !$isAmountzero}
+        {if $is_pay_later}
             <div class="bold">{$pay_later_receipt}</div>
         {/if}
     {/if}

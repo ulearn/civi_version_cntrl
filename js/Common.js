@@ -1,8 +1,8 @@
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -27,7 +27,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -487,15 +487,31 @@ function checkPerformAction (fldPrefix, form, taskButton) {
  *
  * @access public
  * @param chkName - it is name of the checkbox
+ * @param form - name of form that checkboxes are part of
  * @return null
  */
-function checkSelectedBox( chkName ) {
-    var checkElement = cj('#' + chkName );
-    if ( checkElement.attr('checked') ) {
-	cj('input[value=ts_sel]:radio').attr('checked',true );
-	checkElement.parents('tr').addClass('crm-row-selected');
+function checkSelectedBox (chkName, form) 
+{
+    var ss = document.forms[form].elements[chkName].name.substring(7,document.forms[form].elements[chkName].name.length);
+    
+    var row = 'rowid' + ss;
+  
+    if (document.forms[form].elements[chkName].checked == true) {
+        // change 'all records' radio to 'selected' if any row is checked
+        document.forms[form].radio_ts[1].checked = true;
+        
+        if (document.getElementById(row).className == 'even-row') {
+            document.getElementById(row).className = 'row-selected even-row';
+        } else {
+            document.getElementById(row).className = 'row-selected odd-row';
+        }
+	
     } else {
-        checkElement.parents('tr').removeClass('crm-row-selected');
+        if (document.getElementById(row).className == 'row-selected even-row') {
+            document.getElementById(row).className = 'even-row';
+        } else if (document.getElementById(row).className == 'row-selected odd-row') {
+            document.getElementById(row).className = 'odd-row';
+        }
     }
 }
 

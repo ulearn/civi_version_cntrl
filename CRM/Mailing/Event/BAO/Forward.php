@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -99,7 +99,7 @@ class CRM_Mailing_Event_BAO_Forward extends CRM_Mailing_Event_DAO_Forward {
             return $successfulForward;
         }
 
-        civicrm_api_include('contact', false, 3);
+        require_once 'api/v2/Contact.php';
         
         $contact_params = array('email' => $forward_email);
         $count = civicrm_contact_search_count($contact_params);
@@ -116,7 +116,7 @@ class CRM_Mailing_Event_BAO_Forward extends CRM_Mailing_Event_DAO_Forward {
             $formatted['onDuplicate'] = CRM_Import_Parser::DUPLICATE_SKIP;
             $formatted['fixAddress'] = true;
             $contact =& civicrm_contact_format_create($formatted);
-            if ( civicrm_error( $contact ) ) {
+            if (civicrm_error($contact, 'CRM_Core_Error')) {
                 return $successfulForward;
             }
             $contact_id = $contact['id'];

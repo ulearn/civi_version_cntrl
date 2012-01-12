@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -167,9 +167,11 @@ class CRM_Contribute_Form_ContributionPage_AddProduct extends CRM_Contribute_For
         $this->addElement('text','weight', ts('Weight'),CRM_Core_DAO::getAttribute('CRM_Contribute_DAO_PremiumsProduct', 'weight') );
              
         $this->addRule('weight',ts('Please enter integer value for weight') , 'integer');
+        $session = CRM_Core_Session::singleton();
+        $single = $session->get('singleForm');
         $session->pushUserContext( CRM_Utils_System::url( $urlParams, 'action=update&reset=1&id=' . $this->_id ) );
       
-        if ( $this->_single ) {
+        if ( $single ) {
             $this->addButtons(array(
                                     array ( 'type'      => 'next',
                                             'name'      => ts('Save'),
@@ -194,7 +196,8 @@ class CRM_Contribute_Form_ContributionPage_AddProduct extends CRM_Contribute_For
     {
         // get the submitted form values.
         $params    = $this->controller->exportValues( $this->_name );
-        
+        $pageID    = CRM_Utils_Request::retrieve('id', 'Positive',
+                                                 $this, false, 0);
         $urlParams = 'civicrm/admin/contribute/premium';
         if($this->_action & CRM_Core_Action::PREVIEW) {
             $session = CRM_Core_Session::singleton();
@@ -222,7 +225,7 @@ class CRM_Contribute_Form_ContributionPage_AddProduct extends CRM_Contribute_For
             require_once 'CRM/Contribute/DAO/Premium.php';
             $dao = new CRM_Contribute_DAO_Premium();
             $dao->entity_table = 'civicrm_contribution_page';
-            $dao->entity_id    = $this->_id; 
+            $dao->entity_id = $pageID; 
             $dao->find(true);
             $premiumID = $dao->id;
             $params['premiums_id'] = $premiumID;

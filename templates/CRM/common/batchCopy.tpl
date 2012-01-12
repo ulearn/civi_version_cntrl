@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -35,7 +35,7 @@ function setStatusesTo(statusId)
     {/foreach}
     {literal}
     for (k = 0; k < cId.length; k++) {
-        document.getElementById("field_"+cId[k]+"_participant_status").value = statusId;
+        document.getElementById("field_"+cId[k]+"_participant_status_id").value = statusId;
     }
 }
 

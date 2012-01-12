@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -84,16 +84,13 @@ class CRM_Utils_Mail
         $attachments = CRM_Utils_Array::value( 'attachments', $params );
 
         // CRM-6224
-        require_once 'CRM/Utils/String.php';
         if (trim(CRM_Utils_String::htmlToText($htmlMessage)) == '') {
             $htmlMessage = false;
         }
 
         $headers = array( );  
         $headers['From']                      = $params['from'];
-        $headers['To']                        = self::formatRFC822Email( CRM_Utils_Array::value( 'toName', $params ),
-                                                                         CRM_Utils_Array::value( 'toEmail', $params ),
-                                                                         false );
+        $headers['To']                        = "{$params['toName']} <{$params['toEmail']}>";
         $headers['Cc']                        = CRM_Utils_Array::value( 'cc', $params );
         $headers['Bcc']                       = CRM_Utils_Array::value( 'bcc', $params );
         $headers['Subject']                   = CRM_Utils_Array::value( 'subject', $params );
@@ -115,9 +112,11 @@ class CRM_Utils_Mail
         // quote FROM, if comma is detected AND is not already quoted. CRM-7053
         if ( strpos( $headers['From'], ',' )  !== false ) {
             $from = explode( ' <', $headers['From'] );
-            $headers['From'] = self::formatRFC822Email( $from[0],
-                                                        substr( $from[1], 0, -1 ),
-                                                        true );
+            if ( substr( $from[0],  0,  1 ) != '"' || 
+                 substr( $from[0], -1,  1 ) != '"' ) {
+                $from[0] = str_replace( '"', '\"', $from[0] );
+                $headers['From'] = "\"{$from[0]}\" <{$from[1]}";
+            }
         }
 
         require_once 'Mail/mime.php';
@@ -233,11 +232,7 @@ class CRM_Utils_Mail
      */
     function pluckEmailFromHeader($header) {
         preg_match('/<([^<]*)>$/', $header, $matches);
-        
-        if ( isset($matches[1]) ) {
-            return $matches[1];
-        }
-        return null;
+        return $matches[1];
     }
     
     /**
@@ -284,59 +279,6 @@ class CRM_Utils_Mail
         return $message->get( $params );
     }
 
-    static function formatRFC822Email( $name, $email, $useQuote = false ) {
-        $result = null;
-
-        $name = trim( $name );
-
-        // strip out double quotes if present at the beginning AND end
-        if ( substr( $name,  0,  1 ) == '"' &&
-             substr( $name, -1,  1 ) == '"' ) {
-            $name = substr( $name, 1, -1 );
-        }
-            
-        if ( ! empty( $name ) ) {
-            // escape the special characters
-            $name = str_replace( array( '<' , '"' , '>'  ),
-                                 array( '\<', '\"', '\>' ),
-                                 $name );
-            if ( strpos( $name, ',' ) !== false ||
-                 $useQuote ) {
-                // quote the string if it has a comma
-                $name = '"' . $name . '"';
-            }
-
-            $result = "$name ";
-        }
-
-        $result .= "<{$email}>";
-        return $result;
-    }
-    
-    /**
-     * Takes a string and checks to see if it needs to be escaped / double quoted
-     * and if so does the needful and return the formatted name
-     *
-     * This code has been copied and adapted from ezc/Mail/src/tools.php
-     */
-    static function formatRFC2822Name( $name ) 
-    {
-        $name = trim( $name );
-        if ( ! empty( $name ) ) {
-            // remove the quotes around the name part if they are already there
-            if ( substr( $name, 0, 1 ) == '"' && substr( $name, -1 ) == '"' ) {
-                $name = substr( $name, 1, -1 );
-            }
-            
-            // add slashes to " and \ and surround the name part with quotes
-            if ( strpbrk( $name, ",@<>:;'\"" ) !== false ) {
-                $name = '"'. addcslashes( $name, '\\"' ) . '"';
-            }
-        }
-        
-        return $name;
-    }
-    
 }
 
 

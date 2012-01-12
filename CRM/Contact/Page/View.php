@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.0                                                |
+ | CiviCRM version 3.3                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2010                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2010
  * $Id$
  *
  */
@@ -122,14 +122,6 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
                                                           'url'   => self::getSearchURL( ) ) ) );
 
         if ( $image_URL  = CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $this->_contactId , 'image_URL') ) {
-            
-            //CRM-7265 --time being fix. 
-            $config = CRM_Core_Config::singleton( );
-            $image_URL = str_replace( 'https://', 'http://', $image_URL );
-            if ( isset( $config->enableSSL ) && $config->enableSSL ) {
-                $image_URL = str_replace( 'http://', 'https://', $image_URL );    
-            }
-            
             list( $imageWidth, $imageHeight ) = getimagesize( $image_URL );
             list( $imageThumbWidth, $imageThumbHeight ) = CRM_Contact_BAO_Contact::getThumbSize( $imageWidth, $imageHeight );
             $this->assign( "imageWidth", $imageWidth );
@@ -203,9 +195,8 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
             if ($config->userFramework == 'Drupal') {
                 $userRecordUrl = CRM_Utils_System::url( 'user/' . $uid );
             } else if ( $config->userFramework == 'Joomla' ) {
-                $userRecordUrl = $config->userFrameworkVersion > 1.5 ? 
-                    $config->userFrameworkBaseURL ."index.php?option=com_users&view=user&task=user.edit&id=". $uid : 
-                    $config->userFrameworkBaseURL ."index2.php?option=com_users&view=user&task=edit&id[]=". $uid;
+                $userRecordUrl = $config->userFrameworkBaseURL . 
+                    'index2.php?option=com_users&view=user&task=edit&cid[]=' . $uid;
             } else {
                 $userRecordUrl = null;
             }
@@ -296,30 +287,26 @@ class CRM_Contact_Page_View extends CRM_Core_Page {
         return CRM_Utils_System::url( $urlString, $urlParams );
     }
     
-    static function checkUserPermission( $page, $contactID = null ) {
+    static function checkUserPermission( $page ) {
         // check for permissions
         $page->_permission = null;
-
-        if ( !$contactID) {
-            $contactID = $page->_contactId;
-        }
 
         // automatically grant permissin for users on their own record. makes 
         // things easier in dashboard
         $session = CRM_Core_Session::singleton( );
         
         require_once 'CRM/Contact/BAO/Contact/Permission.php';
-        if ( $session->get( 'userID' ) == $contactID ) {
+        if ( $session->get( 'userID' ) == $page->_contactId ) {
             $page->assign( 'permission', 'edit' );
             $page->_permission = CRM_Core_Permission::EDIT;
         // deleted contacts’ stuff should be (at best) only viewable
-        } elseif (CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $contactID, 'is_deleted') and CRM_Core_Permission::check('access deleted contacts')) {
+        } elseif (CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $page->_contactId, 'is_deleted') and CRM_Core_Permission::check('access deleted contacts')) {
             $page->assign('permission', 'view');
             $page->_permission = CRM_Core_Permission::VIEW;
-        } else if ( CRM_Contact_BAO_Contact_Permission::allow( $contactID, CRM_Core_Permission::EDIT ) ) {
+        } else if ( CRM_Contact_BAO_Contact_Permission::allow( $page->_contactId, CRM_Core_Permission::EDIT ) ) {
             $page->assign( 'permission', 'edit' );
             $page->_permission = CRM_Core_Permission::EDIT;            
-        } else if ( CRM_Contact_BAO_Contact_Permission::allow( $contactID, CRM_Core_Permission::VIEW ) ) {
+        } else if ( CRM_Contact_BAO_Contact_Permission::allow( $page->_contactId, CRM_Core_Permission::VIEW ) ) {
             $page->assign( 'permission', 'view' );
             $page->_permission = CRM_Core_Permission::VIEW;
         } else {

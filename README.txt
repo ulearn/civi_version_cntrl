@@ -1,5 +1,5 @@
 *************************
-README file for CiviCRM
+README 3.3.6 file for CiviCRM
 *************************
 1. Who
 2. What

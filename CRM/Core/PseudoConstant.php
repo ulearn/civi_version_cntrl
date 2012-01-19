@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -41,7 +41,7 @@
  * will be reworked to use caching.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -252,7 +252,7 @@ class CRM_Core_PseudoConstant
     private static $honorType;
 
     /**
-     * activity type
+     * activity status
      * @var array
      * @static
      */
@@ -313,6 +313,20 @@ class CRM_Core_PseudoConstant
      * @static
      */
     private static $extensions = array( );
+    
+    /**
+     * activity contacts
+     * @var array
+     * @static
+     */
+    private static $activityContacts;
+
+    /**
+     * auto renew options
+     * @var array
+     * @static
+     */
+    private static $autoRenew;
     
     /**
      * populate the object from the database. generic populate
@@ -445,10 +459,12 @@ class CRM_Core_PseudoConstant
                                           $includeCaseActivities = false, 
                                           $reset = false,
                                           $returnColumn = 'label',
-                                          $includeCampaignActivities = false )
+                                          $includeCampaignActivities = false,
+                                          $onlyComponentActivities = false )
     {
         $index = (int) $all . '_' . $returnColumn . '_' . (int) $includeCaseActivities;
         $index .= '_' . (int)$includeCampaignActivities;
+        $index .= '_' . (int)$onlyComponentActivities;
         
         if ( ! array_key_exists( $index, self::$activityType ) || $reset ) {
             require_once 'CRM/Core/OptionGroup.php';
@@ -457,7 +473,10 @@ class CRM_Core_PseudoConstant
                 $condition    = 'AND filter = 0';
             } 
             $componentClause  = " v.component_id IS NULL";
-
+            if ( $onlyComponentActivities ) {
+                $componentClause  = " v.component_id IS NOT NULL";
+            }
+            
             $componentIds = array( );
             require_once 'CRM/Core/Component.php';
             $compInfo     = CRM_Core_Component::getEnabledComponents( );
@@ -481,6 +500,9 @@ class CRM_Core_PseudoConstant
             if ( count($componentIds) ) {
                 $componentIds     = implode( ',', $componentIds );
                 $componentClause  = " ($componentClause OR v.component_id IN ($componentIds))";
+                if ( $onlyComponentActivities ) {
+                    $componentClause  = " ( v.component_id IN ($componentIds ) )";
+                }
             }
             $condition = $condition . ' AND ' . $componentClause;
             
@@ -692,7 +714,9 @@ class CRM_Core_PseudoConstant
      */
     public static function &stateProvince($id = false, $limit = true)
     {
-        if ( ( $id && !CRM_Utils_Array::value( $id, self::$stateProvince ) ) || !self::$stateProvince || !$id ) {
+        if ( ( $id && ! CRM_Utils_Array::value( $id, self::$stateProvince ) ) ||
+             ! self::$stateProvince ||
+             ! $id ) {
             $whereClause = false;
             $config = CRM_Core_Config::singleton();
             if ( $limit ) {
@@ -805,7 +829,9 @@ WHERE  id = %1";
      */
     public static function country($id = false, $applyLimit = true) 
     {
-        if ( ( $id && !CRM_Utils_Array::value( $id, self::$country ) ) || !self::$country || !$id  ) {
+        if ( ( $id && ! CRM_Utils_Array::value( $id, self::$country ) ) ||
+             ! self::$country ||
+             ! $id  ) {
 
             $config = CRM_Core_Config::singleton();
             $limitCodes = array( );
@@ -1016,20 +1042,27 @@ WHERE  id = %1";
      *
      */
     public static function &staticGroup( $onlyPublic = false,
-                                         $groupType  = null )
+                                         $groupType  = null,
+                                         $excludeHidden = true )
     {
         if ( ! self::$staticGroup ) {
             $condition = 'saved_search_id = 0 OR saved_search_id IS NULL';
             if ( $onlyPublic ) {
                 $condition .= " AND visibility != 'User and User Admin Only'";
             }
+
             if ( $groupType ) {
                 require_once 'CRM/Contact/BAO/Group.php';
                 $condition .= ' AND ' . CRM_Contact_BAO_Group::groupTypeCondition( $groupType );
             }
+
+            if ( $excludeHidden ) {
+                $condition .= ' AND is_hidden != 1 ';
+            }
             
             self::populate( self::$staticGroup, 'CRM_Contact_DAO_Group', false, 'title', 'is_active', $condition, 'title' );
         }
+
         return self::$staticGroup;        
     }
 
@@ -1088,15 +1121,16 @@ WHERE  id = %1";
      * Note: any database errors will be trapped by the DAO.
      *
      * @param string $valueColumnName db column name/label.
+     * @param boolean $reset          reset relationship types if true
      *
      * @access public
      * @static
      *
      * @return array - array reference of all relationship types.
      */
-    public static function &relationshipType( $valueColumnName = 'label' )
+    public static function &relationshipType( $valueColumnName = 'label', $reset = false )
     {
-        if ( !CRM_Utils_Array::value($valueColumnName, self::$relationshipType) ) {
+        if ( !CRM_Utils_Array::value($valueColumnName, self::$relationshipType) || $reset ) {
             self::$relationshipType[$valueColumnName] = array( );
             
             //now we have name/label columns CRM-3336
@@ -1432,9 +1466,20 @@ WHERE  id = %1";
         return self::$mappingType;
     }
 
-    public static function &stateProvinceForCountry( $countryID ) {
+    public static function &stateProvinceForCountry( $countryID, $field = 'name' ) {
+        static $_cache = null;
+
+        $cacheKey = "{$countryID}_{$field}";
+        if ( ! $_cache ) {
+            $_cache = array( );
+        }
+
+        if ( ! empty( $_cache[$cacheKey] ) ) {
+            return $_cache[$cacheKey];
+        } 
+
         $query = "
-SELECT civicrm_state_province.name name, civicrm_state_province.id id
+SELECT civicrm_state_province.{$field} name, civicrm_state_province.id id
   FROM civicrm_state_province
 WHERE country_id = %1
 ORDER BY name";
@@ -1446,6 +1491,7 @@ ORDER BY name";
         while ( $dao->fetch( ) ) {
             $result[$dao->id] = $dao->name;
         }
+
         // localise the stateProvince names if in an non-en_US locale
         $config = CRM_Core_Config::singleton( );
         global $tsLocale;
@@ -1453,6 +1499,55 @@ ORDER BY name";
             $i18n =& CRM_Core_I18n::singleton();
             $i18n->localizeArray( $result );
             asort( $result );
+        }
+
+        $_cache[$cacheKey] = $result;
+        return $result;
+    }
+
+    public static function &countyForState( $stateID ) {
+        if (is_array( $stateID ) ) {
+            $states = implode(", ", $stateID);
+            $query = "
+    SELECT civicrm_county.name name, civicrm_county.id id, civicrm_state_province.abbreviation abbreviation
+      FROM civicrm_county
+      LEFT JOIN civicrm_state_province ON civicrm_county.state_province_id = civicrm_state_province.id
+    WHERE civicrm_county.state_province_id in ( $states )
+    ORDER BY civicrm_state_province.abbreviation, civicrm_county.name";
+
+            $dao = CRM_Core_DAO::executeQuery( $query );
+ 
+            $result = array( );
+            while ( $dao->fetch( ) ) {
+                $result[$dao->id] = $dao->abbreviation . ': ' . $dao->name;
+            }
+
+        } else {
+
+            static $_cache = null;
+
+            $cacheKey = "{$stateID}_name";
+            if ( ! $_cache ) {
+                $_cache = array( );
+            }
+
+            if ( ! empty( $_cache[$cacheKey] ) ) {
+                return $_cache[$cacheKey];
+            } 
+
+            $query = "
+    SELECT civicrm_county.name name, civicrm_county.id id
+      FROM civicrm_county
+    WHERE state_province_id = %1
+    ORDER BY name";
+            $params = array( 1 => array( $stateID, 'Integer' ) );
+
+            $dao = CRM_Core_DAO::executeQuery( $query, $params );
+
+            $result = array( );
+            while ( $dao->fetch( ) ) {
+                $result[$dao->id] = $dao->name;
+            }
         }
         return $result;
     }
@@ -1531,6 +1626,29 @@ ORDER BY name";
 
         return self::$extensions;
     }
+
+    /**
+     * Get all Activity Contacts
+     *
+     * The static array activityContacts is returned
+     *
+     * @access public
+     * @static
+     *
+     * @param boolean $all - get All activity Contacts - default is to get only active ones.
+     *
+     * @return array - array reference of all  activity Contacts
+     *
+     */
+    public static function &activityContacts( )
+    {
+        if ( ! self::$activityContacts ) {
+            require_once 'CRM/Core/OptionGroup.php';
+            self::$activityContacts = CRM_Core_OptionGroup::values('activity_contacts');
+        }
+        return self::$activityContacts;
+    }
+
 }
 
 

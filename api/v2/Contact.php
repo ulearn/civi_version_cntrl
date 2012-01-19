@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,8 +32,8 @@
  *
  * @package CiviCRM_APIv2
  * @subpackage API_Contact
- * @copyright CiviCRM LLC (c) 2004-2010
- * $Id: Contact.php 30757 2010-11-15 14:27:25Z neha $
+ * @copyright CiviCRM LLC (c) 2004-2011
+ * $Id: Contact.php 34863 2011-06-14 10:30:41Z deepak $
  *
  */
 
@@ -150,8 +150,8 @@ function civicrm_contact_update( &$params, $create_new = false )
     }
     
     $error = _civicrm_greeting_format_params( $params );
-    if ( $error['error_message'] ) {
-        return $error['error_message'];
+    if ( civicrm_error( $error ) ) {
+        return $error;
     }
     
     $values   = array( );
@@ -353,6 +353,20 @@ function civicrm_contact_get( &$params, $deprecated_behavior = false )
     if ($deprecated_behavior) {
         return _civicrm_contact_get_deprecated($params);
     }
+    
+    // fix for CRM-7384 cater for soft deleted contacts
+    $params['contact_is_deleted'] = 0;
+    if (isset($params['showAll'])) {
+        if (strtolower($params['showAll']) == "active") {
+            $params['contact_is_deleted'] = 0;
+        }
+        if (strtolower($params['showAll']) == "trash") {
+            $params['contact_is_deleted'] = 1;
+        }
+        if (strtolower($params['showAll']) == "all" && isset($params['contact_is_deleted'])) {
+            unset($params['contact_is_deleted']);
+        }
+    }
 
     $inputParams      = array( );
     $returnProperties = array( );
@@ -519,13 +533,19 @@ function &civicrm_contact_search( &$params )
  * @param boolean $dupeCheck       Should we check for duplicate contacts
  * @param boolean $dupeErrorArray  Should we return values of error
  *                                 object in array foramt
- * @param boolean $requiredCHeck   Should we check if required params
+ * @param boolean $requiredCheck   Should we check if required params
  *                                 are present in params array
+ * @param int   $dedupeRuleGroupID - the dedupe rule ID to use if present
  *
  * @return null on success, error message otherwise
  * @access public
  */
-function civicrm_contact_check_params( &$params, $dupeCheck = true, $dupeErrorArray = false, $requiredCheck = true )
+function civicrm_contact_check_params( &$params,
+                                       $dupeCheck = true,
+                                       $dupeErrorArray = false,
+                                       $requiredCheck = true,
+                                       $dedupeRuleGroupID = null
+                                       )
 {
     if ( $requiredCheck ) {
         $required = array(
@@ -604,7 +624,12 @@ function civicrm_contact_check_params( &$params, $dupeCheck = true, $dupeErrorAr
             $dedupeParams['check_permission'] = $fields['check_permission'];
         }
 
-        $ids = implode(',', CRM_Dedupe_Finder::dupesByParams($dedupeParams, $params['contact_type']));
+        $ids = implode(',',
+                       CRM_Dedupe_Finder::dupesByParams($dedupeParams,
+                                                        $params['contact_type'],
+                                                        'Strict',
+                                                        array( ),
+                                                        $dedupeRuleGroupID ) );
         
         if ( $ids != null ) {
             if ( $dupeErrorArray ) {
@@ -614,7 +639,7 @@ function civicrm_contact_check_params( &$params, $dupeCheck = true, $dupeErrorAr
                 return civicrm_create_error( $error->pop( ) );
             }
             
-            return civicrm_create_error( "Found matching contacts: $ids", $ids );
+            return civicrm_create_error( "Found matching contacts: $ids", array( $ids ) );
         }
     }
 
@@ -695,6 +720,7 @@ function _civicrm_contact_update( &$params, $contactID = null )
 
 /**
  * @todo Move this to ContactFormat.php 
+ * @deprecated
  */
 function civicrm_contact_format_create( &$params )
 {
@@ -708,12 +734,12 @@ function civicrm_contact_format_create( &$params )
     }
 
     $error = _civicrm_required_formatted_contact($params);
-    if (civicrm_error( $error, 'CRM_Core_Error')) {
+    if ( civicrm_error( $error ) ) {
         return $error;
     }
     
     $error = _civicrm_validate_formatted_contact($params);
-    if (civicrm_error( $error, 'CRM_Core_Error')) {
+    if ( civicrm_error( $error ) ) {
         return $error;
     }
 
@@ -725,7 +751,7 @@ function civicrm_contact_format_create( &$params )
     if ( CRM_Utils_Array::value('onDuplicate', $params) != CRM_Import_Parser::DUPLICATE_NOCHECK) {
         CRM_Core_Error::reset( );
         $error = _civicrm_duplicate_formatted_contact($params);
-        if (civicrm_error( $error, 'CRM_Core_Error')) {
+        if ( civicrm_error( $error ) ) {
             return $error;
         }
     }

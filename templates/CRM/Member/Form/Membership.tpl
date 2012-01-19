@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -33,6 +33,22 @@
 <div class="spacer"></div>
 {if $cdType }
   {include file="CRM/Custom/Form/CustomData.tpl"}
+{elseif $priceSetId}
+  {include file="CRM/Price/Form/PriceSet.tpl" context="standalone" extends="Membership"}
+  {literal}
+  <script type="text/javascript">
+    cj( function() {
+        var membershipValues = new Array;
+        {/literal}{foreach from=$optionsMembershipTypes item=memType key=opId}{literal}
+                  membershipValues[{/literal}{$opId}{literal}] = {/literal}{$memType}{literal};
+        {/literal}{/foreach}{literal}
+        processMembershipPriceset(membershipValues, {/literal}{$autoRenewOption}{literal}, 1);
+	{/literal}{if !$membershipMode}{literal}
+	  enableAmountSection({/literal}{$contributionType}{literal});
+	{/literal}{/if}{literal}
+    });
+  </script>
+  {/literal}
 {else}
 {if $membershipMode == 'test' }
     {assign var=registerMode value="TEST"}
@@ -57,9 +73,10 @@
    <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"}</div>
     {if $action eq 8}
       <div class="messages status">
-          <div class="icon inform-icon"></div>       
-          {ts}WARNING: Deleting this membership will also delete related membership log and payment records.{/ts} {ts}This action cannot be undone.{/ts} {ts}Consider modifying the membership status instead if you want to maintain a record of this membership.{/ts}
-          {ts}Do you want to continue?{/ts}    
+          <div class="icon inform-icon"></div>&nbsp;       
+          <span class="font-red bold">{ts}WARNING: Deleting this membership will also delete any related payment (contribution) records.{/ts} {ts}This action cannot be undone.{/ts}</span>
+          <p>{ts}Consider modifying the membership status instead if you want to maintain an audit trail and avoid losing payment data. You can set the status to Cancelled by editing the membership and clicking the Status Override checkbox.{/ts}</p>
+          <p>{ts}Click 'Delete' if you want to continue.{/ts}</p>    
       </div>
     {else}
     <table class="form-layout-compressed">
@@ -68,16 +85,37 @@
                 <td class="font-size12pt label"><strong>{ts}Member{/ts}</strong></td><td class="font-size12pt"><strong>{$displayName}</strong></td>
             </tr>
         {else}
+            {if !$membershipMode and !$emailExists and $outBound_option != 2}
+                {assign var='profileCreateCallback' value=1 }
+            {/if}
             {include file="CRM/Contact/Form/NewContact.tpl"}
         {/if}
     {if $membershipMode}
 	    <tr><td class="label">{$form.payment_processor_id.label}</td><td>{$form.payment_processor_id.html}</td></tr>
 	{/if}
- 	<tr class="crm-membership-form-block-membership_type_id"><td class="label">{$form.membership_type_id.label}</td><td>{$form.membership_type_id.html}
-    {if $member_is_test} {ts}(test){/ts}{/if}<br />
-        <span class="description">{ts}Select Membership Organization and then Membership Type.{/ts}</span></td></tr>	
+ 	<tr class="crm-membership-form-block-membership_type_id">
+            <td class="label">{$form.membership_type_id.label}</td>
+            <td><span id='mem_type_id'>{$form.membership_type_id.html}</span>
+                 {if $hasPriceSets}
+                    <span id='totalAmountORPriceSet'> {ts}OR{/ts}</span>
+        	    <span id='selectPriceSet'>{$form.price_set_id.html}</span>
+                    {if $buildPriceSet && $priceSet}
+                      <div id="priceset"><br/>{include file="CRM/Price/Form/PriceSet.tpl" extends="Membership"}</div>
+                    {else}
+                      <div id="priceset" class="hiddenElement"></div>
+                    {/if}
+                 {/if}
+                 {if $member_is_test} {ts}(test){/ts}{/if}<br />
+                    <span class="description">{ts}Select Membership Organization and then Membership Type.{/ts}</span>
+            </td>
+        </tr>	
     <tr class="crm-membership-form-block-source"><td class="label">{$form.source.label}</td><td>&nbsp;{$form.source.html}<br />
         <span class="description">{ts}Source of this membership. This value is searchable.{/ts}</span></td></tr>
+		
+	{* CRM-7362 --add campaign to membership *}
+	{include file="CRM/Campaign/Form/addCampaignToComponent.tpl"
+	campaignTrClass="crm-membership-form-block-campaign_id"}
+
 	<tr class="crm-membership-form-block-join_date"><td class="label">{$form.join_date.label}</td><td>{include file="CRM/common/jcalendar.tpl" elementName=join_date}
 		<br />
         <span class="description">{ts}When did this contact first become a member?{/ts}</span></td></tr>
@@ -109,6 +147,11 @@
             <span class="description">{ts}If <strong>Status Override</strong> is checked, the selected status will remain in force (it will NOT be modified by the automated status update script).{/ts}</span></td></tr>
 
 	{elseif $membershipMode}
+        <tr class="crm-membership-form-block-total_amount">
+                      <td class="label">{$form.total_amount.label}</td>
+                      <td>{$form.total_amount.html}<br />
+                      <span class="description">{ts}Membership payment amount.{/ts}</span></td>                   
+        </tr>
         <tr class="crm-membership-form-block-billing"><td colspan="2">
         {include file='CRM/Core/BillingBlock.tpl'}
         </td></tr>
@@ -118,7 +161,7 @@
             <td class="label">{if $onlinePendingContributionId}{ts}Update Payment Status{/ts}{else}{$form.record_contribution.label}{/if}</td>
             <td>{$form.record_contribution.html}<br />
                 <span class="description">{ts}Check this box to enter or update payment information. You will also be able to generate a customized receipt.{/ts}</span></td>
-            </tr>
+        </tr>
         <tr class="crm-membership-form-block-record_contribution"><td colspan="2">    
           <fieldset id="recordContribution"><legend>{ts}Membership Payment and Receipt{/ts}</legend>
               <table>
@@ -211,25 +254,6 @@
 {if $action neq 8} {* Jscript additions not need for Delete action *} 
 {if $accessContribution and !$membershipMode AND ($action neq 2 or !$rows.0.contribution_id or $onlinePendingContributionId)}
 
-{literal}
-<script type="text/javascript">
-cj( function( ) {
-    cj('#record_contribution').click( function( ) {
-        if ( cj(this).attr('checked') ) {
-            cj('#recordContribution').show( );
-            setPaymentBlock( );
-        } else {
-            cj('#recordContribution').hide( );
-        }
-    });
-    
-    cj('#membership_type_id\\[1\\]').change( function( ) {
-        setPaymentBlock( );
-    });
-});
-</script>
-{/literal}
-
 {include file="CRM/common/showHideByFieldValue.tpl" 
     trigger_field_id    ="record_contribution"
     trigger_value       =""
@@ -247,6 +271,32 @@ cj( function( ) {
     invert              = 0
 }
 {/if}
+
+{literal}
+<script type="text/javascript">
+cj( function( ) {
+    var mode   = {/literal}'{$membershipMode}'{literal};
+    if ( !mode ) {
+        // Offline form (mode = false) has the record_contribution checkbox
+        cj('#record_contribution').click( function( ) {
+            if ( cj(this).attr('checked') ) {
+                cj('#recordContribution').show( );
+                setPaymentBlock( );
+            } else {
+                cj('#recordContribution').hide( );
+            }
+        });
+    }
+    
+    cj('#membership_type_id\\[1\\]').change( function( ) {
+        setPaymentBlock( mode );
+    });
+});
+</script>
+{/literal}
+
+
+
 {if ($emailExists and $outBound_option != 2) OR $context eq 'standalone' }
 {include file="CRM/common/showHideByFieldValue.tpl" 
     trigger_field_id    ="send_receipt"
@@ -283,17 +333,25 @@ function showHideMemberStatus() {
 {/literal}{/if}
 	
 {literal}
-function setPaymentBlock( ) {
+function setPaymentBlock( mode ) {
     var memType = cj('#membership_type_id\\[1\\]').val( );
+    var isPriceSet = 0;
+
+    if ( cj('#price_set_id').length > 0 && cj('#price_set_id').val() ) {
+        isPriceSet = 1;
+    }  	
     
-    if ( !memType ) {
+    if ( !memType || isPriceSet ) {
         return;
     }
     
     var dataUrl = {/literal}"{crmURL p='civicrm/ajax/memType' h=0}"{literal};
     
     cj.post( dataUrl, {mtype: memType}, function( data ) {
-        cj("#contribution_type_id").val( data.contribution_type_id );
+        if ( !mode ) {
+            // skip this for test and live modes because contribution type is set automatically
+            cj("#contribution_type_id").val( data.contribution_type_id );            
+        } 
         cj("#total_amount").val( data.total_amount );
     }, 'json');    
 }
@@ -308,7 +366,7 @@ cj( function( ) {
     checkEmail( );
 });
 function checkEmail( ) {
-    var contactID = cj("input[name=contact_select_id[1]]").val();
+    var contactID = cj("input[name='contact_select_id[1]']").val();
     if ( contactID ) {
         var postUrl = "{/literal}{crmURL p='civicrm/ajax/checkemail' h=0}{literal}";
         cj.post( postUrl, {contact_id: contactID},
@@ -326,7 +384,14 @@ function checkEmail( ) {
                 }
             }
         );
+    } else {
+       cj("#email-receipt").hide( );
+       cj("#notice").hide( );
     }
+}
+
+function profileCreateCallback( blockNo ) {
+    checkEmail( );     			    	    
 }
 {/literal}
 {/if}
@@ -432,6 +497,180 @@ function buildReceiptANDNotice( ) {
      }
    }
 }
+
+var customDataType = '{/literal}{$customDataType}{literal}';
+
+// load form during form rule.
+{/literal}{if $buildPriceSet}{literal}
+    cj( "#totalAmountORPriceSet" ).hide( );
+    cj( "#mem_type_id" ).hide( );
+    cj('#total_amount').attr("readonly", true);
+{/literal}{/if}{literal}
+
+function buildAmount( priceSetId ) {
+  if ( !priceSetId ) priceSetId = cj("#price_set_id").val( );
+  
+  var fname = '#priceset';
+  if ( !priceSetId ) {
+      cj('#membership_type_id\\[1\\]').val(0);
+      buildCustomData(customDataType, 'null' );
+
+      // hide price set fields.
+      cj( fname ).hide( );
+
+      // show/hide price set amount and total amount.
+      cj( "#mem_type_id").show( );
+      cj( "#totalAmountORPriceSet" ).show( );
+      cj('#total_amount').removeAttr("readonly"); 
+
+      {/literal}{if $allowAutoRenew}{literal}   
+          cj('#autoRenew').hide();
+          var autoRenew = cj("#auto_renew");
+          autoRenew.removeAttr( 'readOnly' );
+          autoRenew.removeAttr( 'checked' );
+       {/literal}{/if}{literal}
+      return;
+  }
+
+  cj( "#total_amount" ).val( '' );
+  cj('#total_amount').attr("readonly", true);
+
+  var dataUrl = {/literal}"{crmURL h=0 q='snippet=4'}"{literal} + '&priceSetId=' + priceSetId;
+  
+  var response = cj.ajax({
+		         url: dataUrl,
+                         async: false
+                 }).responseText;
+  
+  cj( fname ).show( ).html( response );
+  // freeze total amount text field.
+ 
+  cj( "#totalAmountORPriceSet" ).hide( );
+  cj( "#mem_type_id" ).hide( );
+}
+
+var lastMembershipTypes = new Array;
+var optionsMembershipTypes = new Array;
+
+// function to load custom data for selected membership types through priceset
+function processMembershipPriceset( membershipValues, autoRenewOption, reload ) {
+    var currentMembershipType = new Array;
+    var count = 0;
+    var loadCustomData = 0;
+    if ( membershipValues ) {
+        optionsMembershipTypes = membershipValues;
+    }
+
+    if ( reload ) {
+        lastMembershipTypes = new Array;
+        {/literal}{if $allowAutoRenew}{literal}   
+        cj('#autoRenew').hide();
+        var autoRenew = cj("#auto_renew");
+        autoRenew.removeAttr( 'readOnly' );
+        autoRenew.removeAttr( 'checked' );
+        if ( autoRenewOption == 1 ) {
+            cj('#autoRenew').show();
+        } else if ( autoRenewOption == 2 ) {
+            autoRenew.attr( 'readOnly', true );
+            autoRenew.attr( 'checked',  true );
+            cj('#autoRenew').show();
+        }
+        {/literal}{/if}{literal}
+    }
+    
+    cj("input,#priceset select,#priceset").each(function () {
+           if ( cj(this).attr('price') ) {
+             switch( cj(this).attr('type') ) {
+
+               case 'checkbox':
+	         if ( cj(this).attr('checked') ) {
+                     eval( 'var option = ' + cj(this).attr('price') ) ;
+                     var ele = option[0];
+		     var memTypeId = optionsMembershipTypes[ele];
+		     if ( memTypeId && cj.inArray(optionsMembershipTypes[ele], currentMembershipType) == -1 ) {
+		       currentMembershipType[count] = memTypeId;
+		       count++;
+		     }
+                 }
+		 if ( reload ) { 
+		   cj(this).click( function( ) {
+		     processMembershipPriceset();
+		   });
+		 }  
+               break;
+
+               case 'radio':
+                 if ( cj(this).attr('checked') && cj(this).val() ) {
+		   var memTypeId = optionsMembershipTypes[cj(this).val()];
+                   if ( memTypeId && cj.inArray(memTypeId, currentMembershipType) == -1 ) {
+                       currentMembershipType[count] = memTypeId;
+		       count++;
+		   }
+                 }
+                 if ( reload ) { 
+		   cj(this).click( function( ) {
+		     processMembershipPriceset();
+		   });
+		 }
+               break;
+
+               case 'select-one':
+	         if ( cj(this).val( ) ) {
+                   var memTypeId = optionsMembershipTypes[cj(this).val()];
+                   if ( memTypeId && cj.inArray(memTypeId, currentMembershipType) == -1 ) {
+                       currentMembershipType[count] = memTypeId;
+		       count++;
+		   }
+                 } 
+                 if ( reload ) { 
+		   cj(this).change( function( ) {
+		     processMembershipPriceset();
+		   });
+		 }
+	       break;
+	     }
+	   }
+    });
+
+    for( i in currentMembershipType ) {
+        if ( cj.inArray(currentMembershipType[i], lastMembershipTypes) == -1 ) {
+            loadCustomData = 1;
+            break;
+        }
+    }
+
+    if ( !loadCustomData ) {
+        for( i in lastMembershipTypes) { 
+            if ( cj.inArray(lastMembershipTypes[i], currentMembershipType) == -1 ) {
+                loadCustomData = 1;
+                break;
+            }
+        }  
+    }
+    lastMembershipTypes = currentMembershipType;
+
+    // load custom data only if change in membership type selection
+    if ( !loadCustomData ) {
+        return;   
+    }    
+
+    subTypeNames = currentMembershipType.join(',');
+    if ( subTypeNames.length < 1 ) {
+        subTypeNames = 'null';
+    }
+
+    buildCustomData( customDataType, subTypeNames );
+}
+
+function enableAmountSection( setContributionType ) {
+  if ( !cj('#record_contribution').attr('checked') ) {
+    cj('#record_contribution').click( );
+    cj('#recordContribution').show( );
+  }
+  if ( setContributionType ) {
+    cj('#contribution_type_id').val(setContributionType);
+  }
+}	 
 </script>
 {/literal}
 {/if} {* closing of delete check if *} 

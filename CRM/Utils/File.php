@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id: $
  *
  */
@@ -291,6 +291,22 @@ class CRM_Utils_File {
         }
         //support lower and uppercase file extensions
         return isset( $extensions[strtolower( $ext )] ) ? true : false;
+    }
+    
+    /**
+     * Determine whether a given file is listed in the PHP include path
+     *
+     * @param string $name name of file
+     * @return boolean  whether the file can be include()d or require()d
+     */
+    static function isIncludable( $name ) {
+        $x = @fopen($name, 'r', TRUE);
+        if ($x) {
+            fclose($x);
+            return TRUE;
+        } else {
+            return FALSE;
+        }
     }
 
     /**

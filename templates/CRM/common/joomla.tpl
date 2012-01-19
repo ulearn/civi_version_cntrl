@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -39,11 +39,11 @@
   <tr>
 {if $sidebarLeft}
     <td id="sidebar-left" valign="top">
-        <div id="civi-sidebar-logo" style="margin: 0 0 .25em .25em"><img src="{$config->resourceBase}i/logo_words_small.png" title="{ts}CiviCRM{/ts}/></div><div class="spacer"></div>
+        <div id="civi-sidebar-logo" style="margin: 0 0 .25em .25em"><img src="{$config->resourceBase}i/logo_words_small.png" title="{ts}CiviCRM{/ts}"/></div><div class="spacer"></div>
        {$sidebarLeft}
     </td>
 {/if}
-    <td valign="top">
+    <td id="content-right" valign="top">
     {if $breadcrumb}
     <div class="breadcrumb">
       {foreach from=$breadcrumb item=crumb key=key}

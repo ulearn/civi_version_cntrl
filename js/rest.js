@@ -1,6 +1,6 @@
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -53,12 +53,14 @@ var options {ajaxURL:"{$config->userFrameworkResourceURL}";
     	      return settings.success(result,settings);
     	  },
     	  closetxt: "<div class='icon close-icon' title='Close'>[X]</div>",
-    	  ajaxURL: 'civicrm/ajax/rest',
+    	  ajaxURL: '/civicrm/ajax/rest',
     	  msgbox: '#restmsg'
       };
 
       $.fn.crmAPI = function(entity,action,params,options) {
-    	  params ['fnName'] = "civicrm/"+entity+"/"+action;
+//    	  params ['fnName'] = "civicrm/"+entity+"/"+action;
+    	  params ['entity'] = entity;
+    	  params ['action'] = action;
     	  params ['json'] = 1;
     	  var settings = $.extend({}, defaults, options);
     	  $(settings.msgbox).removeClass('msgok').removeClass('msgnok').html("");

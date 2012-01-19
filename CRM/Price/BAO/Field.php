@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -129,6 +129,7 @@ class CRM_Price_BAO_Field extends CRM_Price_DAO_Field
                 $defaultArray[$params['default_option']] = 1;
             }
         }  
+
         for ( $index = 1; $index <= $maxIndex; $index++ ) {
             
             if ( CRM_Utils_Array::value( $index, $params['option_label'] ) &&
@@ -141,6 +142,7 @@ class CRM_Price_BAO_Field extends CRM_Price_DAO_Field
                                  'count'          => CRM_Utils_Array::value( $index, $params['option_count'], null ),
                                  'max_value'      => CRM_Utils_Array::value( $index, $params['option_max_value'], null ),
                                  'description'    => CRM_Utils_Array::value( $index, $params['option_description'], null ),
+                                 'membership_type_id' => CRM_Utils_Array::value( $index, $params['membership_type_id'], null ),
                                  'weight'         => $params['option_weight'][$index],
                                  'is_active'      => 1,
                                  'is_default'     => CRM_Utils_Array::value( $index, $defaultArray )
@@ -346,7 +348,7 @@ class CRM_Price_BAO_Field extends CRM_Price_DAO_Field
             // CRM-6902
             $button = substr( $qf->controller->getButtonName(), -4 );
             if ( !empty($feezeOptions) && $button != 'skip' ) {
-                $qf->addRule($elementName, ts('Participant count for this option is full.') , 'regex', "/".implode('|', $allowedOptions )."/" ); 
+                $qf->addRule($elementName, ts('Sorry, this option is currently sold out.') , 'regex', "/".implode('|', $allowedOptions )."/" ); 
             }
             
             break;

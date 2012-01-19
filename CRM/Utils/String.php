@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -131,10 +131,11 @@ class CRM_Utils_String {
      * @static
      */
     static function getClassName( $string, $char = '_' ) {
+        $names = array( );
         if( !is_array( $string ) ) {
             $names = explode( $char, $string );
         }
-        if( is_array( $names ) )  return array_pop( $names ); 
+        if( !empty( $names ) )  return array_pop( $names ); 
     }
     
     /**
@@ -185,7 +186,7 @@ class CRM_Utils_String {
      * @static
      */
     static function isAscii( $str, $utf8 = true ) {
-        if( ! function_exists( mb_detect_encoding ) ) {
+        if( ! function_exists( 'mb_detect_encoding' ) ) {
             $str = preg_replace( '/\s+/', '', $str ); // eliminate all white space from the string
             /* FIXME:  This is a pretty brutal hack to make utf8 and 8859-1 work.
              */
@@ -391,16 +392,43 @@ class CRM_Utils_String {
             return;
         }
 
-        $names = explode( ' ', $name );
-        if ( count( $names ) == 1 ) {
-            $params['first_name'] = $names[0];
-        } else if ( count( $names ) == 2 ) {
-            $params['first_name'] = $names[0];
-            $params['last_name' ] = $names[1];
+        // strip out quotes
+        $name = str_replace('"', '', $name);
+        $name = str_replace('\'', '', $name);
+        
+        // check for comma in name
+        if ( strpos( $name, ',' ) !== false ) {
+            
+            // name has a comma - assume lname, fname [mname]
+            $names = explode( ',', $name );
+            if ( count( $names ) > 1) {
+                $params['last_name'] = trim( $names[0] );
+                
+                // check for space delim
+                $fnames = explode( ' ', trim( $names[1] ) );
+                if ( count( $fnames ) > 1 ) {
+                    $params['first_name' ] = trim( $fnames[0] );
+                    $params['middle_name'] = trim( $fnames[1] );
+                } else {
+                    $params['first_name'] = trim( $fnames[0] );
+                }
+            } else {
+                $params['first_name'] = trim( $names[0] );
+            }
         } else {
-            $params['first_name' ] = $names[0];
-            $params['middle_name'] = $names[1];
-            $params['last_name'  ] = $names[2];
+            
+            // name has no comma - assume fname [mname] fname
+            $names = explode( ' ', $name );
+            if ( count( $names ) == 1 ) {
+                $params['first_name'] = $names[0];
+            } else if ( count( $names ) == 2 ) {
+                $params['first_name'] = $names[0];
+                $params['last_name' ] = $names[1];
+            } else {
+                $params['first_name' ] = $names[0];
+                $params['middle_name'] = $names[1];
+                $params['last_name'  ] = $names[2];
+            }
         }
     }
 
@@ -423,7 +451,7 @@ class CRM_Utils_String {
      */
     static function addJqueryFiles( &$html ) {
         $smarty = CRM_Core_Smarty::singleton( );
-        return $smarty->fetch( 'CRM/common/jquery.tpl' ) . $html . '<script type="text/javascript">jQuery.noConflict(true);</script>';
+        return $smarty->fetch( 'CRM/common/jquery.tpl' ) . $html;
     }
 
     /**
@@ -439,7 +467,8 @@ class CRM_Utils_String {
         $matches = array();
         preg_match('/-ALTERNATIVE ITEM 0-(.*?)-ALTERNATIVE ITEM 1-.*-ALTERNATIVE END-/s', $full, $matches);
 
-        if ( trim( strip_tags( $matches[1] ) ) != '' ) {
+        if ( isset( $matches[1] ) &&
+             trim( strip_tags( $matches[1] ) ) != '' ) {
             return $matches[1];
         } else {
             return $full;
@@ -451,13 +480,15 @@ class CRM_Utils_String {
      * used for postal/greeting/addressee
      * @param string  $string input string to be cleaned
      *
-     * @return cleaned string
+     * @return string the cleaned string
      * @access public
      * @static
      */
 	static function stripSpaces( $string ) 
 	{
-        if ( empty($string) ) return $string;
+        if ( empty($string) ) {
+            return $string;
+        }
         
         $pat = array( 0 => "/^\s+/",
                       1 =>  "/\s{2,}/", 
@@ -470,5 +501,46 @@ class CRM_Utils_String {
         return preg_replace( $pat, $rep, $string );
 	}
 
+    /**
+     * This function is used to clean the URL 'path' variable that we use 
+     * to construct CiviCRM urls by removing characters from the path variable
+     *
+     * @param string $string  the input string to be sanitized
+     * @param array  $search  the characters to be sanitized
+     * @param string $replace the character to replace it with
+     *
+     * @return string the sanitized string
+     * @access public
+     * @static
+     */
+    static function stripPathChars( $string,
+                                    $search  = null,
+                                    $replace = null ) {
+        static $_searchChars  = null;
+        static $_replaceChar  = null;
+
+        if ( empty( $string ) ) {
+            return $string;
+        }
+        
+        if ( $_searchChars == null ) {
+            $_searchChars = array( '&', ';', ',', '=', '$',
+                                   '"', "'", '\\',
+                                   '<', '>', '(', ')',
+                                   ' ', "\r", "\r\n", "\n", "\t" );
+            $_replaceChar = '_';
+        }
+                                   
+        
+        if ( $search == null ) {
+            $search = $_searchChars;
+        }
+
+        if ( $replace == null ) {
+            $replace = $_replaceChar;
+        }
+
+        return str_replace( $search, $replace, $string );
+    }
 }
 

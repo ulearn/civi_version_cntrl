@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -143,7 +143,8 @@ class CRM_Mailing_Form_Test extends CRM_Core_Form
         $mailing = new CRM_Mailing_BAO_Mailing( );
         $mailing->id = $options['mailing_id'];
         $mailing->find( true );
-        $fromEmail = $mailing->from_email;
+        $fromEmail    = $mailing->from_email;
+        $replyToEmail = $mailing->replyto_email;
         
         require_once 'CRM/Core/BAO/File.php';
         $attachments =& CRM_Core_BAO_File::getEntityFile( 'civicrm_mailing',
@@ -216,7 +217,7 @@ class CRM_Mailing_Form_Test extends CRM_Core_Form
             if ( $error ) {
                 $url = CRM_Utils_System::url( $urlString, $urlParams );
                 CRM_Utils_System::redirect( $url );
-                return true;
+                return $error;
             }
         } 
         
@@ -255,7 +256,8 @@ class CRM_Mailing_Form_Test extends CRM_Core_Form
         if ( CRM_Utils_Array::value( '_qf_Import_refresh', $_POST ) || 
              CRM_Utils_Array::value( '_qf_Test_next', $testParams ) ||
              !CRM_Utils_Array::value( 'sendtest', $testParams ) ) {
-            return true;
+            $error = true;
+            return $error;
         }
         
         require_once 'CRM/Mailing/BAO/Job.php';
@@ -335,8 +337,8 @@ class CRM_Mailing_Form_Test extends CRM_Core_Form
             $url = CRM_Utils_System::url( $urlString, $urlParams );
             CRM_Utils_System::redirect( $url );
         }
-        
-        return true;
+        $error = true;
+        return $error;
     }
     
     /**

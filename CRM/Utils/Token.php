@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id: $
  *
  */
@@ -53,6 +53,7 @@ class CRM_Utils_Token
                                                       'subscribeUrl'
                                                       ),
                              'mailing'       => array(
+                             						  'id',
                                                       'name',
                                                       'group',
                                                       'subject',
@@ -64,6 +65,13 @@ class CRM_Utils_Token
                                                       'approveUrl',
                                                       'creator',
                                                       'creatorEmail'
+                                                      ),
+                             'user'          => array(
+                                                      // we extract the stuff after the role / permission and return the
+                                                      // civicrm email addresses of all users with that role / permission
+                                                      // useful with rules integration
+                                                      'permission:',
+                                                      'role:',
                                                       ),
                              'contact'       => null,  // populate this dynamically
                              'domain'        => array( 
@@ -178,7 +186,7 @@ class CRM_Utils_Token
     }
     
     /**
-     * get the regex for token replacement
+     * get< the regex for token replacement
      *
      * @param string $key       a string indicating the the type of token to be used in the expression
      * @return string           regular expression sutiable for using in preg_replace
@@ -187,7 +195,7 @@ class CRM_Utils_Token
      */
     private static function tokenRegex($token_type)
     {
-        return '/(?<!\{|\\\\)\{'.$token_type.'\.(\w+)\}(?!\})/e';
+        return '/(?<!\{|\\\\)\{'.$token_type.'\.([\w]+(\-[\w\s]+)?)\}(?!\})/e';
     }
 
     /**
@@ -364,7 +372,8 @@ class CRM_Utils_Token
             return $str;
         }
         
-        $str = preg_replace(self::tokenRegex($key),'self::getMailingTokenReplacement(\'\\1\',$mailing,$escapeSmarty)',$str);
+        $str = preg_replace( self::tokenRegex($key),
+                             'self::getMailingTokenReplacement(\'\\1\',$mailing,$escapeSmarty)', $str );
         return $str;
     }
 
@@ -372,6 +381,10 @@ class CRM_Utils_Token
     {
         $value = '';
         switch ( $token ) {
+        // CRM-7663
+        case 'id':
+        	$value = $mailing ? $mailing->id : 'undefined';
+        	break;
         case 'name':
             $value = $mailing ? $mailing->name : 'Mailing Name';
             break;
@@ -406,7 +419,7 @@ class CRM_Utils_Token
         case 'html':
             require_once 'CRM/Mailing/Page/View.php';
             $page = new CRM_Mailing_Page_View( );
-            $value = $page->run( $mailing->id, false );
+            $value = $page->run( $mailing->id, null, false );
             break;
             
         case 'approvalStatus':
@@ -562,7 +575,10 @@ class CRM_Utils_Token
             $value = "{contact.$token}";
         } else if ( $token == 'checksum' ) {
             require_once 'CRM/Contact/BAO/Contact/Utils.php';
-            $cs = CRM_Contact_BAO_Contact_Utils::generateChecksum( $contact['contact_id'] );
+            $cs = CRM_Contact_BAO_Contact_Utils::generateChecksum( $contact['contact_id'],
+                                                                   null,
+                                                                   null,
+                                                                   $contact['hash'] );
             $value = "cs={$cs}";
         } else {
             $value = CRM_Utils_Array::retrieveValueRecursive($contact, $token);
@@ -825,6 +841,63 @@ class CRM_Utils_Token
         return $str;
     }
 
+    /**
+     * Replace all user tokens in $str
+     *
+     * @param string $str       The string with tokens to be replaced
+     *
+     * @return string           The processed string
+     * @access public
+     * @static
+     */
+    public static function &replaceUserTokens($str, $knownTokens = null, $escapeSmarty = false) 
+    {
+        $key = 'user';
+        if ( ! $knownTokens ||
+             ! isset( $knownTokens[$key] ) ) {
+            return $str;
+        }
+        
+        $str = preg_replace( self::tokenRegex($key),
+                             'self::getUserTokenReplacement(\'\\1\',$escapeSmarty)', $str );
+        return $str;
+    }
+
+    public static function getUserTokenReplacement($token, $escapeSmarty = false) 
+    {
+        $value = '';
+
+        list( $objectName, $objectValue ) = explode( '-', $token, 2 );
+
+        switch ( $objectName ) {
+
+        case 'permission':
+            require_once 'CRM/Core/Permission.php';
+            $value = CRM_Core_Permission::permissionEmails( $objectValue );
+            break;
+
+        case 'role':
+            require_once 'CRM/Core/Permission.php';
+            $value = CRM_Core_Permission::roleEmails( $objectValue );
+            break;
+
+        }
+     
+        if ( $escapeSmarty ) {
+            $value = self::tokenEscapeSmarty( $value );
+        }     
+
+        return $value;
+    }
+
+    function getPermissionEmails( $permissionName ) {
+        
+    }
+
+    function getRoleEmails( $roleName ) {
+    }
+    
 }
+
 
 

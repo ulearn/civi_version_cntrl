@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -50,7 +50,7 @@
 <div class="crm-block crm-event-additionalparticipant-form-block">
 {if $priceSet}
      <fieldset id="priceset" class="crm-group priceset-group"><legend>{$event.fee_label}</legend>
-     	 {include file="CRM/Price/Form/PriceSet.tpl"}
+     	 {include file="CRM/Price/Form/PriceSet.tpl" extends="Event"}
     </fieldset>
 {else}
     {if $paidEvent}

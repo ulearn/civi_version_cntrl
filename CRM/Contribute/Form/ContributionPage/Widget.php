@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -140,7 +140,7 @@ class CRM_Contribute_Form_ContributionPage_Widget extends CRM_Contribute_Form_Co
     
         require_once 'CRM/Core/ShowHideBlocks.php';
         $showHide = new CRM_Core_ShowHideBlocks( );
-        $showHide->addHide( "id-colors" );
+        $showHide->addHide( 'id-colors' );
         $showHide->addToTemplate( );
         return $defaults;
     }
@@ -235,9 +235,10 @@ class CRM_Contribute_Form_ContributionPage_Widget extends CRM_Contribute_Form_Co
         $widget->save( );
 
         $buttonName = $this->controller->getButtonName( );
-        if ( $buttonName = $this->_refreshButtonName ) {
+        if ( $buttonName == $this->_refreshButtonName ) {
             return;
         }
+        parent::endPostProcess( );
     }
 
     /** 

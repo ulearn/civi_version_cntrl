@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,10 +29,11 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
+
 
 /**
  * Drupal specific stuff goes here
@@ -49,12 +50,12 @@ class CRM_Utils_System_Drupal {
      * @access public
      */
     function setTitle( $title, $pageTitle = null ) {
-        if ( !$pageTitle ) {
-            $pageTitle = $title;
-        }
         if ( arg(0) == 'civicrm' )	{
-            //set drupal title 
-            drupal_set_title( $pageTitle ); 
+            if ( !$pageTitle ) {
+                $pageTitle = $title;
+            }
+
+            drupal_set_title( $pageTitle, PASS_THROUGH );
         }
     }
     
@@ -104,14 +105,18 @@ class CRM_Utils_System_Drupal {
     /**
      * Append a string to the head of the html file
      *
-     * @param string $head the new string to be appended
+     * @param string $header the new string to be appended
      *
      * @return void
      * @access public
      * @static
+     *
+     * @todo Not Drupal 7 compatible
      */
-    static function addHTMLHead( $head ) {
-      drupal_set_html_head( $head );
+    static function addHTMLHead( $header ) {
+        if ( ! empty( $header ) ) { 
+            drupal_add_html_head($header);
+        }
     }
 
     /** 
@@ -167,6 +172,9 @@ class CRM_Utils_System_Drupal {
         $config = CRM_Core_Config::singleton( );
         $script =  'index.php';
 
+        require_once 'CRM/Utils/String.php';
+        $path = CRM_Utils_String::stripPathChars( $path );
+
         if (isset($fragment)) {
             $fragment = '#'. $fragment;
         }
@@ -215,15 +223,16 @@ class CRM_Utils_System_Drupal {
      *
      * @param string $name     the user name
      * @param string $password the password for the above user name
+     * @param $loadCMSBootstrap boolean load cms bootstrap?
      *
      * @return mixed false if no auth
      *               array( contactID, ufID, unique string ) if success
      * @access public
      * @static
      */
-    static function authenticate( $name, $password ) {
+     static function authenticate( $name, $password, $loadCMSBootstrap = false ) {
         require_once 'DB.php';
-
+        
         $config = CRM_Core_Config::singleton( );
         
         $dbDrupal = DB::connect( $config->userFrameworkDSN );
@@ -231,23 +240,61 @@ class CRM_Utils_System_Drupal {
             CRM_Core_Error::fatal( "Cannot connect to drupal db via $config->userFrameworkDSN, " . $dbDrupal->getMessage( ) ); 
         }                                                      
 
-        $strtolower = function_exists('mb_strtolower') ? 'mb_strtolower' : 'strtolower';
-        $password  = md5( $password );
-        $name      = $dbDrupal->escapeSimple( $strtolower( $name ) );
-        $sql = 'SELECT u.* FROM ' . $config->userFrameworkUsersTableName .
-            " u WHERE LOWER(u.name) = '$name' AND u.pass = '$password' AND u.status = 1";
-        $query = $dbDrupal->query( $sql );
-
-        $user = null;
-        // need to change this to make sure we matched only one row
+        $account = $userUid = $userMail = null;
         require_once 'CRM/Core/BAO/UFMatch.php';
-        while ( $row = $query->fetchRow( DB_FETCHMODE_ASSOC ) ) { 
-            CRM_Core_BAO_UFMatch::synchronizeUFMatch( $user, $row['uid'], $row['mail'], 'Drupal' );
-            $contactID = CRM_Core_BAO_UFMatch::getContactId( $row['uid'] );
+        
+        if ( $loadCMSBootstrap ) {
+            $bootStrapParams = array( );
+            if ( $name && $password ) {
+                $bootStrapParams = array( 'name' => $name,
+                                          'pass' => $password ); 
+            }
+            CRM_Utils_System::loadBootStrap( $bootStrapParams );
+
+            global $user;
+            if ( $user ) {
+                $userUid = $user->uid;
+                $userMail = $user->mail;
+            }
+        } else {
+            // CRM-8638
+            // SOAP cannot load drupal bootstrap and hence we do it the old way
+            // Contact CiviSMTP folks if we run into issues with this :)
+            $cmsPath = self::cmsRootPath( );
+            require_once( "$cmsPath/includes/bootstrap.inc" );
+            require_once( "$cmsPath/includes/password.inc" );
+            
+            $strtolower = function_exists('mb_strtolower') ? 'mb_strtolower' : 'strtolower';
+            $name      = $dbDrupal->escapeSimple( $strtolower( $name ) );
+            $sql = "
+SELECT u.* 
+FROM   {$config->userFrameworkUsersTableName} u
+WHERE  LOWER(u.name) = '$name'
+AND    u.status = 1
+";
+            
+            $query = $dbDrupal->query( $sql );
+            $row = $query->fetchRow( DB_FETCHMODE_ASSOC );
+            
+            if ( $row ) {
+               $fakeDrupalAccount = drupal_anonymous_user();
+               $fakeDrupalAccount->name = $name;
+               $fakeDrupalAccount->pass = $row['pass'];
+               $passwordCheck = user_check_password($password, $fakeDrupalAccount);
+               if ( $passwordCheck ) {
+                   $userUid = $row['uid']; 
+                   $userMail = $row['mail'];
+               }
+            }
+        }
+        
+        if ( $userUid && $userMail ) { 
+            CRM_Core_BAO_UFMatch::synchronizeUFMatch( $account, $userUid , $userMail, 'Drupal' );
+            $contactID = CRM_Core_BAO_UFMatch::getContactId( $userUid );
             if ( ! $contactID ) {
                 return false;
             }
-            return array( $contactID, $row['uid'], mt_rand() );
+            return array( $contactID, $userUid, mt_rand() );
         }
         return false;
     }
@@ -302,63 +349,113 @@ class CRM_Utils_System_Drupal {
     /**
      * load drupal bootstrap
      *
-     * @param $name string  optional username for login
-     * @param $pass string  optional password for login
+     * @param $params array with uid or name and password 
+     * @param $loadUser boolean load cms user?
+     * @param $throwError throw error on failure?
      */
-    static function loadBootStrap($name = null, $pass = null, $uid = null )
+    static function loadBootStrap( $params = array( ), $loadUser = true, $throwError = true )
     {
         //take the cms root path.
         $cmsPath = self::cmsRootPath( );
         
         if ( !file_exists( "$cmsPath/includes/bootstrap.inc" ) ) {
-            echo '<br />Sorry, could not able to locate bootstrap.inc.';
-            exit( );
+            if ( $throwError ) {
+                echo '<br />Sorry, could not able to locate bootstrap.inc.';
+                exit( );
+            }
+            return false;
         }
         
+        // load drupal bootstrap
         chdir($cmsPath);
+        define('DRUPAL_ROOT', $cmsPath);
         require_once 'includes/bootstrap.inc';
-        @drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+        drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
         
+        // explicitly setting error reporting, since we cannot handle drupal related notices
+        error_reporting( 1 );
         if ( !function_exists('module_exists') || 
              !module_exists( 'civicrm' ) ) {
-            echo '<br />Sorry, could not able to load drupal bootstrap.';
+            if ( $throwError ) {
+                echo '<br />Sorry, could not able to load drupal bootstrap.';
+                exit( );
+            } 
+            return false;
+        }
+        
+        if ( !$loadUser ) {
+            return true;
+        }
+      
+        $uid = CRM_Utils_Array::value( 'uid', $params );
+        if ( !$uid ) {
+            //load user, we need to check drupal permissions.
+            $name = CRM_Utils_Array::value( 'name', $params, false ) ? $params['name'] : trim(CRM_Utils_Array::value('name', $_REQUEST));
+            $pass = CRM_Utils_Array::value( 'pass', $params, false ) ? $params['pass'] : trim(CRM_Utils_Array::value('pass', $_REQUEST));
+
+            if ( $name ) {
+                $uid = user_authenticate( $name,  $pass );
+                if ( !$uid ) {
+                    if ( $throwError ) {
+                        echo '<br />Sorry, unrecognized username or password.';
+                        exit( );
+                    }
+                    return false;
+                }
+            } 
+        }
+        
+        if ( $uid ) {
+            $account = user_load($uid );
+            if ( $account && $account->uid ) {
+                global $user;
+                $user = $account;
+                return true;
+            }
+        }
+        
+        if ( $throwError ) {
+            echo '<br />Sorry, can not load CMS user account.';
             exit( );
         }
         
-        //load user, we need to check drupal permissions.
-        $name = $name ? $name : trim(CRM_Utils_Array::value('name', $_REQUEST));
-        $pass = $pass ? $pass : trim(CRM_Utils_Array::value('pass', $_REQUEST));
-        if ( $name ) {
-            $user = user_authenticate(  array( 'name' => $name, 'pass' => $pass ) );
-            if ( empty( $user->uid ) ) {
-                echo '<br />Sorry, unrecognized username or password.';
-                exit( );
-            }
-        } else if ( $uid ) {
-            $account = user_load( array( 'uid' => $uid ) );
-            if ( empty( $account->uid ) ) {
-                echo '<br />Sorry, unrecognized user id.';
-                exit( );
-            } else {
-                global $user;
-                $user = $account;
-            }
-        }
+        // CRM-6948: When using loadBootStrap, it's implicit that CiviCRM has already loaded its settings, which means that define(CIVICRM_CLEANURL) was correctly set.
+        // So we correct it
+        $config = CRM_Core_Config::singleton();
+        $config->cleanURL = (int)variable_get('clean_url', '0'); 
         
+        // CRM-8655: Drupal wasn't available during bootstrap, so hook_civicrm_config never executes
+        require_once 'CRM/Utils/Hook.php';
+        CRM_Utils_Hook::config( $config );
+
+        return false;
     }
     
     static function cmsRootPath( ) 
     {
-        $cmsRoot  = $valid = null;
-        $pathVars = explode( '/', str_replace( '\\', '/', $_SERVER['SCRIPT_FILENAME'] ) );
+        $cmsRoot = $valid = null;
         
-        //might be windows installation.
+        $path = $_SERVER['SCRIPT_FILENAME'];
+        if ( function_exists( 'drush_get_context' ) ) {
+            // drush anyway takes care of multisite install etc
+            return drush_get_context('DRUSH_DRUPAL_ROOT');
+        }
+        // CRM-7582
+        $pathVars = explode( '/', 
+                             str_replace('//', '/', 
+                                         str_replace( '\\', '/', $path ) ) );
+        
+        //lets store first var,
+        //need to get back for windows.
         $firstVar = array_shift( $pathVars );
-        if ( $firstVar ) $cmsRoot = $firstVar;
         
-        //start w/ csm dir search.
-        foreach ( $pathVars as $var ) {
-            $cmsRoot .= "/$var";
+        //lets remove sript name to reduce one iteration.
+        array_pop( $pathVars );
+        
+        //CRM-7429 --do check for upper most 'includes' dir,
+        //which would effectually work for multisite installation.
+        do {
+            $cmsRoot = $firstVar . '/'.implode( '/', $pathVars );
             $cmsIncludePath = "$cmsRoot/includes";
             //stop as we found bootstrap.
             if ( @opendir( $cmsIncludePath ) && 
@@ -366,9 +463,11 @@ class CRM_Utils_System_Drupal {
                 $valid = true;
                 break;
             }
-        }
+            //remove one directory level.
+            array_pop( $pathVars );
+        } while ( count( $pathVars ) ); 
         
-        return ( $valid ) ? $cmsRoot : null; 
+        return ( $valid ) ? $cmsRoot : null;
     }
     
     /**

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -137,7 +137,8 @@ class CRM_Friend_BAO_Friend extends CRM_Friend_DAO_Friend
                                   'subject'            => ts( 'Tell a Friend' ) . ": {$params['title']}",
                                   'details'            => $params['suggested_message'],
                                   'status_id'          => 2,
-                                  'is_test'            => $params['is_test'] );
+                                  'is_test'            => $params['is_test'],
+                                  'campaign_id'        => CRM_Utils_Array::value( 'campaign_id', $params ) );
         
         //activity creation
         $activity = CRM_Activity_BAO_Activity::create( $activityParams );
@@ -247,9 +248,9 @@ class CRM_Friend_BAO_Friend extends CRM_Friend_DAO_Friend
 
         $form->add('text','general_link',ts('Info Page Link'), CRM_Core_DAO::getAttribute('CRM_Friend_DAO_Friend', 'general_link'));
         
-        $form->add('text', 'thankyou_title', ts('Thank-you Title'), CRM_Core_DAO::getAttribute('CRM_Friend_DAO_Friend', 'thankyou_title'), true );
+        $form->add('text', 'tf_thankyou_title', ts('Thank-you Title'), CRM_Core_DAO::getAttribute('CRM_Friend_DAO_Friend', 'thankyou_title'), true );
 
-        $form->addWysiwyg('thankyou_text', ts('Thank-you Message'), CRM_Core_DAO::getAttribute('CRM_Friend_DAO_Friend', 'thankyou_text') , true);
+        $form->addWysiwyg('tf_thankyou_text', ts('Thank-you Message'), CRM_Core_DAO::getAttribute('CRM_Friend_DAO_Friend', 'thankyou_text') , true);
     }
     
     /**

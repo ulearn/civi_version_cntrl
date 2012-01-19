@@ -13,9 +13,8 @@
    * Implementation of hook_install().
    */
 function civicrm_member_roles_install() {
-    //Create table.
-    drupal_install_schema('civicrm_member_roles');
-  }
+
+}
 
 /**
  * Implementation of hook_schema().
@@ -25,8 +24,6 @@ function civicrm_member_roles_schema() {
                                                   'fields' => array(
                                                                     'rule_id' => array(
                                                                                        'type' => 'serial', 
-                                                                                       'unsigned' => TRUE, 
-                                                                                       'not null' => TRUE,
                                                                                        ),
                                                                     'rid' => array(
                                                                                    'type' => 'int', 
@@ -53,6 +50,5 @@ function civicrm_member_roles_schema() {
  * Implementation of hook_uninstall().
  */
 function civicrm_member_roles_uninstall() {
-    drupal_uninstall_schema('civicrm_member_roles');
     variable_del('civicrm_member_roles_sync_method');
 }

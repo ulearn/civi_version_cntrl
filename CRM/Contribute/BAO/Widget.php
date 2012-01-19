@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -133,7 +133,9 @@ class CRM_Contribute_BAO_Widget extends CRM_Contribute_DAO_Widget {
                     $endDate = CRM_Utils_Date::unixTime( $dao->end_date );
                     if ( $endDate &&
                     $endDate < $now ) {
-                        $data['is_active'] = false;                    
+                        $data['is_active'] = false;
+                        $data['campaign_start'] = ts( 'Campaign ended on %1', array( 1 => CRM_Utils_Date::customFormat( $dao->end_date, 
+                            $config->dateformatFull ) ) );
                     } else if ( $startDate >= $now ) {
                         $data['campaign_start'] = ts( 'Campaign starts on %1', array( 1 => CRM_Utils_Date::customFormat( $dao->start_date, 
                             $config->dateformatFull ) ) );
@@ -152,7 +154,8 @@ class CRM_Contribute_BAO_Widget extends CRM_Contribute_DAO_Widget {
         require_once 'CRM/Utils/Money.php';
         $data['money_raised_percentage'] = 0;
         if ( $data['money_target'] > 0 ) {
-            $data['money_raised_percentage'] = ( $data['money_raised'] / $data['money_target'] ) * 100 . "%";
+            $percent = $data['money_raised'] / $data['money_target'];
+            $data['money_raised_percentage'] = ( round($percent, 2) ) * 100 . "%";
             $data['money_target_display'] = CRM_Utils_Money::format( $data['money_target'] );
             $data['money_raised'] = ts( 'Raised %1 of %2', array( 1 => CRM_Utils_Money::format( $data['money_raised'] ), 
                                                                   2 => $data['money_target_display']

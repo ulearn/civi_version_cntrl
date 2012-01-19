@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -130,7 +130,7 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form
         $this->add('date', 'fixed_period_start_day', ts('Fixed Period Start Day'), 
                    CRM_Core_SelectValues::date( null, 'M d' ), false);
         
-        require_once "CRM/Core/BAO/MessageTemplates.php";
+        require_once 'CRM/Core/BAO/MessageTemplates.php';
         $msgTemplates = CRM_Core_BAO_MessageTemplates::getMessageTemplates( false );
         $hasMsgTemplates = false;
         if ( !empty( $msgTemplates ) ) $hasMsgTemplates = true;

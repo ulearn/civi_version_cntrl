@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -122,7 +122,7 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form
         $returnProperties = array( 'case_type_id', 'subject', 'status_id', 'start_date' );
         CRM_Core_DAO::commonRetrieve('CRM_Case_BAO_Case', $params, $values, $returnProperties );
                 
-        $values['case_type_id'] = explode( CRM_Case_BAO_Case::VALUE_SEPERATOR, 
+        $values['case_type_id'] = explode( CRM_Core_DAO::VALUE_SEPARATOR,
                                            CRM_Utils_Array::value( 'case_type_id' , $values ) );
 
         require_once 'CRM/Case/PseudoConstant.php';
@@ -146,7 +146,7 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form
 
         // Send Email activity requires a different URL format from all other activities
         $newActivityEmailUrl = 
-            CRM_Utils_System::url( 'civicrm/activity/add', 
+            CRM_Utils_System::url( 'civicrm/activity/email/add', 
                                    "action=add&context=standalone&reset=1&caseid={$this->_caseID}&atype=", 
                                    false, null, false ); 
         $this->assign ( 'newActivityEmailUrl', $newActivityEmailUrl );
@@ -315,14 +315,19 @@ class CRM_Case_Form_CaseView extends CRM_Core_Form
 		//get case related relationships (Case Role)
         $caseRelationships = CRM_Case_BAO_Case::getCaseRoles( $this->_contactID, $this->_caseID );
        
+        //save special label because we unset it in the loop
+        $managerLabel = empty( $managerRoleId ) ? '' : $caseRoles[$managerRoleId];
+
         //build reporter select
         $reporters = array( "" => ts(' - any reporter - ') );
         foreach( $caseRelationships as $key => &$value ) {
             $reporters[$value['cid']] = $value['name'] . " ( {$value['relation']} )";
 
-            if ( $managerRoleId == $value['relation_type'] ) {
-                $value['relation'] = $caseRoles[$managerRoleId]; 
-            } 
+	    if ( ! empty( $managerRoleId ) ) {
+                if ( $managerRoleId == $value['relation_type'] ) {
+                    $value['relation'] = $managerLabel;
+                } 
+	    }
 
             //calculate roles that don't have relationships
             if ( CRM_Utils_Array::value($value['relation_type'], $caseRoles) ) {

@@ -2,9 +2,9 @@
  
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -30,7 +30,7 @@
  * 
  * @package CRM 
  * @author Alan Dixon
- * @copyright CiviCRM LLC (c) 2004-2010 
+ * @copyright CiviCRM LLC (c) 2004-2011 
  * $Id$ 
  * 
  */ 
@@ -62,7 +62,7 @@ class CRM_Core_Payment_Moneris extends CRM_Core_Payment {
         $this->_paymentProcessor = $paymentProcessor;
         $this->_processorName    = ts('Moneris');
 
-        if (include_once('Services/mpgClasses.php') === false ) { // require moneris supplied api library
+        if ( (include_once 'Services/mpgClasses.php') === false ) { // require moneris supplied api library
             CRM_Core_Error::fatal( ts( 'Please download and put the Moneris mpgClasses.php file in packages/Services directory to enable Moneris Support.' ) );
         }
 

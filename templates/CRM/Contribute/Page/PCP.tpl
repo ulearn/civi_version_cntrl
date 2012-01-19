@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -55,8 +55,8 @@
 	</thead>
 	<tbody>
 	{foreach from=$rows item=row}
-	<tr class="{cycle values="odd-row,even-row"} {$row.class}">
-        	<td><a href="{crmURL p='civicrm/contribute/pcp/info' q="reset=1&id=`$row.id` " fe='true'}" title="{ts}View Personal Campaign Page{/ts}" target="_blank">{$row.title}</a></td>
+	<tr id="row_{$row.id}" class="{cycle values="odd-row,even-row"} {$row.class}">
+        	<td><a href="{crmURL p='civicrm/contribute/pcp/info' q="reset=1&id=`$row.id` " }" title="{ts}Preview Personal Campaign Page{/ts}" target="_blank">{$row.title}</a></td>
 		<td><a href="{crmURL p='civicrm/contact/view' q="reset=1&cid=`$row.supporter_id`"}" title="{ts}View contact record{/ts}">{$row.supporter}</a></td>
 		<td><a href="{crmURL p='civicrm/contribute/transact' q="id=`$row.contribution_page_id`&reset=1" fe='true'}" title="{ts}View contribution page{/ts}" target="_blank">{$row.contribution_page_title}</td>
 		<td>{$row.start_date|crmDate:"%b %d, %Y %l:%M %P"}</td>

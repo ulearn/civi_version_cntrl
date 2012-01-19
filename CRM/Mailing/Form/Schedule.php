@@ -2,9 +2,9 @@
 
  /*
   +--------------------------------------------------------------------+
-  | CiviCRM version 3.3                                                |
+  | CiviCRM version 4.0                                                |
   +--------------------------------------------------------------------+
-  | Copyright CiviCRM LLC (c) 2004-2010                                |
+  | Copyright CiviCRM LLC (c) 2004-2011                                |
   +--------------------------------------------------------------------+
   | This file is a part of CiviCRM.                                    |
   |                                                                    |
@@ -29,7 +29,7 @@
  /**
   *
   * @package CRM
-  * @copyright CiviCRM LLC (c) 2004-2010
+  * @copyright CiviCRM LLC (c) 2004-2011
   * $Id$
   *
   */
@@ -79,7 +79,8 @@ require_once 'CRM/Mailing/BAO/Mailing.php';
      {
          $defaults = array( );
          if ( $this->_scheduleFormOnly ) {
-             $count = CRM_Mailing_BAO_Mailing::getRecipientsCount( true, false, $this->_mailingID );
+             require_once 'CRM/Mailing/BAO/Recipients.php';
+             $count = CRM_Mailing_BAO_Recipients::mailingSize( $this->_mailingID );
          } else {
              $count = $this->get( 'count' );
          }
@@ -171,7 +172,7 @@ require_once 'CRM/Mailing/BAO/Mailing.php';
       */
      public static function formRule( $params, $files, $self ) 
      {
-         if ( $params['_qf_Schedule_submit'] ) {
+         if ( !empty($params['_qf_Schedule_submit']) ) {
              //when user perform mailing from search context 
              //redirect it to search result CRM-3711.
              $ssID = $self->get( 'ssID' );
@@ -209,7 +210,7 @@ require_once 'CRM/Mailing/BAO/Mailing.php';
                  CRM_Utils_System::redirect($url);
              }
          }
-         if ( isset($params['now']) || $params['_qf_Schedule_back'] == '<< Previous' ) {
+         if ( isset($params['now']) || CRM_Utils_Array::value('_qf_Schedule_back', $params) == '<< Previous' ) {
              return true;
          }
 
@@ -249,7 +250,7 @@ require_once 'CRM/Mailing/BAO/Mailing.php';
             $job = new CRM_Mailing_BAO_Job();
             $job->mailing_id = $mailing->id;
 
-            if ( ! $mailing->is_template) {
+            if ( empty($mailing->is_template)) {
                 $job->status = 'Scheduled';
                 if ($params['now']) {
                     $job->scheduled_date = date('YmdHis');
@@ -287,7 +288,9 @@ require_once 'CRM/Mailing/BAO/Mailing.php';
         //when user perform mailing from search context 
         //redirect it to search result CRM-3711.
         $ssID    = $this->get( 'ssID' );
-        if ( $ssID && $this->_searchBasedMailing ) {
+        if ( $ssID && 
+             $this->_searchBasedMailing &&
+             ! CRM_Mailing_Info::workflowEnabled( ) ) {
             if ( $this->_action == CRM_Core_Action::BASIC ) {
                 $fragment = 'search';
             } else if ( $this->_action == CRM_Core_Action::PROFILE ) {
@@ -304,12 +307,12 @@ require_once 'CRM/Mailing/BAO/Mailing.php';
             if ( CRM_Utils_Rule::qfKey( $qfKey ) ) $urlParams .= "&qfKey=$qfKey";
             
             $url = CRM_Utils_System::url( 'civicrm/contact/' . $fragment, $urlParams );
-            CRM_Utils_System::redirect( $url );
+            return $this->controller->setDestination($url);
         }
         
         $session = CRM_Core_Session::singleton( );
         $session->pushUserContext( CRM_Utils_System::url( 'civicrm/mailing/browse/scheduled', 
-                                                             'reset=1&scheduled=true' ) );
+                                                          'reset=1&scheduled=true' ) );
     }
     
     /**

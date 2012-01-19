@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,7 +24,10 @@
  +--------------------------------------------------------------------+
 *}
 <div id="pricesetTotal" class="crm-section section-pricesetTotal">
-	<div class="label" id="pricelabel"><label>Total Fee(s)</label></div>
+	<div class="label" id="pricelabel"><label>
+         {if ( $extends eq 'Contribution' ) || ( $extends eq 'Membership' )}
+           {ts}Total Amount{/ts}{else}{ts}Total Fee(s){/ts}
+         {/if}</label></div>
 	<div class="content view-value" id="pricevalue" ></div>
 </div>
 

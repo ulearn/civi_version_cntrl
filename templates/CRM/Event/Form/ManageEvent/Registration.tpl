@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,6 +23,24 @@
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
 *}
+{if $addProfileBottomAdd OR $addProfileBottom}
+  {if $addProfileBottomAdd}
+    <tr class="crm-event-manage-registration-form-block-additional_custom_post_{$profileBottomNumAdd}">
+      <td scope="row" class="label" width="20%">{$form.additional_custom_post_id_multiple[$profileBottomNumAdd].label}</td>
+      <td>{$form.additional_custom_post_id_multiple[$profileBottomNumAdd].html}	
+          <span class='profile_bottom_add_link'>&nbsp;<a href="javascript:addProfileBottomAdd()">{ts}add profile{/ts}</a></span>
+      </td>
+    </tr>
+  {/if}
+  {if $addProfileBottom}
+     <tr class="crm-event-manage-registration-form-block-custom_post_{$profileBottomNum}">
+       <td scope="row" class="label" width="20%">{$form.custom_post_id_multiple[$profileBottomNum].label}</td>
+       <td>{$form.custom_post_id_multiple[$profileBottomNum].html}
+           <span class='profile_bottom_link'>&nbsp;<a href="javascript:addProfileBottom()">{ts}add profile{/ts}</a></span>
+       </td>
+     </tr>
+  {/if}
+{else}
 {assign var=eventID value=$id}
 <div id="help">
 {ts}If you want to provide an Online Registration page for this event, check the first box below and then complete the fields on this form.{/ts} 
@@ -31,7 +49,7 @@
 <span id="restmsg" class="msgok" style="display:none"></span>
 <div class="crm-block crm-form-block crm-event-manage-registration-form-block">
 <div class="crm-submit-buttons">
-   {include file="CRM/common/formButtons.tpl" location="top"}
+{include file="CRM/common/formButtons.tpl" location="top"}
 </div>
 
     <div id="register">
@@ -94,7 +112,7 @@
             <a href="#" onclick="hide('registration_screen_show'); show('registration_screen'); return false;"><img src="{$config->resourceBase}i/TreePlus.gif" class="action-icon" alt="{ts}open section{/ts}"/></a><label>{ts}Registration Screen{/ts}</label><br />
         </div>	
         <div id="registration_screen">
-        <fieldset><legend><a href="#" onclick= "hide('registration_screen'); show('registration_screen_show'); return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}close section{/ts}"/></a>{ts}Registration Screen{/ts}</legend>
+        <h3><a href="#" onclick= "hide('registration_screen'); show('registration_screen_show'); return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}close section{/ts}"/></a>{ts}Registration Screen{/ts}</h3>
         <table class= "form-layout-compressed">
          <tr class="crm-event-manage-registration-form-block-intro_text">
             <td scope="row" class="label" width="20%">{$form.intro_text.label} {if $action == 2}{include file='CRM/Core/I18n/Dialog.tpl' table='civicrm_event' field='intro_text' id=$eventID}{/if}</td>
@@ -107,16 +125,38 @@
             <td>{$form.footer_text.html}
             <div class="description">{ts}Optional footer text for registration screen.{/ts}</div></td>
          </tr>
+	 </table>
+ 	 <table class= "form-layout-compressed">	
          <tr class="crm-event-manage-registration-form-block-custom_pre_id">
             <td scope="row" class="label" width="20%">{$form.custom_pre_id.label}</td>
             <td>{$form.custom_pre_id.html}<br />
             <span class="description">{ts}Include additional fields on this registration form by configuring and selecting a CiviCRM Profile to be included at the top of the page (immediately after the introductory message).{/ts}{help id="event-profile"}</span></td>
 	 </tr>
-         <tr class="crm-event-manage-registration-form-block-custom_post_id">
+         <tr id="profile_post" class="crm-event-manage-registration-form-block-custom_post_id">
             <td scope="row" class="label" width="20%">{$form.custom_post_id.label}</td>
-            <td>{$form.custom_post_id.html}<br />
-            <span class="description">{ts}Include additional fields on this registration form by configuring and selecting a CiviCRM Profile to be included at the bottom of the page.{/ts}</span></td>
+            <td>{$form.custom_post_id.html}
+	        {if !$profilePostMultiple}
+	          <span class='profile_bottom_link'>&nbsp;<a href="javascript:addProfileBottom()">{ts}add profile{/ts}</a></span>
+		{/if}
+	    <br />
+            <span class="description">{ts}Include additional fields on this registration form by configuring and selecting a CiviCRM Profile to be included at the bottom of the page.{/ts}</span>
+            </td>
         </tr>
+
+         {if $profilePostMultiple}
+         {foreach from=$profilePostMultiple item=profilePostId key=profilePostNum name=profilePostIdName}
+ 	    <tr class='crm-event-manage-registration-form-block-custom_post_multiple'>
+               <td scope="row" class="label" width="20%">{$form.custom_post_id_multiple.$profilePostNum.label}</td>
+               <td>{$form.custom_post_id_multiple.$profilePostNum.html}
+	           {if $smarty.foreach.profilePostIdName.last}
+	             <span class='profile_bottom_link'>&nbsp;<a href="javascript:addProfileBottom()">{ts}add profile{/ts}</a></span>
+                   {/if}
+	       </td>
+             </tr>
+         {/foreach}
+ 	{/if}
+	</table>
+	<table class= "form-layout-compressed">
         <tr id="additional_profile_pre" class="crm-event-manage-registration-form-block-additional_custom_pre_id">
             <td scope="row" class="label" width="20%">{$form.additional_custom_pre_id.label}</td>
             <td>{$form.additional_custom_pre_id.html}<br />
@@ -125,12 +165,25 @@
         </tr>
         <tr id="additional_profile_post" class="crm-event-manage-registration-form-block-additional_custom_post_id">
              <td scope="row" class="label" width="20%">{$form.additional_custom_post_id.label}</td>
-             <td>{$form.additional_custom_post_id.html}<br />
+             <td>{$form.additional_custom_post_id.html}
+	         {if !$profilePostMultipleAdd}<span class='profile_bottom_add_link'><a href="javascript:addProfileBottomAdd()">{ts}add profile{/ts}</a></span>
+		 {/if}<br />
                 <span class="description">{ts}Change this if you want to use a different profile for additional participants.{/ts}</span>
              </td>
         </tr>
+	{if $profilePostMultipleAdd}
+         {foreach from=$profilePostMultipleAdd item=profilePostIdA key=profilePostNumA name=profilePostIdAName}
+ 	    <tr class='crm-event-manage-registration-form-block-additional_custom_post_multiple'>
+               <td scope="row" class="label" width="20%">{$form.additional_custom_post_id_multiple.$profilePostNumA.label}</td>
+               <td>{$form.additional_custom_post_id_multiple.$profilePostNumA.html}
+	           {if $smarty.foreach.profilePostIdAName.last}
+		     <span class='profile_bottom_add_link'>&nbsp;<a href="javascript:addProfileBottomAdd()">{ts}add profile{/ts}</a></span>
+                   {/if}
+	       </td>
+             </tr>
+         {/foreach}
+ 	{/if}
         </table>
-        </fieldset>
         </div>
 
         {*Confirmation Block*}
@@ -139,7 +192,7 @@
         </div>	
 
         <div id="confirm">
-        <fieldset><legend><a href="#" onclick="hide('confirm'); show('confirm_show'); return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}close section{/ts}"/></a>{ts}Confirmation Screen{/ts}</legend>
+        <h3><a href="#" onclick="hide('confirm'); show('confirm_show'); return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}close section{/ts}"/></a>{ts}Confirmation Screen{/ts}</h3>
          <table class= "form-layout-compressed">
            <tr class="crm-event-manage-registration-form-block-confirm_title">
               <td scope="row" class="label" width="20%">{$form.confirm_title.label} <span class="marker">*</span> {if $action == 2}{include file='CRM/Core/I18n/Dialog.tpl' table='civicrm_event' field='confirm_title' id=$eventID}{/if}</td>
@@ -160,8 +213,7 @@
               </td>
            </tr>
          </table>
-        </fieldset>
-        </div>
+       </div>
 
          {*ThankYou Block*}
         <div id="thankyou_show" class="section-hidden section-hidden-border">
@@ -169,7 +221,7 @@
         </div>	
 
         <div id="thankyou">
-        <fieldset><legend><a href="#" onclick="hide('thankyou'); show('thankyou_show'); return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}close section{/ts}"/></a>{ts}Thank-you Screen{/ts}</legend>
+        <h3><a href="#" onclick="hide('thankyou'); show('thankyou_show'); return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}close section{/ts}"/></a>{ts}Thank-you Screen{/ts}</h3>
          <table class= "form-layout-compressed">
            <tr class="crm-event-manage-registration-form-block-confirm_thankyou_title">           
               <td scope="row" class="label" width="20%">{$form.thankyou_title.label} <span class="marker">*</span> {if $action == 2}{include file='CRM/Core/I18n/Dialog.tpl' table='civicrm_event' field='thankyou_title' id=$eventID}{/if}</td>
@@ -190,8 +242,7 @@
               </td>
             </tr>
          </table>
-        </fieldset>
-        </div>
+       </div>
 
         {* Confirmation Email Block *}
         <div id="mail_show" class="section-hidden section-hidden-border">
@@ -199,7 +250,7 @@
         </div>	
 
         <div id="mail">
-        <fieldset><legend><a href="#" onclick="hide('mail'); show('mail_show'); return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}close section{/ts}"/></a>{ts}Confirmation Email{/ts}</legend>
+        <h3><a href="#" onclick="hide('mail'); show('mail_show'); return false;"><img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}close section{/ts}"/></a>{ts}Confirmation Email{/ts}</h3>
           <table class= "form-layout-compressed">
             <tr class="crm-event-manage-registration-form-block-is_email_confirm"> 
               <td scope="row" class="label" width="20%">{$form.is_email_confirm.label}</td>
@@ -241,8 +292,7 @@
              </tr>
            </table>
 	  </div>
-        </fieldset>
-        </div>
+       </div>
     </div> {*end of div registration_blocks*}
     </div>
  <div class="crm-submit-buttons">
@@ -290,7 +340,10 @@ invert              = 0
         if ( !cj(this).attr( 'checked') ) {
             cj("#additional_custom_pre_id").val('');
             cj("#additional_custom_post_id").val('');
-        }
+	    cj(".crm-event-manage-registration-form-block-additional_custom_post_multiple").hide();
+        } else {
+	    cj(".crm-event-manage-registration-form-block-additional_custom_post_multiple").show();
+	}
     });
     
     showRuleFields( {/literal}{$ruleFields}{literal} );
@@ -308,6 +361,41 @@ invert              = 0
             cj( '#restmsg' ).html( imageIcon + errorMsg  ).hide( );
         }
     }
+
+    var profileBottomCount = Number({/literal}{$profilePostMultiple|@count}{literal});
+
+    function addProfileBottom( ) {
+      profileBottomCount++;
+      cj('.profile_bottom_link').css('display', 'none');
+      var urlPath = {/literal}"{crmURL p='civicrm/event/manage/registration' h=0 q=$addProfileParams}"{literal};
+      urlPath = urlPath + '&snippet=4&addProfileNum=' + profileBottomCount;
+      cj.ajax({ url     : urlPath,
+                async   : false,
+                global  : false,
+	        success : function ( content ) { 		
+                 cj( "#profile_post" ).parent().append( content );
+                }
+      });   
+    }
+
+
+    var profileBottomCountAdd = Number({/literal}{$profilePostMultipleAdd|@count}{literal});
+    function addProfileBottomAdd( ) {
+      profileBottomCountAdd++;
+      cj('.profile_bottom_add_link').css('display', 'none');
+      var urlPathAdd = {/literal}"{crmURL p='civicrm/event/manage/registration' h=0 q=$addProfileParamsAdd}"{literal};
+      urlPathAdd = urlPathAdd + '&snippet=4&addProfileNumAdd=' + profileBottomCountAdd;
+      cj.ajax({ url     : urlPathAdd,
+                async   : false,
+                global  : false,
+	        success : function ( contentAdd ) { 		
+                 cj( "#additional_profile_post" ).parent().append( contentAdd );
+                }
+      });   
+    }
+
+
     {/literal}
 </script>
 {include file="CRM/common/formNavigate.tpl"}
+{/if}

@@ -2,9 +2,9 @@
 
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 3.3                                                |
+ | CiviCRM version 4.0                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2011                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -29,7 +29,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2011
  * $Id$
  *
  */
@@ -193,12 +193,14 @@ WHERE     %2.id = %1";
                                    'price_field_value_id' => $oid,
                                    'label'                => $options[$oid]['label'],
                                    'field_title'          => $fieldTitle,
-                                   'description'          => $options[$oid]['description'],
+                                   'description'          => CRM_Utils_Array::value('description', $options[$oid]),
                                    'qty'                  => $qty,
                                    'unit_price'           => $price,
                                    'line_total'           => $qty * $price,
                                    'participant_count'    => $qty * $participantsPerField,
                                    'max_value'            => CRM_Utils_Array::value( 'max_value', $options[$oid] ),
+                                   'membership_type_id'   => CRM_Utils_Array::value( 'membership_type_id', $options[$oid] ),
+                                   'auto_renew'           => CRM_Utils_Array::value( 'auto_renew', $options[$oid] ),
                                    'html_type'            => $fields['html_type'] );
         }
     }

@@ -43,8 +43,8 @@ class CRM_Report_Form_Contribute_Detail extends CRM_Report_Form {
     protected $_emailField   = false;
 
     protected $_summary      = null;
-
-    protected $_customGroupExtends = array( 'Contribution' );
+	protected $_customGroupExtends = array( 'Contribution', 'Contact', 'Individual',  'Household', 'Organization' );
+  //  The above includes the custom fields from each component. Previously it was = protected $_customGroupExtends = array(  );
 
     function __construct( ) {
         $this->_columns = 

@@ -30,7 +30,7 @@
 // to be run by cron!
 
 
-$syncrun = new mailchimpSync('off', 0);
+$syncrun = new mailchimpSync('off', 1);
 
 
 $syncrun->createTables();

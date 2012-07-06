@@ -160,7 +160,7 @@ class CRM_Core_IDS {
     private function react(IDS_Report $result) {
 
         $impact = $result->getImpact( );
-        if ($impact >= $this->threshold['kick']) {
+        if ($impact >= $this->threshold['kick'] && !user_access('access CiviCRM')) {
             $this->log($result, 3, $impact);
             $this->kick($result);
             return true;
